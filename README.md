@@ -1,6 +1,6 @@
 # TurfArena ♛
 
-![TurfArena Hero Banner](hero-image-placeholder.png) <!-- Update with an actual screenshot of the app's hero section -->
+![TurfArena Hero Banner](athlete.png) <!-- Update with an actual screenshot of the app's hero section -->
 
 TurfArena is a modern, full-stack web application designed to streamline the process of booking sports turfs and fostering local sports communities. It provides an intuitive interface for athletes to find nearby turfs, check real-time availability, and book slots instantly without the hassle of double bookings.
 
