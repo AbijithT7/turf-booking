@@ -81,7 +81,7 @@ TurfArena is a modern, full-stack web application designed to streamline the pro
 ## 📂 Folder Structure
 
 ```
-Jeff_turf-main/
+Turf-Booking/
 │
 ├── backend/                   # Node.js Express API server
 │   ├── models/                # Mongoose Database Schemas
