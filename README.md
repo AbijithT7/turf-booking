@@ -110,10 +110,8 @@ Jeff_turf-main/
 
 ## 👥 Contributors
 
-*   **Your Name** - *Full Stack Developer* - [GitHub Profile](https://github.com/your-username)
-*   **Team Member 2** - *Role*
-*   **Team Member 3** - *Role*
+*   **Abijith Thennarasu** 
+*   **Ranse Roger2** 
 
-## 📜 License
 
-This project is licensed under the MIT License - see the `LICENSE` file for details.
+
