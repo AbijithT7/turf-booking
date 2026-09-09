@@ -1,187 +1,133 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Admin Login - TurfArena</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    :root {
-      --primary: #006FCD;
-      --primary-dark: #005A9E;
-      --bg: #0b1220;
-      --card-bg: #111827;
-      --accent: #3b82f6;
-      --danger: #ef4444;
-      --text: #f9fafb;
-      --muted: #9ca3af;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    body {
-      background: radial-gradient(circle at top, #1f2933 0, #0f172a 55%);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .login-container {
-      background: var(--card-bg);
-      border-radius: 20px;
-      padding: 40px;
-      width: 100%;
-      max-width: 400px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
-    }
-
-    .login-header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-
-    .login-header h1 {
-      font-size: 24px;
-      margin-bottom: 8px;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .login-header p {
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .input-group {
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 14px;
-      color: var(--text);
-    }
-
-    input {
-      width: 100%;
-      padding: 12px 16px;
-      border-radius: 10px;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      background: rgba(15, 23, 42, 0.9);
-      color: var(--text);
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.2s ease;
-    }
-
-    input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(0, 128, 255, 0.3);
-    }
-
-    .btn {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      color: #fff;
-      box-shadow: 0 10px 25px rgba(0, 111, 205, 0.4);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 14px 30px rgba(0, 128, 255, 0.6);
-    }
-
-    .error {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid var(--danger);
-      color: var(--danger);
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      font-size: 14px;
-      display: none;
-    }
-
-    @media (max-width: 520px) {
-      .login-container {
-        padding: 30px 20px;
+  <head>
+    <meta charset="UTF-8" />
+    <title>TurfArena - Admin Facility Gateway</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600;1,700;1,800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Theme CSS -->
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 24px;
+        position: relative;
       }
-    }
-  </style>
-</head>
-<body>
-  <div class="login-container">
-    <div class="login-header">
-      <h1>Admin Login</h1>
-      <p>Secure access for turf owners</p>
+
+      .admin-auth-box {
+        background: var(--card-bg);
+        border: 1px solid var(--line-strong);
+        border-radius: 28px;
+        width: 100%;
+        max-width: 420px;
+        padding: 40px 32px;
+        box-shadow: var(--shadow-glass), var(--shadow-neon-soft);
+        position: relative;
+        z-index: 10;
+        animation: modalAppear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      @keyframes modalAppear {
+        from { opacity: 0; transform: scale(0.96) translateY(10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+      }
+
+      .admin-logo-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+        background: var(--surface-3);
+        border: 1px solid var(--line-lime);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-size: 24px;
+        box-shadow: var(--shadow-neon-soft);
+        margin: 0 auto 14px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Ambient Glow Layer -->
+    <div class="ambient-glow-mesh" aria-hidden="true">
+      <div class="glow-orb-1"></div>
+      <div class="glow-orb-2"></div>
     </div>
 
-    <div class="error" id="loginError">Invalid credentials. Please try again.</div>
-
-    <form id="adminLoginForm">
-      <div class="input-group">
-        <label for="adminEmail">Email</label>
-        <input type="email" id="adminEmail" placeholder="admin@turfarena.com" required />
+    <div class="admin-auth-box">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div class="admin-logo-icon">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h1 style="font-size: 22px; font-weight: 800; color: var(--text-main);">
+          Admin <span class="text-lime-gradient">Command Suite</span>
+        </h1>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+          Master access for turf operators and venue directors
+        </p>
       </div>
 
-      <div class="input-group">
-        <label for="adminPassword">Password</label>
-        <input type="password" id="adminPassword" placeholder="Enter password" required />
+      <div id="loginError" style="display: none; background: rgba(255, 82, 82, 0.12); border: 1px solid var(--danger); color: var(--danger); padding: 10px 14px; border-radius: 12px; font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 16px;">
+        Invalid credentials. (Hint: admin@turfarena.com / admin123)
       </div>
 
-      <button type="submit" class="btn btn-primary">
-        Login
-      </button>
-    </form>
-  </div>
+      <form id="adminLoginForm" style="display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Admin Email</label>
+          <input type="email" id="adminEmail" class="input-premium" placeholder="admin@turfarena.com" value="admin@turfarena.com" required />
+        </div>
 
-  <script>
-    // Mock admin credentials (in real project, use backend auth)
-    const ADMIN_CREDENTIALS = {
-      email: 'admin@turfarena.com',
-      password: 'admin123'
-    };
+        <div>
+          <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Password</label>
+          <input type="password" id="adminPassword" class="input-premium" placeholder="••••••••" value="admin123" required />
+        </div>
 
-    document.getElementById('adminLoginForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const email = document.getElementById('adminEmail').value.trim();
-      const password = document.getElementById('adminPassword').value.trim();
-      const errorEl = document.getElementById('loginError');
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; margin-top: 8px;">
+          <i class="fa-solid fa-key"></i> Authenticate & Enter Suite
+        </button>
+      </form>
 
-      if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
-        // Store login state (mock with localStorage)
-        localStorage.setItem('adminLoggedIn', 'true');
-        window.location.href = 'admin-dashboard.html';
-      } else {
-        errorEl.style.display = 'block';
-        setTimeout(() => { errorEl.style.display = 'none'; }, 3000);
-      }
-    });
-  </script>
-</body>
+      <div style="margin-top: 24px; text-align: center; border-top: 1px solid var(--line-soft); padding-top: 16px;">
+        <a href="index.html" style="color: var(--text-muted); font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-arrow-left"></i> Back to Public App
+        </a>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="theme-toggle.js"></script>
+    <script>
+      const ADMIN_CREDENTIALS = {
+        email: "admin@turfarena.com",
+        password: "admin123",
+      };
+
+      document.getElementById("adminLoginForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const email = document.getElementById("adminEmail").value.trim();
+        const password = document.getElementById("adminPassword").value.trim();
+        const errorEl = document.getElementById("loginError");
+
+        if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
+          localStorage.setItem("adminLoggedIn", "true");
+          window.location.href = "admin-dashboard.html";
+        } else {
+          errorEl.style.display = "block";
+          setTimeout(() => {
+            errorEl.style.display = "none";
+          }, 4000);
+        }
+      });
+    </script>
+  </body>
 </html>

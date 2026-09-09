@@ -1,220 +1,624 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>User Dashboard - TurfArena</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="theme.css" />
-  <style>
-    body {
-      padding: 40px 5vw;
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 300px 1fr;
-      gap: 32px;
-    }
-
-    .profile-info {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      text-align: center;
-      padding: 32px;
-      border-radius: 24px;
-    }
-
-    .avatar {
-      width: 100px;
-      height: 100px;
-      background: var(--blue-gradient);
-      border-radius: 50%;
-      margin: 0 auto 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 40px;
-      font-weight: 700;
-      box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
-      color: #fff;
-    }
-
-    .profile-detail {
-      text-align: left;
-      font-size: 14px;
-    }
-
-    .profile-detail label {
-      color: var(--text-muted);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .dashboard-main {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-    
-    .dashboard-panel {
-      padding: 32px;
-      border-radius: 24px;
-    }
-
-    h2 { margin: 0 0 20px; font-weight: 700; font-size: 24px; letter-spacing: -0.02em; }
-
-    .booking-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .booking-card {
-      background: rgba(2, 6, 23, 0.6);
-      border: 1px solid rgba(59, 130, 246, 0.15);
-      border-radius: 16px;
-      padding: 20px;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      align-items: center;
-      transition: all 0.3s ease;
-    }
-
-    .booking-card:hover {
-      background: rgba(15, 23, 42, 0.8);
-      border-color: var(--primary);
-      transform: translateX(4px);
-    }
-
-    .booking-turf { font-weight: 600; color: var(--primary); font-size: 18px; margin-bottom: 4px;}
-    .booking-meta { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
-    .booking-price { font-weight: 700; font-size: 18px; color: var(--text-main); }
-
-    .header-nav {
-      margin-bottom: 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .btn-logout {
-      background: transparent;
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      color: var(--danger);
-      border-radius: 999px;
-      padding: 10px 20px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-family: 'Outfit', sans-serif;
-    }
-
-    .btn-logout:hover {
-      background: rgba(239, 68, 68, 0.1);
-      border-color: var(--danger);
-    }
-
-    @media (max-width: 768px) {
-      .container { grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
-<body>
-  <div class="header-nav">
-    <a href="index.html" class="btn-outline-gold"><i class="fa-solid fa-arrow-left"></i> Back to Reservations</a>
-    <button class="btn-logout" title="Sign Out" onclick="handleLogout()"><i class="fa-solid fa-power-off"></i> Sign Out</button>
-  </div>
-
-  <div class="container">
-    <div class="glass-panel profile-info">
-      <div class="avatar" id="avatarInit"><i class="fa-solid fa-user"></i></div>
-      <h3 id="userNameDisplay" style="margin: 0; font-size: 22px;">User</h3>
-      <div style="border-top: 1px solid rgba(59, 130, 246, 0.2); padding-top: 16px; margin-top: 8px; display: flex; flex-direction: column; gap: 16px;">
-        <div class="profile-detail">
-          <label><i class="fa-solid fa-envelope" style="color:var(--primary);"></i> Email Address</label>
-          <span id="userEmailDisplay">...</span>
-        </div>
-        <div class="profile-detail">
-          <label><i class="fa-solid fa-phone" style="color:var(--primary);"></i> Mobile Number</label>
-          <span id="userPhoneDisplay">...</span>
-        </div>
-        <div class="profile-detail">
-          <label><i class="fa-solid fa-gem" style="color:var(--primary);"></i> VIP Member Since</label>
-          <span id="userJoinDisplay" style="color: var(--primary); font-weight: 500;">...</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="dashboard-main">
-      <div class="glass-panel dashboard-panel">
-        <h2><i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);"></i> Your Past Reservations</h2>
-        <div class="booking-list" id="userBookingsList">
-          <div style="color: var(--text-muted); text-align: center; padding: 20px;">Loading bookings...</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    function loadUserData() {
-      const user = JSON.parse(localStorage.getItem('currentUser'));
-      if (!user) {
-        window.location.href = 'user-login.html';
-        return;
+  <head>
+    <meta charset="UTF-8" />
+    <title>TurfArena - Player Profile & Reservations</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600;1,700;1,800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Theme CSS -->
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        padding: 16px 5vw;
+        background: var(--surface-1);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--line-soft);
       }
 
-      document.getElementById('userNameDisplay').textContent = user.name;
-      document.getElementById('userEmailDisplay').textContent = user.email;
-      document.getElementById('userPhoneDisplay').textContent = user.phone;
-      document.getElementById('userJoinDisplay').textContent = user.joinedDate || "Just now";
-      document.getElementById('avatarInit').innerHTML = '<i class="fa-solid fa-user"></i>';
+      .navbar-inner {
+        max-width: 1360px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
 
-      fetchBookings(user.phone);
-    }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: var(--text-main);
+        cursor: pointer;
+      }
 
-    async function fetchBookings(phone) {
-      const list = document.getElementById('userBookingsList');
-      try {
-        const response = await fetch(`/api/user/bookings/${encodeURIComponent(phone)}`);
-        if (!response.ok) throw new Error('Failed to fetch bookings');
-        
-        const history = await response.json();
-        
-        if (history.length === 0) {
-          list.innerHTML = "<div style='color: var(--text-muted); text-align: center; padding: 30px; font-weight: 500;'>No bookings found. Head back to the reservation page to book a luxury turf!</div>";
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--primary) 0%, #22c55e 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #050a0d;
+        font-size: 18px;
+        box-shadow: var(--shadow-neon-soft);
+      }
+
+      .dashboard-container {
+        max-width: 1360px;
+        margin: 0 auto;
+        padding: 40px 5vw;
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 32px;
+        position: relative;
+        z-index: 10;
+      }
+
+      @media (max-width: 960px) {
+        .dashboard-container {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Profile Left Column */
+      .profile-card {
+        background: var(--card-bg);
+        border: 1px solid var(--line-soft);
+        border-radius: 28px;
+        padding: 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--shadow-card);
+      }
+
+      .profile-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary), var(--secondary));
+      }
+
+      .avatar-box {
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        padding: 3px;
+        margin-bottom: 4px;
+        box-shadow: var(--shadow-neon-lime);
+      }
+
+      .avatar-inner {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: var(--bg-surface-high);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        color: var(--primary);
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .profile-details-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: var(--surface-2);
+        padding: 16px;
+        border-radius: 18px;
+        border: 1px solid var(--line-soft);
+      }
+
+      .profile-detail-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+
+      .profile-detail-row i {
+        color: var(--primary);
+        width: 16px;
+      }
+
+      .bento-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        text-align: center;
+      }
+
+      .bento-box {
+        background: var(--surface-2);
+        border: 1px solid var(--line-soft);
+        border-radius: 14px;
+        padding: 12px 8px;
+      }
+
+      .bento-num {
+        font-size: 20px;
+        font-weight: 800;
+        font-family: var(--font-mono);
+        color: var(--primary);
+        line-height: 1;
+      }
+
+      .bento-lbl {
+        font-size: 10px;
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-top: 4px;
+        font-weight: 700;
+      }
+
+      /* Performance Stamina Bar Chart */
+      .stamina-card {
+        background: var(--surface-2);
+        border: 1px solid var(--line-soft);
+        border-radius: 18px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .chart-bars-wrap {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+        height: 60px;
+        padding-top: 8px;
+      }
+
+      .chart-bar {
+        flex: 1;
+        background: var(--surface-3);
+        border-radius: 6px 6px 0 0;
+        transition: background 0.2s, height 0.3s;
+      }
+
+      .chart-bar:hover, .chart-bar.active {
+        background: var(--primary);
+        box-shadow: var(--shadow-neon-soft);
+      }
+
+      /* Right Column: Reservations Hub */
+      .hub-section {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .hub-panel {
+        background: var(--card-bg);
+        border: 1px solid var(--line-soft);
+        border-radius: 28px;
+        padding: 32px;
+        box-shadow: var(--shadow-card);
+      }
+
+      .hub-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--line-soft);
+      }
+
+      .reservation-card {
+        background: var(--surface-2);
+        border: 1px solid var(--line-soft);
+        border-radius: 20px;
+        padding: 20px 24px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 16px;
+        transition: all 0.3s;
+      }
+
+      .reservation-card:hover {
+        border-color: var(--line-lime);
+        background: var(--surface-3);
+        transform: translateY(-2px);
+      }
+
+      .res-turf-name {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--text-main);
+        margin-bottom: 4px;
+      }
+
+      .res-meta {
+        font-size: 13px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .res-price {
+        font-size: 20px;
+        font-weight: 800;
+        font-family: var(--font-mono);
+        color: var(--primary);
+        text-align: right;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Ambient Glow Layer -->
+    <div class="ambient-glow-mesh" aria-hidden="true">
+      <div class="glow-orb-1"></div>
+      <div class="glow-orb-2"></div>
+    </div>
+
+    <!-- Header / Nav -->
+    <header>
+      <div class="navbar-inner">
+        <a class="logo" href="index.html">
+          <div class="logo-icon">
+            <i class="fa-solid fa-crown"></i>
+          </div>
+          <div>
+            <div class="logo-brand">TURF<span>ARENA</span></div>
+            <div class="logo-sub">Player Portal</div>
+          </div>
+        </a>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <a href="index.html" class="btn btn-outline btn-sm">
+            <i class="fa-solid fa-arrow-left"></i> Book More Turfs
+          </a>
+          <a href="community.html" class="btn btn-outline btn-sm">
+            <i class="fa-solid fa-users"></i> Community Lobby
+          </a>
+          <button class="theme-toggle-btn" data-theme-toggle type="button"></button>
+          <button class="btn btn-ghost btn-sm" onclick="handleLogout()" title="Sign Out">
+            <i class="fa-solid fa-power-off" style="color: var(--danger);"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard-container">
+      <!-- ───────────────────────────────────────────
+           LEFT COLUMN: PLAYER PROFILE CARD
+      ─────────────────────────────────────────── -->
+      <aside style="display: flex; flex-direction: column; gap: 24px;">
+        <div class="profile-card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div class="avatar-box">
+              <div class="avatar-inner" id="avatarInit">AT</div>
+            </div>
+            <span class="badge badge-lime">
+              <i class="fa-solid fa-gem"></i> VIP Member
+            </span>
+          </div>
+
+          <div>
+            <h1 id="userNameDisplay" style="font-size: 24px; font-weight: 800; margin-bottom: 2px;">Athlete Profile</h1>
+            <div style="font-size: 13px; color: var(--primary); font-weight: 600;">@turfathlete · All-Rounder</div>
+          </div>
+
+          <div class="profile-details-list">
+            <div class="profile-detail-row">
+              <i class="fa-regular fa-envelope"></i>
+              <span id="userEmailDisplay" class="truncate">user@turf.com</span>
+            </div>
+            <div class="profile-detail-row">
+              <i class="fa-solid fa-phone"></i>
+              <span id="userPhoneDisplay">9999999999</span>
+            </div>
+            <div class="profile-detail-row" style="color: var(--secondary); font-weight: 600;">
+              <i class="fa-solid fa-shield-check"></i>
+              <span>KYC & UPI Verified</span>
+            </div>
+            <div class="profile-detail-row" style="font-size: 12px;">
+              <i class="fa-regular fa-calendar-check"></i>
+              <span>Member Since <b id="userJoinDisplay" style="color: var(--text-main);">March 2026</b></span>
+            </div>
+          </div>
+
+          <!-- Bento Stats -->
+          <div class="bento-metrics">
+            <div class="bento-box">
+              <div class="bento-num" id="metricMatches">24</div>
+              <div class="bento-lbl">Matches</div>
+            </div>
+            <div class="bento-box">
+              <div class="bento-num" style="color: var(--secondary);">98%</div>
+              <div class="bento-lbl">Turnout</div>
+            </div>
+            <div class="bento-box">
+              <div class="bento-num" style="color: var(--accent-gold);">4.9</div>
+              <div class="bento-lbl">Fair Play</div>
+            </div>
+          </div>
+
+          <!-- Stamina Chart Widget -->
+          <div class="stamina-card">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700;">
+              <span>Weekly Play Stamina</span>
+              <span style="color: var(--primary);">6.5 hrs</span>
+            </div>
+            <div class="chart-bars-wrap">
+              <div class="chart-bar" style="height: 35%;" title="Mon: 1h"></div>
+              <div class="chart-bar" style="height: 60%;" title="Tue: 2h"></div>
+              <div class="chart-bar" style="height: 25%;" title="Wed: 45m"></div>
+              <div class="chart-bar" style="height: 80%;" title="Thu: 2.5h"></div>
+              <div class="chart-bar active" style="height: 100%;" title="Fri: 3h"></div>
+              <div class="chart-bar" style="height: 55%;" title="Sat: 1.5h"></div>
+              <div class="chart-bar" style="height: 10%;" title="Sun: Rest"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; font-family: var(--font-mono); color: var(--text-muted);">
+              <span>M</span><span>T</span><span>W</span><span>T</span><span style="color:var(--primary); font-weight:bold;">F</span><span>S</span><span>S</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ───────────────────────────────────────────
+           RIGHT COLUMN: RESERVATIONS & SQUAD HUB
+      ─────────────────────────────────────────── -->
+      <section class="hub-section">
+        <!-- Past Reservations Panel -->
+        <div class="hub-panel">
+          <div class="hub-header">
+            <div>
+              <h2 style="font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i>
+                Your Pitch Reservations
+              </h2>
+              <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+                Live slot confirmations and past match digital passes.
+              </p>
+            </div>
+            <a href="index.html#available-turfs" class="btn btn-primary btn-sm">
+              <i class="fa-solid fa-plus"></i> New Reservation
+            </a>
+          </div>
+
+          <div id="userBookingsList" style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="color: var(--text-muted); text-align: center; padding: 32px;">
+              <i class="fa-solid fa-spinner fa-spin" style="color: var(--primary); font-size: 24px; margin-bottom: 8px;"></i>
+              <div>Loading reservations...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Community & Squad Activity Panel -->
+        <div class="hub-panel">
+          <div class="hub-header">
+            <div>
+              <h2 style="font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-shield-heart" style="color: var(--secondary);"></i>
+                Your Community Squads & Applications
+              </h2>
+              <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+                Lobby challenges created by you and join requests submitted to host captains.
+              </p>
+            </div>
+            <a href="community.html" class="btn btn-secondary btn-sm">
+              <i class="fa-solid fa-users"></i> Lobby
+            </a>
+          </div>
+
+          <div id="userCommunityList" style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="color: var(--text-muted); text-align: center; padding: 32px;">
+              <i class="fa-solid fa-spinner fa-spin" style="color: var(--secondary); font-size: 24px; margin-bottom: 8px;"></i>
+              <div>Loading community items...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <div style="max-width: 1360px; margin: 0 auto; text-align: center; color: var(--text-muted); font-size: 13px;">
+        © 2026 TurfArena Inc. All verified reservations are protected with live anti-double booking sync.
+      </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="theme-toggle.js"></script>
+    <script>
+      function getCurrentUser() {
+        try {
+          return JSON.parse(localStorage.getItem("currentUser"));
+        } catch (e) {
+          localStorage.removeItem("currentUser");
+          return null;
+        }
+      }
+
+      function loadUserData() {
+        const user = getCurrentUser();
+        if (!user) {
+          window.location.href = "user-login.html";
           return;
         }
 
-        list.innerHTML = history.map(b => `
-          <div class="booking-card">
-            <div>
-              <div class="booking-turf">${b.turf}</div>
-              <div class="booking-meta">${b.date} • <span style="color: var(--text-main); font-weight: 500;">${b.time}</span></div>
-              <div class="booking-meta" style="color: var(--success); font-weight: 600; margin-top: 8px;">${b.status}</div>
-            </div>
-            <div class="booking-price">${b.price}</div>
-          </div>
-        `).join('');
+        document.getElementById("userNameDisplay").textContent = user.name || "Player";
+        document.getElementById("userEmailDisplay").textContent = user.email || "—";
+        document.getElementById("userPhoneDisplay").textContent = user.phone || "—";
+        document.getElementById("userJoinDisplay").textContent = user.joinedDate || "March 2026";
 
-      } catch (err) {
-        list.innerHTML = "<div style='color: var(--danger); text-align: center; padding: 20px;'>Error loading reservations from server.</div>";
-        console.error(err);
+        const initials = (user.name || "AT")
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase();
+        document.getElementById("avatarInit").textContent = initials;
+
+        fetchBookings(user.phone);
+        fetchCommunityActivity(user.phone);
       }
-    }
 
-    function handleLogout() {
-      localStorage.removeItem('currentUser');
-      window.location.href = 'index.html';
-    }
+      async function fetchBookings(phone) {
+        const list = document.getElementById("userBookingsList");
+        try {
+          const res = await fetch(`/api/user/bookings/${encodeURIComponent(phone)}`);
+          if (!res.ok) throw new Error("Could not fetch bookings");
 
-    window.onload = loadUserData;
-  </script>
-</body>
+          const history = await res.json();
+          if (!history.length) {
+            list.innerHTML = `
+              <div style="text-align: center; padding: 36px 20px; background: var(--surface-2); border-radius: 20px; border: 1px dashed var(--line-soft);">
+                <i class="fa-regular fa-calendar-xmark" style="font-size: 32px; color: var(--primary); margin-bottom: 10px; opacity: 0.8;"></i>
+                <h4 style="font-size: 16px; font-weight: 700;">No reservations found</h4>
+                <p style="color: var(--text-muted); font-size: 13px; margin: 4px 0 14px;">You haven't booked any turf slots yet.</p>
+                <a href="index.html#available-turfs" class="btn btn-primary btn-sm">Explore & Book Turfs</a>
+              </div>
+            `;
+            document.getElementById("metricMatches").textContent = "0";
+            return;
+          }
+
+          document.getElementById("metricMatches").textContent = history.length;
+
+          list.innerHTML = history
+            .map(
+              (b) => `
+            <div class="reservation-card">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                  <span class="badge badge-green"><i class="fa-solid fa-check"></i> ${b.status || "Confirmed"}</span>
+                  <span class="badge badge-dark">Pass ID: #TA-${Math.floor(10000 + Math.random() * 90000)}</span>
+                </div>
+                <div class="res-turf-name">${b.turf}</div>
+                <div class="res-meta">
+                  <span><i class="fa-regular fa-calendar" style="color: var(--primary);"></i> ${b.date}</span>
+                  <span><i class="fa-regular fa-clock" style="color: var(--primary);"></i> ${b.time}</span>
+                  <span style="color: var(--secondary);"><i class="fa-solid fa-shield-check"></i> Gate Pass Active</span>
+                </div>
+              </div>
+              <div>
+                <div class="res-price">${b.price}</div>
+                <div style="font-size: 11px; color: var(--secondary); font-family: var(--font-mono); text-align: right;">Paid Online</div>
+              </div>
+            </div>
+          `,
+            )
+            .join("");
+        } catch (err) {
+          list.innerHTML = `<div style="color: var(--danger); text-align: center; padding: 20px;">Could not connect to reservation server.</div>`;
+        }
+      }
+
+      async function fetchCommunityActivity(phone) {
+        const list = document.getElementById("userCommunityList");
+        try {
+          const res = await fetch(`/api/user/community/${encodeURIComponent(phone)}`);
+          if (!res.ok) throw new Error("Could not fetch community activity");
+
+          const data = await res.json();
+          const { createdPosts = [], appliedRequests = [] } = data;
+
+          if (createdPosts.length === 0 && appliedRequests.length === 0) {
+            list.innerHTML = `
+              <div style="text-align: center; padding: 36px 20px; background: var(--surface-2); border-radius: 20px; border: 1px dashed var(--line-soft);">
+                <i class="fa-solid fa-users" style="font-size: 32px; color: var(--secondary); margin-bottom: 10px; opacity: 0.8;"></i>
+                <h4 style="font-size: 16px; font-weight: 700;">No squad activity yet</h4>
+                <p style="color: var(--text-muted); font-size: 13px; margin: 4px 0 14px;">Post an opening or join existing matches in the Community Lobby.</p>
+                <a href="community.html" class="btn btn-secondary btn-sm">Go to Community Lobby</a>
+              </div>
+            `;
+            return;
+          }
+
+          let html = "";
+          if (createdPosts.length > 0) {
+            html += `<div style="font-size: 12px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 4px;">Matches & Challenges You Created</div>`;
+            html += createdPosts
+              .map((p) => {
+                const pending = (p.requests || []).filter((r) => (r.status || "").toLowerCase() === "pending").length;
+                return `
+                <div class="reservation-card">
+                  <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                      <span class="badge badge-lime">${p.sport} • ${p.post_type}</span>
+                      <span class="badge badge-dark">${p.spots} spots open</span>
+                    </div>
+                    <div class="res-turf-name">${p.team_name}</div>
+                    <div class="res-meta">
+                      <span><i class="fa-solid fa-location-dot"></i> ${p.turf || "GreenLine Arena"}</span>
+                      <span style="color: var(--accent-gold); font-weight: 600;">${(p.requests || []).length} applicants (${pending} pending)</span>
+                    </div>
+                  </div>
+                  <div>
+                    <a href="community.html" class="btn btn-primary btn-sm">Manage Applicants</a>
+                  </div>
+                </div>
+              `;
+              })
+              .join("");
+          }
+
+          if (appliedRequests.length > 0) {
+            html += `<div style="font-size: 12px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin: 16px 0 4px;">Your Applications to Squads</div>`;
+            html += appliedRequests
+              .map((r) => {
+                const statusColor = r.status === "Accepted" ? "var(--secondary)" : r.status === "Rejected" ? "var(--danger)" : "var(--accent-gold)";
+                return `
+                <div class="reservation-card">
+                  <div>
+                    <div class="res-turf-name">${r.team_name} <span style="font-size: 13px; color: var(--text-muted); font-weight: normal;">(${r.sport})</span></div>
+                    <div class="res-meta">
+                      <span><i class="fa-solid fa-location-dot"></i> ${r.turf || "Chennai Pitch"}</span>
+                      <span style="color: ${statusColor}; font-weight: 700;">Status: ${r.status}</span>
+                    </div>
+                  </div>
+                  <div class="res-price">₹${r.fare || 0}</div>
+                </div>
+              `;
+              })
+              .join("");
+          }
+
+          list.innerHTML = html;
+        } catch (e) {
+          list.innerHTML = `<div style="color: var(--text-muted); text-align: center; padding: 20px;">Could not load community items.</div>`;
+        }
+      }
+
+      function handleLogout() {
+        localStorage.removeItem("currentUser");
+        window.location.href = "index.html";
+      }
+
+      window.onload = loadUserData;
+    </script>
+  </body>
 </html>

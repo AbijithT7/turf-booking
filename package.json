@@ -1,7 +1,9 @@
 {
-  "name": "jeff-turf",
+  "name": "turfarena-sports-booking",
   "version": "1.0.0",
   "scripts": {
-    "dev": "npm run dev --prefix backend"
+    "dev": "npm run start --prefix backend",
+    "test:api": "npm run test:api --prefix backend",
+    "test:frontend": "echo Manual frontend testing steps available in README.md"
   }
 }

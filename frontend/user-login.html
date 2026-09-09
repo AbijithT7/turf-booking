@@ -1,191 +1,297 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>User Authentication - TurfArena</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="theme.css" />
-  <style>
-    /* Specific layout for login */
-    body {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-    }
-
-    .auth-card {
-      padding: 40px 32px;
-      border-radius: 24px;
-      width: min(400px, 90vw);
-    }
-
-    .auth-tabs {
-      display: flex;
-      margin-bottom: 24px;
-      border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-    }
-
-    .auth-tab {
-      flex: 1;
-      text-align: center;
-      padding: 12px;
-      cursor: pointer;
-      color: var(--text-muted);
-      font-weight: 600;
-      transition: all 0.2s;
-      text-transform: uppercase;
-      font-size: 13px;
-      letter-spacing: 0.5px;
-    }
-
-    .auth-tab.active {
-      color: var(--primary);
-      border-bottom: 2px solid var(--primary);
-      text-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
-    }
-
-    .input-group { margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
-    
-    label { 
-      font-size: 11px; 
-      color: var(--text-muted); 
-      margin-left: 12px; 
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    /* Applying global form class */
-    .input-group input { width: 100%; box-sizing: border-box; }
-
-    .message-box { font-size: 13px; text-align: center; margin-top: 12px; min-height: 18px; }
-    .error { color: var(--danger); font-weight: 500; }
-    .success { color: var(--success); font-weight: 500; }
-    
-    .back-link { display: block; text-align: center; margin-top: 24px; color: var(--text-muted); text-decoration: none; font-size: 13px; transition: 0.2s; }
-    .back-link:hover { color: var(--primary); }
-  </style>
-</head>
-<body>
-  <div class="auth-card glass-panel">
-    <div class="auth-tabs">
-      <div class="auth-tab active" id="tab-login" onclick="switchMode('login')">Login</div>
-      <div class="auth-tab" id="tab-register" onclick="switchMode('register')">Sign Up</div>
-    </div>
-
-    <!-- Login Form -->
-    <div id="login-form">
-      <div class="input-group">
-        <label><i class="fa-solid fa-envelope" style="color:var(--primary);"></i> Email Address</label>
-        <input type="email" class="premium-input" id="login-email" placeholder="user@example.com" />
-      </div>
-      <div class="input-group">
-        <label><i class="fa-solid fa-lock" style="color:var(--primary);"></i> Password</label>
-        <input type="password" class="premium-input" id="login-password" placeholder="••••••••" />
-      </div>
-      <div class="message-box" id="login-message"></div>
-      <button class="btn-gold" style="width: 100%;" onclick="handleAuth('login')"><i class="fa-solid fa-right-to-bracket"></i> Login Securely</button>
-    </div>
-
-    <!-- Register Form -->
-    <div id="register-form" style="display: none;">
-      <div class="input-group">
-        <label><i class="fa-solid fa-user" style="color:var(--primary);"></i> Full Name</label>
-        <input type="text" class="premium-input" id="reg-name" placeholder="John Doe" />
-      </div>
-      <div class="input-group">
-        <label><i class="fa-solid fa-phone" style="color:var(--primary);"></i> Mobile Number</label>
-        <input type="tel" class="premium-input" id="reg-phone" placeholder="10-digit number" />
-      </div>
-      <div class="input-group">
-        <label><i class="fa-solid fa-envelope" style="color:var(--primary);"></i> Email Address</label>
-        <input type="email" class="premium-input" id="reg-email" placeholder="user@example.com" />
-      </div>
-      <div class="input-group">
-        <label><i class="fa-solid fa-lock" style="color:var(--primary);"></i> Password</label>
-        <input type="password" class="premium-input" id="reg-password" placeholder="••••••••" />
-      </div>
-      <div class="message-box" id="reg-message"></div>
-      <button class="btn-gold" style="width: 100%;" onclick="handleAuth('register')"><i class="fa-solid fa-user-plus"></i> Create Account</button>
-    </div>
-    <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Reservations</a>
-  </div>
-
-  <script>
-    let mode = 'login';
-
-    function switchMode(newMode) {
-      mode = newMode;
-      document.getElementById('login-form').style.display = mode === 'login' ? 'block' : 'none';
-      document.getElementById('register-form').style.display = mode === 'register' ? 'block' : 'none';
-      
-      document.getElementById('tab-login').classList.toggle('active', mode === 'login');
-      document.getElementById('tab-register').classList.toggle('active', mode === 'register');
-      
-      clearMessages();
-    }
-
-    function clearMessages() {
-      document.getElementById('login-message').textContent = "";
-      document.getElementById('reg-message').textContent = "";
-      document.getElementById('login-message').className = "message-box";
-      document.getElementById('reg-message').className = "message-box";
-    }
-
-    function showMessage(type, text, isError = true) {
-      const el = document.getElementById(`${type}-message`);
-      el.textContent = text;
-      el.className = `message-box ${isError ? 'error' : 'success'}`;
-    }
-
-    async function handleAuth(action) {
-      clearMessages();
-      let endpoint = action === 'login' ? '/api/auth/login' : '/api/auth/register';
-      let payload = {};
-
-      if (action === 'login') {
-        const email = document.getElementById('login-email').value.trim();
-        const pass = document.getElementById('login-password').value.trim();
-        if (!email || !pass) return showMessage('login', 'Please fill all fields');
-        payload = { email, password: pass };
-      } else {
-        const name = document.getElementById('reg-name').value.trim();
-        const email = document.getElementById('reg-email').value.trim();
-        const phone = document.getElementById('reg-phone').value.trim();
-        const pass = document.getElementById('reg-password').value.trim();
-        if (!name || !email || !phone || !pass) return showMessage('reg', 'Please fill all fields');
-        if(phone)
-        payload = { name, email, phone, password: pass };
+  <head>
+    <meta charset="UTF-8" />
+    <title>TurfArena - Athlete Authentication</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600;1,700;1,800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Theme CSS -->
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 24px;
+        position: relative;
       }
 
-      try {
-        const response = await fetch(`${endpoint}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-          showMessage(action === 'login' ? 'login' : 'reg', data.error);
-          return;
+      .auth-box {
+        background: var(--card-bg);
+        border: 1px solid var(--line-strong);
+        border-radius: 28px;
+        width: 100%;
+        max-width: 440px;
+        padding: 40px 32px;
+        box-shadow: var(--shadow-glass), var(--shadow-neon-soft);
+        position: relative;
+        z-index: 10;
+        animation: modalAppear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      @keyframes modalAppear {
+        from { opacity: 0; transform: scale(0.96) translateY(10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+      }
+
+      .auth-logo-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .auth-logo-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--primary) 0%, #22c55e 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #050a0d;
+        font-size: 24px;
+        box-shadow: var(--shadow-neon-soft);
+        margin-bottom: 12px;
+      }
+
+      .auth-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: var(--surface-2);
+        padding: 4px;
+        border-radius: 14px;
+        border: 1px solid var(--line-soft);
+        margin-bottom: 24px;
+      }
+
+      .auth-tab-btn {
+        padding: 10px;
+        border-radius: 10px;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        font-weight: 700;
+        font-size: 13.5px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+        font-family: var(--font-main);
+      }
+
+      .auth-tab-btn.active {
+        background: var(--primary);
+        color: var(--on-primary);
+        box-shadow: var(--shadow-neon-soft);
+      }
+
+      .input-field-group {
+        margin-bottom: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .input-field-label {
+        font-size: 11px;
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        margin-left: 2px;
+      }
+
+      .message-box {
+        font-size: 13px;
+        text-align: center;
+        min-height: 20px;
+        margin-top: 12px;
+        font-weight: 600;
+      }
+
+      .message-box.error {
+        color: var(--danger);
+      }
+
+      .message-box.success {
+        color: var(--secondary);
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Ambient Glow Layer -->
+    <div class="ambient-glow-mesh" aria-hidden="true">
+      <div class="glow-orb-1"></div>
+      <div class="glow-orb-2"></div>
+    </div>
+
+    <div class="auth-box">
+      <!-- Logo Header -->
+      <div class="auth-logo-header">
+        <a href="index.html" style="text-decoration: none;">
+          <div class="auth-logo-icon">
+            <i class="fa-solid fa-crown"></i>
+          </div>
+        </a>
+        <h2 style="font-size: 22px; font-weight: 800; color: var(--text-main);">
+          Welcome to <span class="text-lime-gradient">TURFARENA</span>
+        </h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+          Access live ground slots and squad matchmaking
+        </p>
+      </div>
+
+      <!-- Segmented Switcher -->
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="tabLogin" onclick="switchAuthTab('login')">
+          <i class="fa-solid fa-lock"></i> Sign In
+        </button>
+        <button class="auth-tab-btn" id="tabRegister" onclick="switchAuthTab('register')">
+          <i class="fa-solid fa-user-plus"></i> Sign Up
+        </button>
+      </div>
+
+      <!-- Form -->
+      <form id="authForm" onsubmit="handleAuthSubmit(event)">
+        <!-- Name (Register Only) -->
+        <div class="input-field-group" id="groupName" style="display: none;">
+          <label class="input-field-label">Full Name</label>
+          <input type="text" id="authName" class="input-premium" placeholder="Full name" />
+        </div>
+
+        <!-- Email -->
+        <div class="input-field-group">
+          <label class="input-field-label">Email Address</label>
+          <input type="email" id="authEmail" class="input-premium" placeholder="name@example.com" required />
+        </div>
+
+        <!-- Phone (Register Only) -->
+        <div class="input-field-group" id="groupPhone" style="display: none;">
+          <label class="input-field-label">Mobile Number</label>
+          <input type="tel" id="authPhone" class="input-premium" placeholder="10-digit phone number" />
+        </div>
+
+        <!-- Password -->
+        <div class="input-field-group">
+          <label class="input-field-label">Password</label>
+          <input type="password" id="authPassword" class="input-premium" placeholder="••••••••" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="authSubmitBtn" style="width: 100%; padding: 14px; margin-top: 8px;">
+          Sign In to TurfArena
+        </button>
+
+        <div id="authMessage" class="message-box"></div>
+      </form>
+
+      <!-- Back Link -->
+      <div style="margin-top: 24px; text-align: center; border-top: 1px solid var(--line-soft); padding-top: 16px;">
+        <a href="index.html" style="color: var(--text-muted); font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-arrow-left"></i> Back to Homepage
+        </a>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="theme-toggle.js"></script>
+    <script>
+      let mode = "login";
+
+      function switchAuthTab(newMode) {
+        mode = newMode;
+        document.getElementById("tabLogin").classList.toggle("active", mode === "login");
+        document.getElementById("tabRegister").classList.toggle("active", mode === "register");
+
+        document.getElementById("groupName").style.display = mode === "register" ? "flex" : "none";
+        document.getElementById("groupPhone").style.display = mode === "register" ? "flex" : "none";
+
+        document.getElementById("authSubmitBtn").textContent = mode === "login" ? "Sign In to TurfArena" : "Create Athlete Account";
+        document.getElementById("authMessage").textContent = "";
+      }
+
+      async function handleAuthSubmit(e) {
+        e.preventDefault();
+        const msg = document.getElementById("authMessage");
+        msg.className = "message-box";
+        msg.textContent = "";
+
+        const email = document.getElementById("authEmail").value.trim();
+        const password = document.getElementById("authPassword").value;
+
+        if (mode === "login") {
+          try {
+            const res = await fetch("/api/auth/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Login failed");
+
+            localStorage.setItem("currentUser", JSON.stringify(data.user));
+            msg.className = "message-box success";
+            msg.textContent = "Welcome back! Redirecting...";
+            setTimeout(() => {
+              window.location.href = "index.html";
+            }, 800);
+          } catch (err) {
+            msg.className = "message-box error";
+            msg.textContent = err.message;
+          }
+        } else {
+          const name = document.getElementById("authName").value.trim();
+          const phone = document.getElementById("authPhone").value.trim();
+
+          if (!name || !phone) {
+            msg.className = "message-box error";
+            msg.textContent = "Please fill in all fields.";
+            return;
+          }
+
+          if (!/^\d{10}$/.test(phone)) {
+            msg.className = "message-box error";
+            msg.textContent = "Please enter a valid 10-digit mobile number.";
+            return;
+          }
+
+          try {
+            const res = await fetch("/api/auth/register", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name, email, phone, password }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Registration failed");
+
+            localStorage.setItem("currentUser", JSON.stringify(data.user));
+            msg.className = "message-box success";
+            msg.textContent = "Account created successfully! Redirecting...";
+            setTimeout(() => {
+              window.location.href = "index.html";
+            }, 800);
+          } catch (err) {
+            msg.className = "message-box error";
+            msg.textContent = err.message;
+          }
         }
-
-        showMessage(action === 'login' ? 'login' : 'reg', data.message, false);
-        
-        localStorage.setItem('currentUser', JSON.stringify(data.user));
-        
-        setTimeout(() => {
-          window.location.href = 'user-dashboard.html';
-        }, 800);
-
-      } catch (err) {
-        showMessage(action === 'login' ? 'login' : 'reg', 'Server connection failed');
       }
-    }
-  </script>
-</body>
+
+      // Check query param for auto-selecting sign up tab
+      window.onload = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("mode") === "signup") {
+          switchAuthTab("register");
+        }
+      };
+    </script>
+  </body>
 </html>

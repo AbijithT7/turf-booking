@@ -1,51 +1,95 @@
-# TurfArena ♛
+# ⚽ TurfArena — Modern Sports Turf Booking & Community Platform
 
-![TurfArena Hero Banner](athlete.png) <!-- Update with an actual screenshot of the app's hero section -->
+> **A state-of-the-art, full-stack sports venue reservation engine, player community lobby, and venue administration suite.**
 
-TurfArena is a modern, full-stack web application designed to streamline the process of booking sports turfs and fostering local sports communities. It provides an intuitive interface for athletes to find nearby turfs, check real-time availability, and book slots instantly without the hassle of double bookings.
+Made by **Abijith Thennarasu**, Vellore Institute of Technology, Chennai.
 
-## 🚀 Features
+---
 
-### Core Capabilities
-*   **Real-time Turf Booking:** Browse available turfs, see live schedules, and book 1-hour slots instantly.
-*   **360° Turf View:** Integrated `Pannellum` immersive panoramic virtual tours of the grounds before you book.
-*   **Mock UPI Payments:** Built-in mockup of Razorpay/UPI payment flow with QR code generation.
-*   **Dynamic Theming:** Seamless switching between Dark and Light modes.
-*   **Mobile Responsive:** Fully responsive design with a clean, app-like mobile experience.
+## 🌟 Overview
 
-### Community Hub (Players Lobby)
-*   **Free Agent Lobby:** Post your availability as a solo player or find players to fill your squad's empty spots.
-*   **Turf Wars:** Challenge other local teams to matches and split the turf cost 50/50.
-*   **Tournaments:** Host or register your team for local weekend leagues and tournaments.
+**TurfArena** is a high-performance web platform designed to streamline sports turf reservations and connect active player communities. Built with modern UI design principles ("Nocturnal Pitch" aesthetics, glassmorphism, responsive micro-interactions), TurfArena offers an intuitive experience for athletes, team managers, and venue administrators.
 
-### Admin Dashboard
-*   **Management:** Admin panel to manage turf listings, block off slots, and view comprehensive booking reports.
-*   **Analytics:** Dedicated views for revenue tracking and user statistics.
+---
+
+## 🚀 Key Features
+
+### 🏟️ Instant Turf Reservation & Slot Matrix
+* **Interactive Time Slot Selector**: Real-time hourly slot matrix showing instant availability (Available, Booked, Maintenance).
+* **360° Virtual Pitch Tours**: Integrated **Pannellum WebGL 360° Panorama Viewer** allowing players to virtually inspect field turf, lighting, and amenities before booking.
+* **Mock UPI & QR Checkout**: Built-in payment gateway simulator complete with dynamic QR codes, total price calculation, and instant booking confirmation receipts.
+
+### ⚽ Community & Players Lobby
+* **Free Agent Draft Board**: Solo players can post profiles and get recruited by teams needing fill-in players.
+* **Turf Wars (Team Challenges)**: Squads can issue match challenges to rival teams with built-in 50/50 turf fee split computation.
+* **Tournament Gateway**: Browse local weekend leagues, check prize pools, and register teams directly.
+
+### 👤 Athlete Dashboard
+* View all past and upcoming turf bookings.
+* Cancel reservations or download booking receipts.
+* Personal athlete profile display with sport preferences and stats.
+
+### 🛡️ Admin Command Suite
+* **Real-time Slot Controller**: Toggle slot status between Available, Reserved, and Maintenance with single-click admin actions.
+* **Revenue & Venue Analytics**: Live dashboard showcasing total booking revenue, venue utilization rates, and active players.
+* **Turf Configuration**: Add new turfs, modify hourly pricing, and update venue descriptions.
+
+### 🌓 Dynamic Nocturnal Pitch Theme Engine
+* Dual Light & Dark mode support built with CSS variables.
+* Remembers user preference across sessions with zero flash-on-load.
+
+---
 
 ## 🛠️ Technology Stack
 
-**Frontend:**
-*   HTML5
-*   CSS3 (Custom CSS Properties for theming, No CSS Frameworks)
-*   Vanilla JavaScript (ES6)
-*   Pannellum JS (for 360° Panorama viewing)
+| Component | Technologies Used |
+| :--- | :--- |
+| **Frontend** | HTML5, Vanilla JavaScript (ES6+), Modern CSS3 Tokens, FontAwesome 6, Pannellum JS |
+| **Typography** | *Plus Jakarta Sans* (Body/UI) & *Space Grotesk* (Headings/Monospace Data) |
+| **Backend API** | Node.js, Express.js, CORS, dotenv |
+| **Database** | SQLite 3 (`sqlite` async wrapper) with auto-seeding schema (`backend/turf.db`) |
+| **Security** | Bcrypt password hashing for user & admin authentication |
 
-**Backend:**
-*   Node.js
-*   Express.js
-*   MongoDB (Mongoose ODM)
-*   Bcrypt (for Admin and User Authentication)
-*   CORS / dotenv (Environment management)
+---
+
+## 📂 Project Structure
+
+```
+Turf_Booking/
+├── backend/
+│   ├── server.js              # Express API Server & SQLite DB Manager
+│   ├── turf.db                # SQLite Database (seeded automatically)
+│   ├── package.json           # Backend dependencies
+│   └── package-lock.json
+│
+├── frontend/
+│   ├── index.html             # Main Landing, Turf Explorer & Booking Modal
+│   ├── community.html           # Players Lobby, Turf Wars & Tournaments
+│   ├── user-dashboard.html      # Athlete Profile & Booking History
+│   ├── user-login.html         # Player Authentication (Login / Register)
+│   ├── admin-login.html        # Admin Authentication
+│   ├── admin-dashboard.html    # Venue Admin Slot Suite
+│   ├── theme.css              # Global Design Tokens & Glassmorphic Utilities
+│   ├── theme-toggle.js        # Theme Switcher Engine
+│   └── *.jpg / *.png / *.gif  # High-resolution pitch imagery & 360° Panoramas
+│
+├── README.md                  # Project Documentation
+└── package.json               # Root package descriptor
+```
+
+---
 
 ## ⚙️ Getting Started
 
 ### Prerequisites
+* **Node.js** (v16.0 or higher)
+* **npm** (v7.0 or higher)
 
-*   **Node.js** (v14 or higher)
-*   **MongoDB** (Local instance or MongoDB Atlas URI)
+### 1. Installation
 
-### Installation
+Clone the repository and install backend dependencies:
 
+<<<<<<< HEAD
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/your-username/TurfArena.git
@@ -106,12 +150,72 @@ Turf-Booking/
 ├── admin-dashboard.html       # Admin control panel
 │
 └── package.json               # Backend dependencies
+=======
+```bash
+cd Turf_Booking/backend
+npm install
+>>>>>>> 89ba83b (Clean up repository: remove duplicate and useless files)
 ```
 
-## 👥 Contributors
+### 2. Run the Backend Server
 
+<<<<<<< HEAD
 *   **Abijith Thennarasu** 
 *   **Ranse Roger** 
 
 
+=======
+Start the Express backend server (runs on port `5000` by default):
+
+```bash
+node server.js
+```
+
+Upon launch, the server automatically initializes SQLite `turf.db` and seeds initial sports turfs (*Apex Arena 7v7*, *Thunder Pitch*, *Paddy Field*) if not present.
+
+### 3. Launch the Application
+
+Open your browser and navigate to:
+```
+http://localhost:5000
+```
+*(Or open `frontend/index.html` via Live Server)*
+
+---
+
+## 🔑 Default Credentials (Testing)
+
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| **User / Athlete** | `test@turf.com` | `password123` |
+| **Admin Operator** | `admin@turfarena.com` | `admin123` |
+
+---
+
+## 📡 API Reference Summary
+
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `GET /api/turfs` | `GET` | Retrieve list of all sports turfs |
+| `GET /api/turfs/:id` | `GET` | Retrieve details & slot availability for a turf |
+| `POST /api/bookings` | `POST` | Book a turf slot |
+| `GET /api/bookings` | `GET` | Fetch user booking history |
+| `POST /api/users/register` | `POST` | Register a new user |
+| `POST /api/users/login` | `POST` | Authenticate user |
+| `POST /api/admin/login` | `POST` | Authenticate admin operator |
+| `PUT /api/admin/slots` | `PUT` | Update slot status (Available / Booked / Maintenance) |
+| `GET /api/community/free-agents` | `GET` | List active free agents |
+| `GET /api/community/turf-wars` | `GET` | List active team challenges |
+
+---
+
+## 👨‍💻 Author & Attribution
+
+**Made by Abijith Thennarasu**  
+*Vellore Institute of Technology, Chennai*
+
+---
+
+## 📄 License
+>>>>>>> 89ba83b (Clean up repository: remove duplicate and useless files)
 

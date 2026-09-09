@@ -1,0 +1,1213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>TurfArena - Players & Community Lobby</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Find teammates for weekend matches, challenge rival squads in 50-50 turf wars, register for regional tournaments on TurfArena." />
+    <!-- Fonts: Plus Jakarta Sans & Space Grotesk -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600;1,700;1,800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Theme CSS -->
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        padding: 16px 5vw;
+        background: var(--surface-1);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--line-soft);
+      }
+
+      .navbar-inner {
+        max-width: 1360px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: var(--text-main);
+        cursor: pointer;
+      }
+
+      .logo-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--primary) 0%, #22c55e 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #050a0d;
+        font-size: 20px;
+        box-shadow: var(--shadow-neon-soft);
+      }
+
+      .logo-brand {
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        line-height: 1;
+      }
+
+      .logo-brand span {
+        color: var(--primary);
+      }
+
+      .logo-sub {
+        font-size: 9.5px;
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        color: var(--text-muted);
+        margin-top: 3px;
+        font-weight: 600;
+      }
+
+      .top-nav {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--surface-2);
+        padding: 4px 6px;
+        border-radius: 999px;
+        border: 1px solid var(--line-soft);
+      }
+
+      .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 18px;
+        border-radius: 999px;
+        text-decoration: none;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 13.5px;
+        transition: all 0.2s ease;
+      }
+
+      .nav-link:hover {
+        color: var(--text-main);
+        background: var(--surface-3);
+      }
+
+      .nav-link.active {
+        color: var(--on-primary);
+        background: var(--primary);
+        box-shadow: var(--shadow-neon-soft);
+      }
+
+      @media (max-width: 860px) {
+        .top-nav {
+          display: none;
+        }
+      }
+
+      .container-main {
+        max-width: 1360px;
+        margin: 0 auto;
+        padding: 40px 5vw;
+        display: flex;
+        flex-direction: column;
+        gap: 36px;
+        position: relative;
+        z-index: 10;
+      }
+
+      /* Hero Lobby Header */
+      .lobby-hero {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 24px;
+      }
+
+      .lobby-title {
+        font-size: clamp(32px, 4.5vw, 52px);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+        margin-top: 8px;
+      }
+
+      .lobby-sub {
+        color: var(--text-muted);
+        font-size: clamp(14px, 1.6vw, 16px);
+        line-height: 1.6;
+        max-width: 640px;
+        margin-top: 10px;
+      }
+
+      /* Live Stats Grid */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+      }
+
+      .stat-card {
+        background: var(--card-bg);
+        border: 1px solid var(--line-soft);
+        border-radius: 20px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 16px;
+        transition: all 0.3s;
+        box-shadow: var(--shadow-card);
+      }
+
+      .stat-card:hover {
+        border-color: var(--line-lime);
+        transform: translateY(-3px);
+      }
+
+      .stat-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 700;
+        letter-spacing: 0.05em;
+      }
+
+      .stat-main {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+      }
+
+      .stat-num {
+        font-size: 34px;
+        font-weight: 800;
+        font-family: var(--font-mono);
+        color: var(--text-main);
+      }
+
+      .stat-num span {
+        font-size: 14px;
+        color: var(--primary);
+        font-weight: 700;
+        margin-left: 4px;
+      }
+
+      .stat-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: var(--surface-3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-size: 16px;
+      }
+
+      /* Segmented Filter & Action Tabs */
+      .tabs-wrapper {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+      }
+
+      .segmented-tabs {
+        display: inline-flex;
+        background: var(--surface-1);
+        padding: 6px;
+        border-radius: 999px;
+        border: 1px solid var(--line-soft);
+        gap: 6px;
+        overflow-x: auto;
+        max-width: 100%;
+      }
+
+      .tab-btn {
+        padding: 10px 24px;
+        border-radius: 999px;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        font-weight: 700;
+        font-size: 13.5px;
+        cursor: pointer;
+        transition: all 0.25s;
+        white-space: nowrap;
+        font-family: var(--font-main);
+      }
+
+      .tab-btn.active {
+        background: var(--primary);
+        color: var(--on-primary);
+        box-shadow: var(--shadow-neon-soft);
+      }
+
+      /* Filter & Subheader Row */
+      .filter-toolbar {
+        background: var(--surface-1);
+        border: 1px solid var(--line-soft);
+        border-radius: 20px;
+        padding: 20px 24px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .filter-group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .filter-pill-select {
+        background: var(--surface-2);
+        border: 1px solid var(--line-soft);
+        color: var(--text-main);
+        padding: 8px 16px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        outline: none;
+        cursor: pointer;
+        font-family: var(--font-main);
+      }
+
+      .filter-pill-select option {
+        background-color: var(--bg-surface-high);
+        color: var(--text-main);
+      }
+
+      /* Community Card Grid */
+      .community-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 24px;
+      }
+
+      .community-card {
+        background: var(--card-bg);
+        border: 1px solid var(--line-soft);
+        border-radius: 24px;
+        padding: 26px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 20px;
+        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: var(--shadow-card);
+      }
+
+      .community-card:hover {
+        border-color: var(--line-lime);
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-glass), var(--shadow-neon-soft);
+      }
+
+      .card-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .card-team-title {
+        font-size: 20px;
+        font-weight: 800;
+        margin: 10px 0 6px;
+        color: var(--text-main);
+      }
+
+      .card-meta-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+
+      .card-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .card-meta-item i {
+        color: var(--primary);
+        width: 16px;
+      }
+
+      .host-strip {
+        background: var(--surface-2);
+        border: 1px solid var(--line-soft);
+        border-radius: 14px;
+        padding: 10px 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .host-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--surface-3);
+        border: 1px solid var(--line-lime);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--primary);
+      }
+
+      .card-action-bar {
+        display: flex;
+        gap: 10px;
+        padding-top: 14px;
+        border-top: 1px solid var(--line-soft);
+      }
+
+      /* Modals */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 10, 13, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+        overflow-y: auto;
+      }
+
+      .modal-box {
+        background: var(--bg-surface);
+        border: 1px solid var(--line-strong);
+        border-radius: 28px;
+        width: 100%;
+        max-width: 540px;
+        padding: 32px;
+        box-shadow: var(--shadow-glass);
+        position: relative;
+        animation: modalAppear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      @keyframes modalAppear {
+        from { opacity: 0; transform: scale(0.96) translateY(12px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+      }
+
+      .modal-close-btn {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--surface-3);
+        border: 1px solid var(--line-soft);
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .modal-close-btn:hover {
+        color: var(--text-main);
+        border-color: var(--primary);
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Ambient Stadium Lighting & Glow Mesh -->
+    <div class="ambient-glow-mesh" aria-hidden="true">
+      <div class="glow-orb-1"></div>
+      <div class="glow-orb-2"></div>
+      <div class="glow-orb-3"></div>
+    </div>
+
+    <!-- ───────────────────────────────────────────
+         HEADER / NAVIGATION
+    ─────────────────────────────────────────── -->
+    <header>
+      <div class="navbar-inner">
+        <a class="logo" href="index.html">
+          <div class="logo-icon">
+            <i class="fa-solid fa-crown"></i>
+          </div>
+          <div class="logo-text">
+            <span class="logo-brand">TURF<span>ARENA</span></span>
+            <span class="logo-sub">Play Beyond Boundaries</span>
+          </div>
+        </a>
+
+        <nav class="top-nav">
+          <a href="index.html" class="nav-link"><i class="fa-solid fa-house"></i> Home</a>
+          <a href="index.html#available-turfs" class="nav-link"><i class="fa-solid fa-calendar-check"></i> Book Turf</a>
+          <a href="community.html" class="nav-link active"><i class="fa-solid fa-users"></i> Community</a>
+          <a href="community.html#tournaments" class="nav-link" onclick="setTab('tournament')"><i class="fa-solid fa-trophy"></i> Tournaments</a>
+          <a href="index.html#about" class="nav-link"><i class="fa-solid fa-shield-halved"></i> About</a>
+        </nav>
+
+        <div class="header-actions">
+          <button class="theme-toggle-btn" data-theme-toggle type="button"></button>
+          <div id="userAuthActions" style="display: flex; gap: 8px;">
+            <a href="user-login.html" class="btn btn-outline btn-sm"><i class="fa-solid fa-user"></i> Login</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="container-main">
+      <!-- ───────────────────────────────────────────
+           LOBBY HERO HEADER
+      ─────────────────────────────────────────── -->
+      <section class="lobby-hero">
+        <div>
+          <div class="badge badge-lime">
+            <i class="fa-solid fa-bolt"></i> LIVE TEAMS · SQUAD CHALLENGES · TOURNAMENTS
+          </div>
+          <h1 class="lobby-title">
+            Players & Community <span class="text-lime-gradient">Lobby</span>
+          </h1>
+          <p class="lobby-sub">
+            Find teammates for weekend matches, challenge rival squads in 50-50 turf wars, register for regional tournaments, and build your sports network under the floodlights.
+          </p>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; background: var(--surface-1); border: 1px solid var(--line-soft); padding: 12px 20px; border-radius: 18px;">
+          <span class="live-dot"></span>
+          <div>
+            <div style="font-size: 13px; font-weight: 700;">Chennai Pitch Pulse</div>
+            <div style="font-size: 11px; font-family: var(--font-mono); color: var(--secondary);">Active Matchmaking Live</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───────────────────────────────────────────
+           LIVE STATS CARDS (4 COLUMNS)
+      ─────────────────────────────────────────── -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-top">
+            <span>Solo Openings</span>
+            <span class="live-dot"></span>
+          </div>
+          <div class="stat-main">
+            <div class="stat-num" id="statSolo">0<span>live</span></div>
+            <div class="stat-icon"><i class="fa-solid fa-user-plus"></i></div>
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted);">Slots needing substitutes</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span>Turf Wars</span>
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--secondary);"></span>
+          </div>
+          <div class="stat-main">
+            <div class="stat-num" id="statTeam">0<span>challenges</span></div>
+            <div class="stat-icon" style="color: var(--secondary);"><i class="fa-solid fa-hand-fist"></i></div>
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted);">50-50 stakes match open</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span>Tournaments</span>
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--accent-gold);"></span>
+          </div>
+          <div class="stat-main">
+            <div class="stat-num" id="statTournaments">0<span>cups</span></div>
+            <div class="stat-icon" style="color: var(--accent-gold);"><i class="fa-solid fa-trophy"></i></div>
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted);">Knockout championships</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <span>Pending Approvals</span>
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--tertiary);"></span>
+          </div>
+          <div class="stat-main">
+            <div class="stat-num" id="statPending">0<span>pending</span></div>
+            <div class="stat-icon" style="color: var(--tertiary);"><i class="fa-solid fa-user-check"></i></div>
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted);">Requests on your matches</div>
+        </div>
+      </section>
+
+      <!-- ───────────────────────────────────────────
+           SEGMENTED TABS
+      ─────────────────────────────────────────── -->
+      <section class="tabs-wrapper">
+        <div class="segmented-tabs">
+          <button class="tab-btn active" id="tabSolo" onclick="setTab('solo')">
+            <i class="fa-solid fa-users"></i> Free Agent Lobby
+          </button>
+          <button class="tab-btn" id="tabTeam" onclick="setTab('team')">
+            <i class="fa-solid fa-hand-fist"></i> Turf Wars (v/s)
+          </button>
+          <button class="tab-btn" id="tabTournaments" onclick="setTab('tournament')">
+            <i class="fa-solid fa-trophy"></i> Tournaments & Leagues
+          </button>
+          <button class="tab-btn" id="tabMySquads" onclick="setTab('my-squads')">
+            <i class="fa-solid fa-shield-heart"></i> My Squads & Requests
+          </button>
+        </div>
+      </section>
+
+      <!-- ───────────────────────────────────────────
+           FILTER TOOLBAR & ACTION BAR
+      ─────────────────────────────────────────── -->
+      <section class="filter-toolbar">
+        <div>
+          <h2 id="tabHeading" style="font-size: 20px; font-weight: 800; margin-bottom: 2px;">
+            Free Agent Openings
+          </h2>
+          <p id="tabSubheading" style="font-size: 13px; color: var(--text-muted);">
+            Need 1-2 players to complete your squad? Post or sub in here.
+          </p>
+        </div>
+
+        <div class="filter-group">
+          <select class="filter-pill-select" id="sportFilter" onchange="renderCards()">
+            <option value="all">All Sports</option>
+            <option value="Football">Football</option>
+            <option value="Cricket">Cricket</option>
+          </select>
+
+          <select class="filter-pill-select" id="locFilter" onchange="renderCards()">
+            <option value="all">All Chennai Areas</option>
+            <option value="Velachery">Velachery</option>
+            <option value="OMR">OMR IT Corridor</option>
+            <option value="Tambaram">Tambaram</option>
+          </select>
+
+          <button class="btn btn-primary btn-sm" onclick="openCreateModal()">
+            <i class="fa-solid fa-plus"></i> <span id="createBtnText">Post Opening</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ───────────────────────────────────────────
+           COMMUNITY MATCH CARDS GRID
+      ─────────────────────────────────────────── -->
+      <section class="community-grid" id="communityCardGrid">
+        <!-- Dynamically rendered via JS -->
+      </section>
+    </main>
+
+    <!-- ───────────────────────────────────────────
+         CREATE POST MODAL (SOLO / TURF WAR / TOURNAMENT)
+    ─────────────────────────────────────────── -->
+    <div class="modal-backdrop" id="createPostModal">
+      <div class="modal-box">
+        <button class="modal-close-btn" onclick="closeModal('createPostModal')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <h3 id="createModalTitle" style="font-size: 22px; font-weight: 800; margin-bottom: 6px;">Create Match Opening</h3>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Publish your match opening to the live TurfArena lobby.</p>
+
+        <form id="createPostForm" onsubmit="handleCreatePost(event)" style="display: flex; flex-direction: column; gap: 14px;">
+          <div>
+            <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Post Type</label>
+            <select id="postTypeInput" class="input-premium" onchange="updateCreateFormFields()">
+              <option value="solo">Free Agent (Need Players)</option>
+              <option value="team">Turf War (Challenge Rival Team)</option>
+              <option value="tournament">Tournament Championship</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;" id="lblTeamName">Squad / Match Title</label>
+            <input type="text" id="teamNameInput" class="input-premium" placeholder="e.g. Marina Strikers 7v7" required />
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Sport</label>
+              <select id="postSportInput" class="input-premium">
+                <option value="Football">Football</option>
+                <option value="Cricket">Cricket Box</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Venue Turf</label>
+              <select id="postTurfInput" class="input-premium">
+                <option value="GreenLine Arena">GreenLine Arena (Velachery)</option>
+                <option value="Boundary Line Turf">Boundary Line Turf (Tambaram)</option>
+                <option value="SkyLine Sports Hub">SkyLine Sports Hub (OMR)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div id="spotsWrap">
+              <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;" id="lblSpots">Open Spots</label>
+              <input type="number" id="spotsInput" class="input-premium" value="2" min="1" max="16" />
+            </div>
+            <div id="fareWrap">
+              <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;" id="lblFare">Fare per Player (₹)</label>
+              <input type="number" id="fareInput" class="input-premium" value="150" min="0" />
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Match Date</label>
+              <input type="date" id="eventDateInput" class="input-premium" required />
+            </div>
+            <div>
+              <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Time</label>
+              <input type="time" id="eventTimeInput" class="input-premium" value="19:00" required />
+            </div>
+          </div>
+
+          <div id="prizeWrap" style="display: none;">
+            <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Prize Pool Description</label>
+            <input type="text" id="prizeInput" class="input-premium" placeholder="e.g. Winner ₹25,000 + Trophy" />
+          </div>
+
+          <div id="createError" style="color: var(--danger); font-size: 12px; font-weight: 600;"></div>
+
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeModal('createPostModal')">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="flex: 2;">
+              <i class="fa-solid fa-paper-plane"></i> Publish to Lobby
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ───────────────────────────────────────────
+         JOIN SQUAD / CHALLENGE MODAL
+    ─────────────────────────────────────────── -->
+    <div class="modal-backdrop" id="joinRequestModal">
+      <div class="modal-box">
+        <button class="modal-close-btn" onclick="closeModal('joinRequestModal')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <h3 id="joinModalTitle" style="font-size: 22px; font-weight: 800; margin-bottom: 6px;">Join Squad</h3>
+        <p id="joinModalSubtitle" style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Send a verified participation request to the match host.</p>
+
+        <form id="joinRequestForm" onsubmit="handleSendJoinRequest(event)" style="display: flex; flex-direction: column; gap: 14px;">
+          <input type="hidden" id="joinPostId" />
+
+          <div>
+            <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Your Full Name</label>
+            <input type="text" id="joinNameInput" class="input-premium" placeholder="Full name" required />
+          </div>
+
+          <div>
+            <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Mobile Number</label>
+            <input type="tel" id="joinPhoneInput" class="input-premium" placeholder="10-digit mobile number" required />
+          </div>
+
+          <div id="joinTeamNameWrap">
+            <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Your Team Name / Position</label>
+            <input type="text" id="joinTeamInput" class="input-premium" placeholder="e.g. Red Devils FC or Striker" />
+          </div>
+
+          <div id="joinError" style="color: var(--danger); font-size: 12px; font-weight: 600;"></div>
+
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeModal('joinRequestModal')">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="flex: 2;">
+              <i class="fa-solid fa-check"></i> Send Request
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ───────────────────────────────────────────
+         MANAGE APPLICANTS MODAL
+    ─────────────────────────────────────────── -->
+    <div class="modal-backdrop" id="manageApplicantsModal">
+      <div class="modal-box" style="max-width: 600px;">
+        <button class="modal-close-btn" onclick="closeModal('manageApplicantsModal')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 6px;">Manage Squad Requests</h3>
+        <p id="manageModalSubtitle" style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Review and approve or reject player applicants.</p>
+
+        <div id="applicantsList" style="display: flex; flex-direction: column; gap: 10px; max-height: 320px; overflow-y: auto;">
+          <!-- Loaded dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <div style="max-width: 1360px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px;">
+        <div style="font-weight: 700;">
+          <span style="color: var(--primary);">TURFARENA</span> • Sports Community Hub
+        </div>
+        <div>
+          <span>© 2026 TurfArena Inc. All rights reserved.</span>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="theme-toggle.js"></script>
+    <script>
+      let currentTab = "solo";
+      let allPosts = [];
+
+      function getCurrentUser() {
+        try {
+          return JSON.parse(localStorage.getItem("currentUser"));
+        } catch (e) {
+          localStorage.removeItem("currentUser");
+          return null;
+        }
+      }
+
+      async function init() {
+        checkUrlHash();
+        setupUserAuth();
+        await fetchCommunityPosts();
+      }
+
+      function checkUrlHash() {
+        if (window.location.hash === "#tournaments") {
+          currentTab = "tournament";
+        }
+      }
+
+      function setupUserAuth() {
+        const user = getCurrentUser();
+        if (user) {
+          document.getElementById("userAuthActions").innerHTML = `
+            <a href="user-dashboard.html" class="btn btn-outline btn-sm">
+              <i class="fa-solid fa-user-circle"></i> ${user.name.split(" ")[0]}
+            </a>
+            <button onclick="handleLogout()" class="btn btn-ghost btn-sm" title="Sign Out">
+              <i class="fa-solid fa-power-off"></i>
+            </button>
+          `;
+          document.getElementById("joinNameInput").value = user.name || "";
+          document.getElementById("joinPhoneInput").value = user.phone || "";
+        }
+      }
+
+      function handleLogout() {
+        localStorage.removeItem("currentUser");
+        window.location.reload();
+      }
+
+      async function fetchCommunityPosts() {
+        try {
+          const res = await fetch("/api/community");
+          if (res.ok) {
+            allPosts = await res.json();
+          }
+        } catch (err) {
+          console.error("Error fetching community posts:", err);
+          allPosts = [];
+        }
+        updateStats();
+        renderCards();
+      }
+
+      function updateStats() {
+        const soloCount = allPosts.filter((p) => p.postType === "solo").length;
+        const teamCount = allPosts.filter((p) => p.postType === "team").length;
+        const tournCount = allPosts.filter((p) => p.postType === "tournament").length;
+
+        const user = getCurrentUser();
+        let pendingCount = 0;
+        if (user) {
+          allPosts
+            .filter((p) => p.createdByPhone === user.phone || p.createdByEmail === user.email)
+            .forEach((p) => {
+              pendingCount += (p.requests || []).filter((r) => (r.status || "").toLowerCase() === "pending").length;
+            });
+        }
+
+        document.getElementById("statSolo").innerHTML = `${soloCount}<span>live</span>`;
+        document.getElementById("statTeam").innerHTML = `${teamCount}<span>challenges</span>`;
+        document.getElementById("statTournaments").innerHTML = `${tournCount}<span>cups</span>`;
+        document.getElementById("statPending").innerHTML = `${pendingCount}<span>pending</span>`;
+      }
+
+      function setTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+        if (tab === "solo") document.getElementById("tabSolo").classList.add("active");
+        if (tab === "team") document.getElementById("tabTeam").classList.add("active");
+        if (tab === "tournament") document.getElementById("tabTournaments").classList.add("active");
+        if (tab === "my-squads") document.getElementById("tabMySquads").classList.add("active");
+
+        const titles = {
+          solo: { h: "Free Agent Openings", s: "Need 1-2 players to complete your squad? Post or sub in here.", btn: "Post Opening" },
+          team: { h: "Turf Wars (v/s Challenges)", s: "Rival team matchmaking with split venue fares and bragging rights.", btn: "Challenge a Squad" },
+          tournament: { h: "Tournaments & Championship Cups", s: "Register your squad for official knockout cups and prize pools.", btn: "Host Tournament" },
+          "my-squads": { h: "Your Created Squads & Applications", s: "Manage incoming player requests and track match approvals.", btn: "Create New Post" },
+        };
+
+        const config = titles[tab] || titles["solo"];
+        document.getElementById("tabHeading").textContent = config.h;
+        document.getElementById("tabSubheading").textContent = config.s;
+        document.getElementById("createBtnText").textContent = config.btn;
+
+        renderCards();
+      }
+
+      function renderCards() {
+        const grid = document.getElementById("communityCardGrid");
+        grid.innerHTML = "";
+
+        const sport = document.getElementById("sportFilter").value;
+        const loc = document.getElementById("locFilter").value;
+        const user = getCurrentUser();
+
+        let filtered = allPosts.filter((p) => {
+          if (currentTab === "my-squads") {
+            if (!user) return false;
+            return p.createdByPhone === user.phone || p.createdByEmail === user.email;
+          }
+          return p.postType === currentTab;
+        });
+
+        if (sport !== "all") {
+          filtered = filtered.filter((p) => (p.sport || "").toLowerCase().includes(sport.toLowerCase()));
+        }
+
+        if (loc !== "all") {
+          filtered = filtered.filter((p) => (p.turf || "").toLowerCase().includes(loc.toLowerCase()));
+        }
+
+        if (filtered.length === 0) {
+          grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 48px 20px; background: var(--card-bg); border-radius: 24px; border: 1px dashed var(--line-soft);">
+              <i class="fa-solid fa-users" style="font-size: 36px; color: var(--primary); margin-bottom: 12px; opacity: 0.8;"></i>
+              <h3 style="font-size: 18px; font-weight: 700;">No active matches found</h3>
+              <p style="color: var(--text-muted); font-size: 13px; margin: 6px 0 16px;">Be the first to create an opening or challenge for this category!</p>
+              <button class="btn btn-primary btn-sm" onclick="openCreateModal()">Create Match Post</button>
+            </div>
+          `;
+          return;
+        }
+
+        filtered.forEach((post) => {
+          const card = document.createElement("article");
+          card.className = "community-card";
+
+          const isSolo = post.postType === "solo";
+          const isTournament = post.postType === "tournament";
+          const isMyPost = user && (post.createdByPhone === user.phone || post.createdByEmail === user.email);
+          const pendingRequests = (post.requests || []).filter((r) => (r.status || "").toLowerCase() === "pending").length;
+
+          const badgeClass = isSolo ? "badge-lime" : isTournament ? "badge-cyan" : "badge-green";
+          const badgeText = isSolo ? `${post.sport} • Need Players` : isTournament ? `${post.sport} • Tournament Cup` : `${post.sport} • Turf War`;
+
+          let actionButtons = "";
+          if (isMyPost) {
+            actionButtons = `
+              <button class="btn btn-outline btn-sm" style="flex: 1;" onclick="openManageModal(${post.id})">
+                <i class="fa-solid fa-users-gear"></i> Manage Applicants (${pendingRequests} pending)
+              </button>
+            `;
+          } else if (isTournament) {
+            actionButtons = `
+              <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="openJoinModal(${post.id}, 'Register Team for Tournament')">
+                <i class="fa-solid fa-trophy"></i> Register Squad (₹${post.fare || 499})
+              </button>
+            `;
+          } else if (isSolo) {
+            actionButtons = `
+              <button class="btn btn-secondary btn-sm" style="flex: 1;" onclick="openJoinModal(${post.id}, 'Request to Join Squad')">
+                <i class="fa-solid fa-user-plus"></i> Request to Join (₹${post.fare || 0}/pp)
+              </button>
+            `;
+          } else {
+            actionButtons = `
+              <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="openJoinModal(${post.id}, 'Accept Match Challenge')">
+                <i class="fa-solid fa-hand-fist"></i> Accept Challenge (50-50 Fare)
+              </button>
+            `;
+          }
+
+          card.innerHTML = `
+            <div>
+              <div class="card-header-row">
+                <span class="badge ${badgeClass}">${badgeText}</span>
+                <span class="badge badge-dark">
+                  ${isTournament ? `${post.maxTeams || 16} Max Teams` : `${post.spots || 1} Open Spot(s)`}
+                </span>
+              </div>
+
+              <h3 class="card-team-title">${post.teamName}</h3>
+
+              <div class="card-meta-list">
+                <div class="card-meta-item">
+                  <i class="fa-solid fa-location-dot"></i>
+                  <span>${post.turf || "GreenLine Arena"}</span>
+                </div>
+                <div class="card-meta-item">
+                  <i class="fa-regular fa-calendar"></i>
+                  <span>${post.eventDate || "Upcoming"} • ${post.eventTime || "TBA"}</span>
+                </div>
+                ${post.prizePool ? `
+                  <div class="card-meta-item" style="color: var(--accent-gold); font-weight: 700;">
+                    <i class="fa-solid fa-trophy"></i>
+                    <span>${post.prizePool}</span>
+                  </div>
+                ` : ""}
+              </div>
+            </div>
+
+            <div>
+              <div class="host-strip">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div class="host-avatar">${(post.createdByName || "C").slice(0, 2).toUpperCase()}</div>
+                  <div>
+                    <div style="font-size: 12px; font-weight: 700;">${post.createdByName || "Captain"}</div>
+                    <div style="font-size: 10px; color: var(--text-muted);">Verified Match Host</div>
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase;">Entry / Share</div>
+                  <div style="font-size: 15px; font-weight: 800; color: var(--primary); font-family: var(--font-mono);">
+                    ₹${post.fare || 0}
+                  </div>
+                </div>
+              </div>
+
+              <div class="card-action-bar">
+                ${actionButtons}
+              </div>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      }
+
+      // ───────────────────────────────────────────
+      // MODAL CONTROLS
+      // ───────────────────────────────────────────
+      function openModal(id) {
+        document.getElementById(id).style.display = "flex";
+      }
+
+      function closeModal(id) {
+        document.getElementById(id).style.display = "none";
+      }
+
+      function openCreateModal() {
+        const user = getCurrentUser();
+        if (!user) {
+          alert("Please log in to publish a community match or challenge.");
+          window.location.href = "user-login.html";
+          return;
+        }
+
+        const today = new Date().toISOString().split("T")[0];
+        document.getElementById("eventDateInput").value = today;
+        document.getElementById("eventDateInput").min = today;
+        document.getElementById("postTypeInput").value = currentTab === "my-squads" ? "solo" : currentTab;
+        updateCreateFormFields();
+        openModal("createPostModal");
+      }
+
+      function updateCreateFormFields() {
+        const type = document.getElementById("postTypeInput").value;
+        const prizeWrap = document.getElementById("prizeWrap");
+        const lblTeam = document.getElementById("lblTeamName");
+        const lblSpots = document.getElementById("lblSpots");
+        const lblFare = document.getElementById("lblFare");
+
+        if (type === "tournament") {
+          prizeWrap.style.display = "block";
+          lblTeam.textContent = "Tournament Title";
+          lblSpots.textContent = "Max Squads";
+          lblFare.textContent = "Entry Fee per Team (₹)";
+        } else if (type === "team") {
+          prizeWrap.style.display = "none";
+          lblTeam.textContent = "Challenging Squad Name";
+          lblSpots.textContent = "Team Size (Players)";
+          lblFare.textContent = "Total Slot Fare (50-50 Split) (₹)";
+        } else {
+          prizeWrap.style.display = "none";
+          lblTeam.textContent = "Squad / Lobby Name";
+          lblSpots.textContent = "Open Spots Needed";
+          lblFare.textContent = "Fare per Substitute Player (₹)";
+        }
+      }
+
+      async function handleCreatePost(e) {
+        e.preventDefault();
+        const user = getCurrentUser();
+        if (!user) return;
+
+        const type = document.getElementById("postTypeInput").value;
+        const teamName = document.getElementById("teamNameInput").value.trim();
+        const sport = document.getElementById("postSportInput").value;
+        const turf = document.getElementById("postTurfInput").value;
+        const spots = parseInt(document.getElementById("spotsInput").value) || 1;
+        const fare = parseInt(document.getElementById("fareInput").value) || 0;
+        const date = document.getElementById("eventDateInput").value;
+        const time = document.getElementById("eventTimeInput").value;
+        const prize = document.getElementById("prizeInput").value.trim();
+
+        const payload = {
+          postType: type,
+          sport: sport,
+          teamName: teamName,
+          turf: turf,
+          spots: spots,
+          fare: fare,
+          eventDate: date,
+          eventTime: time,
+          prizePool: type === "tournament" ? prize : null,
+          createdByName: user.name,
+          createdByPhone: user.phone,
+          createdByEmail: user.email,
+        };
+
+        try {
+          const res = await fetch("/api/community", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to publish post.");
+
+          closeModal("createPostModal");
+          alert("Post published successfully!");
+          await fetchCommunityPosts();
+        } catch (err) {
+          document.getElementById("createError").textContent = err.message;
+        }
+      }
+
+      function openJoinModal(postId, title) {
+        const user = getCurrentUser();
+        if (!user) {
+          alert("Please login to join or request matches.");
+          window.location.href = "user-login.html";
+          return;
+        }
+
+        document.getElementById("joinPostId").value = postId;
+        document.getElementById("joinModalTitle").textContent = title;
+        document.getElementById("joinError").textContent = "";
+        openModal("joinRequestModal");
+      }
+
+      async function handleSendJoinRequest(e) {
+        e.preventDefault();
+        const postId = document.getElementById("joinPostId").value;
+        const name = document.getElementById("joinNameInput").value.trim();
+        const phone = document.getElementById("joinPhoneInput").value.trim();
+        const teamName = document.getElementById("joinTeamInput").value.trim();
+
+        try {
+          const res = await fetch(`/api/community/${postId}/request`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              applicantName: name,
+              applicantPhone: phone,
+              applicantTeam: teamName,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to submit request.");
+
+          closeModal("joinRequestModal");
+          alert(data.message || "Request sent successfully to squad host!");
+          await fetchCommunityPosts();
+        } catch (err) {
+          document.getElementById("joinError").textContent = err.message;
+        }
+      }
+
+      function openManageModal(postId) {
+        const post = allPosts.find((p) => p.id === postId);
+        if (!post) return;
+
+        const list = document.getElementById("applicantsList");
+        list.innerHTML = "";
+
+        const requests = post.requests || [];
+        if (!requests.length) {
+          list.innerHTML = "<p style='color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px;'>No applicant requests received yet.</p>";
+        } else {
+          requests.forEach((req) => {
+            const row = document.createElement("div");
+            row.style.cssText = "background: var(--surface-2); border: 1px solid var(--line-soft); border-radius: 14px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;";
+            row.innerHTML = `
+              <div>
+                <div style="font-weight: 700; font-size: 14px;">${req.name || req.applicantName} <span style="font-size: 12px; color: var(--text-muted);">(${req.phone || req.applicantPhone})</span></div>
+                <div style="font-size: 12px; color: var(--text-muted);">${req.teamName || "Solo Player"} • Status: <b style="color: ${req.status === 'Accepted' ? 'var(--secondary)' : req.status === 'Rejected' ? 'var(--danger)' : 'var(--accent-gold)'};">${req.status}</b></div>
+              </div>
+              <div style="display: flex; gap: 6px;">
+                ${req.status === "Pending" ? `
+                  <button class="btn btn-secondary btn-sm" onclick="respondRequest(${post.id}, ${req.id}, 'Accepted')">Accept</button>
+                  <button class="btn btn-outline btn-sm" style="color: var(--danger); border-color: var(--danger);" onclick="respondRequest(${post.id}, ${req.id}, 'Rejected')">Reject</button>
+                ` : `<span class="badge badge-dark">${req.status}</span>`}
+              </div>
+            `;
+            list.appendChild(row);
+          });
+        }
+
+        openModal("manageApplicantsModal");
+      }
+
+      async function respondRequest(postId, reqId, status) {
+        try {
+          const res = await fetch(`/api/community/${postId}/request/${reqId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: status }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to update request.");
+
+          alert(`Applicant request ${status.toLowerCase()}!`);
+          closeModal("manageApplicantsModal");
+          await fetchCommunityPosts();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      window.onload = init;
+    </script>
+  </body>
+</html>
