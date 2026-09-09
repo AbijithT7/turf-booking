@@ -15,40 +15,45 @@ Made by **Abijith Thennarasu**, Vellore Institute of Technology, Chennai.
 ## 🚀 Key Features
 
 ### 🏟️ Instant Turf Reservation & Slot Matrix
-* **Interactive Time Slot Selector**: Real-time hourly slot matrix showing instant availability (Available, Booked, Maintenance).
-* **360° Virtual Pitch Tours**: Integrated **Pannellum WebGL 360° Panorama Viewer** allowing players to virtually inspect field turf, lighting, and amenities before booking.
-* **Mock UPI & QR Checkout**: Built-in payment gateway simulator complete with dynamic QR codes, total price calculation, and instant booking confirmation receipts.
+
+- **Interactive Time Slot Selector**: Real-time hourly slot matrix showing instant availability (Available, Booked, Maintenance).
+- **360° Virtual Pitch Tours**: Integrated **Pannellum WebGL 360° Panorama Viewer** allowing players to virtually inspect field turf, lighting, and amenities before booking.
+- **Mock UPI & QR Checkout**: Built-in payment gateway simulator complete with dynamic QR codes, total price calculation, and instant booking confirmation receipts.
 
 ### ⚽ Community & Players Lobby
-* **Free Agent Draft Board**: Solo players can post profiles and get recruited by teams needing fill-in players.
-* **Turf Wars (Team Challenges)**: Squads can issue match challenges to rival teams with built-in 50/50 turf fee split computation.
-* **Tournament Gateway**: Browse local weekend leagues, check prize pools, and register teams directly.
+
+- **Free Agent Draft Board**: Solo players can post profiles and get recruited by teams needing fill-in players.
+- **Turf Wars (Team Challenges)**: Squads can issue match challenges to rival teams with built-in 50/50 turf fee split computation.
+- **Tournament Gateway**: Browse local weekend leagues, check prize pools, and register teams directly.
 
 ### 👤 Athlete Dashboard
-* View all past and upcoming turf bookings.
-* Cancel reservations or download booking receipts.
-* Personal athlete profile display with sport preferences and stats.
+
+- View all past and upcoming turf bookings.
+- Cancel reservations or download booking receipts.
+- Personal athlete profile display with sport preferences and stats.
 
 ### 🛡️ Admin Command Suite
-* **Real-time Slot Controller**: Toggle slot status between Available, Reserved, and Maintenance with single-click admin actions.
-* **Revenue & Venue Analytics**: Live dashboard showcasing total booking revenue, venue utilization rates, and active players.
-* **Turf Configuration**: Add new turfs, modify hourly pricing, and update venue descriptions.
+
+- **Real-time Slot Controller**: Toggle slot status between Available, Reserved, and Maintenance with single-click admin actions.
+- **Revenue & Venue Analytics**: Live dashboard showcasing total booking revenue, venue utilization rates, and active players.
+- **Turf Configuration**: Add new turfs, modify hourly pricing, and update venue descriptions.
 
 ### 🌓 Dynamic Nocturnal Pitch Theme Engine
-* Dual Light & Dark mode support built with CSS variables.
-* Remembers user preference across sessions with zero flash-on-load.
+
+- Dual Light & Dark mode support built with CSS variables.
+- Remembers user preference across sessions with zero flash-on-load.
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Component | Technologies Used |
-| :--- | :--- |
-| **Frontend** | HTML5, Vanilla JavaScript (ES6+), Modern CSS3 Tokens, FontAwesome 6, Pannellum JS |
-| **Typography** | *Plus Jakarta Sans* (Body/UI) & *Space Grotesk* (Headings/Monospace Data) |
-| **Backend API** | Node.js, Express.js, CORS, dotenv |
-| **Database** | SQLite 3 (`sqlite` async wrapper) with auto-seeding schema (`backend/turf.db`) |
-| **Security** | Bcrypt password hashing for user & admin authentication |
+| Component       | Technologies Used                                                                 |
+| :-------------- | :-------------------------------------------------------------------------------- |
+| **Frontend**    | HTML5, Vanilla JavaScript (ES6+), Modern CSS3 Tokens, FontAwesome 6, Pannellum JS |
+| **Typography**  | _Plus Jakarta Sans_ (Body/UI) & _Space Grotesk_ (Headings/Monospace Data)         |
+| **Backend API** | Node.js, Express.js, CORS, dotenv                                                 |
+| **Database**    | SQLite 3 (`sqlite` async wrapper) with auto-seeding schema (`backend/turf.db`)    |
+| **Security**    | Bcrypt password hashing for user & admin authentication                           |
 
 ---
 
@@ -82,15 +87,18 @@ Turf_Booking/
 ## ⚙️ Getting Started
 
 ### Prerequisites
-* **Node.js** (v16.0 or higher)
-* **npm** (v7.0 or higher)
+
+- **Node.js** (v16.0 or higher)
+- **npm** (v7.0 or higher)
 
 ### 1. Installation
 
 Clone the repository and install backend dependencies:
 
 <<<<<<< HEAD
+
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/your-username/TurfArena.git
    cd TurfArena
@@ -98,6 +106,7 @@ Clone the repository and install backend dependencies:
 
 2. **Setup the Backend:**
    Navigate to the backend directory and install dependencies.
+
    ```bash
    cd backend
    npm install
@@ -105,12 +114,14 @@ Clone the repository and install backend dependencies:
 
 3. **Configure Environment Variables:**
    Create a `.env` file in the `backend` directory and add your MongoDB connection string and JWT secret (if applicable).
+
    ```env
    MONGO_URI=mongodb://127.0.0.1:27017/turfarena
    PORT=3000
    ```
 
 4. **Start the Backend Server:**
+
    ```bash
    node server.js
    ```
@@ -120,11 +131,11 @@ Clone the repository and install backend dependencies:
    ```bash
    npx http-server ./
    ```
-   *Navigate to `http://localhost:8080` (or your respective port) in your browser.*
+   _Navigate to `http://localhost:8080` (or your respective port) in your browser._
 
 ## 📂 Folder Structure
 
-```
+````
 Turf-Booking/
 │
 ├── backend/                   # Node.js Express API server
@@ -155,14 +166,14 @@ Turf-Booking/
 cd Turf_Booking/backend
 npm install
 >>>>>>> 89ba83b (Clean up repository: remove duplicate and useless files)
-```
+````
 
 ### 2. Run the Backend Server
 
 <<<<<<< HEAD
-*   **Abijith Thennarasu** 
-*   **Ranse Roger** 
 
+- **Abijith Thennarasu**
+- **Ranse Roger**
 
 =======
 Start the Express backend server (runs on port `5000` by default):
@@ -171,51 +182,47 @@ Start the Express backend server (runs on port `5000` by default):
 node server.js
 ```
 
-Upon launch, the server automatically initializes SQLite `turf.db` and seeds initial sports turfs (*Apex Arena 7v7*, *Thunder Pitch*, *Paddy Field*) if not present.
+Upon launch, the server automatically initializes SQLite `turf.db` and seeds initial sports turfs (_Apex Arena 7v7_, _Thunder Pitch_, _Paddy Field_) if not present.
 
 ### 3. Launch the Application
 
 Open your browser and navigate to:
+
 ```
 http://localhost:5000
 ```
-*(Or open `frontend/index.html` via Live Server)*
+
+_(Or open `frontend/index.html` via Live Server)_
 
 ---
 
 ## 🔑 Default Credentials (Testing)
 
-| Role | Email | Password |
-| :--- | :--- | :--- |
-| **User / Athlete** | `test@turf.com` | `password123` |
-| **Admin Operator** | `admin@turfarena.com` | `admin123` |
+| Role               | Email                 | Password      |
+| :----------------- | :-------------------- | :------------ |
+| **User / Athlete** | `test@turf.com`       | `password123` |
+| **Admin Operator** | `admin@turfarena.com` | `admin123`    |
 
 ---
 
 ## 📡 API Reference Summary
 
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `GET /api/turfs` | `GET` | Retrieve list of all sports turfs |
-| `GET /api/turfs/:id` | `GET` | Retrieve details & slot availability for a turf |
-| `POST /api/bookings` | `POST` | Book a turf slot |
-| `GET /api/bookings` | `GET` | Fetch user booking history |
-| `POST /api/users/register` | `POST` | Register a new user |
-| `POST /api/users/login` | `POST` | Authenticate user |
-| `POST /api/admin/login` | `POST` | Authenticate admin operator |
-| `PUT /api/admin/slots` | `PUT` | Update slot status (Available / Booked / Maintenance) |
-| `GET /api/community/free-agents` | `GET` | List active free agents |
-| `GET /api/community/turf-wars` | `GET` | List active team challenges |
+| Endpoint                         | Method | Description                                           |
+| :------------------------------- | :----- | :---------------------------------------------------- |
+| `GET /api/turfs`                 | `GET`  | Retrieve list of all sports turfs                     |
+| `GET /api/turfs/:id`             | `GET`  | Retrieve details & slot availability for a turf       |
+| `POST /api/bookings`             | `POST` | Book a turf slot                                      |
+| `GET /api/bookings`              | `GET`  | Fetch user booking history                            |
+| `POST /api/users/register`       | `POST` | Register a new user                                   |
+| `POST /api/users/login`          | `POST` | Authenticate user                                     |
+| `POST /api/admin/login`          | `POST` | Authenticate admin operator                           |
+| `PUT /api/admin/slots`           | `PUT`  | Update slot status (Available / Booked / Maintenance) |
+| `GET /api/community/free-agents` | `GET`  | List active free agents                               |
+| `GET /api/community/turf-wars`   | `GET`  | List active team challenges                           |
 
 ---
 
 ## 👨‍💻 Author & Attribution
 
 **Made by Abijith Thennarasu**  
-*Vellore Institute of Technology, Chennai*
-
----
-
-## 📄 License
->>>>>>> 89ba83b (Clean up repository: remove duplicate and useless files)
-
+_Vellore Institute of Technology, Chennai_
