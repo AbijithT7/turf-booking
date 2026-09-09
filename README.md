@@ -1,228 +1,204 @@
-# ⚽ TurfArena — Modern Sports Turf Booking & Community Platform
+# TurfArena
 
-> **A state-of-the-art, full-stack sports venue reservation engine, player community lobby, and venue administration suite.**
+TurfArena is a full-stack sports turf booking application for browsing venues, reserving time slots, finding teammates, and managing blocked slots.
 
-Made by **Abijith Thennarasu**, Vellore Institute of Technology, Chennai.
+The project uses a static HTML/CSS/JavaScript frontend served by an Express backend. SQLite is created and seeded automatically when the backend starts.
 
----
+## Features
 
-## 🌟 Overview
+- Browse seeded sports turfs and their hourly prices.
+- Check booked and blocked slots for a selected date.
+- Book one or more slots in a single request.
+- Register and log in as a user.
+- View booking history and community activity from the user dashboard.
+- Create team openings and request to join other teams.
+- Create community posts for solo players, teams, and tournaments.
+- Submit and manage community participation requests.
+- Use the admin dashboard to block and unblock slots and review bookings.
+- Switch between the application's light and dark themes.
 
-**TurfArena** is a high-performance web platform designed to streamline sports turf reservations and connect active player communities. Built with modern UI design principles ("Nocturnal Pitch" aesthetics, glassmorphism, responsive micro-interactions), TurfArena offers an intuitive experience for athletes, team managers, and venue administrators.
+## Tech Stack
 
----
+- Node.js and Express
+- SQLite with `sqlite` and `sqlite3`
+- bcrypt for user password hashing
+- Vanilla HTML, CSS, and JavaScript
+- Font Awesome and Pannellum loaded from CDNs by the frontend
 
-## 🚀 Key Features
+## Project Structure
 
-### 🏟️ Instant Turf Reservation & Slot Matrix
-
-- **Interactive Time Slot Selector**: Real-time hourly slot matrix showing instant availability (Available, Booked, Maintenance).
-- **360° Virtual Pitch Tours**: Integrated **Pannellum WebGL 360° Panorama Viewer** allowing players to virtually inspect field turf, lighting, and amenities before booking.
-- **Mock UPI & QR Checkout**: Built-in payment gateway simulator complete with dynamic QR codes, total price calculation, and instant booking confirmation receipts.
-
-### ⚽ Community & Players Lobby
-
-- **Free Agent Draft Board**: Solo players can post profiles and get recruited by teams needing fill-in players.
-- **Turf Wars (Team Challenges)**: Squads can issue match challenges to rival teams with built-in 50/50 turf fee split computation.
-- **Tournament Gateway**: Browse local weekend leagues, check prize pools, and register teams directly.
-
-### 👤 Athlete Dashboard
-
-- View all past and upcoming turf bookings.
-- Cancel reservations or download booking receipts.
-- Personal athlete profile display with sport preferences and stats.
-
-### 🛡️ Admin Command Suite
-
-- **Real-time Slot Controller**: Toggle slot status between Available, Reserved, and Maintenance with single-click admin actions.
-- **Revenue & Venue Analytics**: Live dashboard showcasing total booking revenue, venue utilization rates, and active players.
-- **Turf Configuration**: Add new turfs, modify hourly pricing, and update venue descriptions.
-
-### 🌓 Dynamic Nocturnal Pitch Theme Engine
-
-- Dual Light & Dark mode support built with CSS variables.
-- Remembers user preference across sessions with zero flash-on-load.
-
----
-
-## 🛠️ Technology Stack
-
-| Component       | Technologies Used                                                                 |
-| :-------------- | :-------------------------------------------------------------------------------- |
-| **Frontend**    | HTML5, Vanilla JavaScript (ES6+), Modern CSS3 Tokens, FontAwesome 6, Pannellum JS |
-| **Typography**  | _Plus Jakarta Sans_ (Body/UI) & _Space Grotesk_ (Headings/Monospace Data)         |
-| **Backend API** | Node.js, Express.js, CORS, dotenv                                                 |
-| **Database**    | SQLite 3 (`sqlite` async wrapper) with auto-seeding schema (`backend/turf.db`)    |
-| **Security**    | Bcrypt password hashing for user & admin authentication                           |
-
----
-
-## 📂 Project Structure
-
-```
+```text
 Turf_Booking/
 ├── backend/
-│   ├── server.js              # Express API Server & SQLite DB Manager
-│   ├── turf.db                # SQLite Database (seeded automatically)
-│   ├── package.json           # Backend dependencies
-│   └── package-lock.json
-│
+│   ├── server.js       # Express server, routes, schema, and seed data
+│   ├── api-smoke.js    # API smoke test
+│   ├── reset-db.js     # Drops team-opening tables
+│   ├── package.json
+│   └── turf.db         # Created at runtime; ignored/generated locally
 ├── frontend/
-│   ├── index.html             # Main Landing, Turf Explorer & Booking Modal
-│   ├── community.html           # Players Lobby, Turf Wars & Tournaments
-│   ├── user-dashboard.html      # Athlete Profile & Booking History
-│   ├── user-login.html         # Player Authentication (Login / Register)
-│   ├── admin-login.html        # Admin Authentication
-│   ├── admin-dashboard.html    # Venue Admin Slot Suite
-│   ├── theme.css              # Global Design Tokens & Glassmorphic Utilities
-│   ├── theme-toggle.js        # Theme Switcher Engine
-│   └── *.jpg / *.png / *.gif  # High-resolution pitch imagery & 360° Panoramas
-│
-├── README.md                  # Project Documentation
-└── package.json               # Root package descriptor
+│   ├── index.html      # Turf browsing and booking
+│   ├── community.html  # Community posts and team matching
+│   ├── user-login.html
+│   ├── user-dashboard.html
+│   ├── admin-login.html
+│   ├── admin-dashboard.html
+│   ├── theme.css
+│   └── theme-toggle.js
+├── package.json        # Root convenience scripts
+└── README.md
 ```
 
----
+## Requirements
 
-## ⚙️ Getting Started
+- Node.js 18 or newer
+- npm
 
-### Prerequisites
+## Installation
 
-- **Node.js** (v16.0 or higher)
-- **npm** (v7.0 or higher)
-
-### 1. Installation
-
-Clone the repository and install backend dependencies:
-
-<<<<<<< HEAD
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/your-username/TurfArena.git
-   cd TurfArena
-   ```
-
-2. **Setup the Backend:**
-   Navigate to the backend directory and install dependencies.
-
-   ```bash
-   cd backend
-   npm install
-   ```
-
-3. **Configure Environment Variables:**
-   Create a `.env` file in the `backend` directory and add your MongoDB connection string and JWT secret (if applicable).
-
-   ```env
-   MONGO_URI=mongodb://127.0.0.1:27017/turfarena
-   PORT=3000
-   ```
-
-4. **Start the Backend Server:**
-
-   ```bash
-   node server.js
-   ```
-
-5. **Run the Frontend:**
-   The frontend uses standard web files. For the best experience, serve the root directory using a local development server like `Live Server` in VS Code or `http-server`:
-   ```bash
-   npx http-server ./
-   ```
-   _Navigate to `http://localhost:8080` (or your respective port) in your browser._
-
-## 📂 Folder Structure
-
-````
-Turf-Booking/
-│
-├── backend/                   # Node.js Express API server
-│   ├── models/                # Mongoose Database Schemas
-│   ├── routes/                # API Endpoints
-│   └── server.js              # Entry point for backend
-│
-├── css/                       # Frontend Stylesheets
-│   ├── global.css             # Base styles and CSS variables
-│   ├── index.css              # Home/Booking page styles
-│   └── community.css          # Community Hub styles
-│
-├── js/                        # Frontend JavaScript logic
-│   ├── index.js               # Booking logic, modal handling
-│   ├── community.js           # Lobby and post handling
-│   ├── nav.js                 # Global navigation & routing
-│   └── theme.js               # Dark/Light mode toggler
-│
-├── index.html                 # Main Landing & Booking Page
-├── community.html             # Community Hub (Lobby/Wars/Tournaments)
-├── user-dashboard.html        # User Profile and Booking History
-├── admin-login.html           # Admin Portal Auth
-├── admin-dashboard.html       # Admin control panel
-│
-└── package.json               # Backend dependencies
-=======
-```bash
-cd Turf_Booking/backend
-npm install
->>>>>>> 89ba83b (Clean up repository: remove duplicate and useless files)
-````
-
-### 2. Run the Backend Server
-
-<<<<<<< HEAD
-
-- **Abijith Thennarasu**
-- **Ranse Roger**
-
-=======
-Start the Express backend server (runs on port `5000` by default):
+From the repository root:
 
 ```bash
-node server.js
+npm install --prefix backend
 ```
 
-Upon launch, the server automatically initializes SQLite `turf.db` and seeds initial sports turfs (_Apex Arena 7v7_, _Thunder Pitch_, _Paddy Field_) if not present.
+The root package has no runtime dependencies. Installing in `backend` installs the server dependencies.
 
-### 3. Launch the Application
+## Run the Application
 
-Open your browser and navigate to:
+Start the backend from the repository root:
 
+```bash
+npm run dev
 ```
-http://localhost:5000
+
+Or run it directly:
+
+```bash
+cd backend
+npm start
 ```
 
-_(Or open `frontend/index.html` via Live Server)_
+Open [http://localhost:5000](http://localhost:5000) in a browser. Express serves the frontend and API from the same origin, so opening the HTML files directly is not recommended.
 
----
+Set a different port with an environment variable before starting the server:
 
-## 🔑 Default Credentials (Testing)
+```powershell
+$env:PORT = 5050
+npm run dev
+```
 
-| Role               | Email                 | Password      |
-| :----------------- | :-------------------- | :------------ |
-| **User / Athlete** | `test@turf.com`       | `password123` |
-| **Admin Operator** | `admin@turfarena.com` | `admin123`    |
+```bash
+PORT=5050 npm run dev
+```
 
----
+## Application Pages
 
-## 📡 API Reference Summary
+| Page            | URL                | Purpose                                            |
+| --------------- | ------------------ | -------------------------------------------------- |
+| Home            | `/`                | Browse turfs, view availability, and make bookings |
+| User login      | `/user-login.html` | Register or log in as a user                       |
+| User dashboard  | `/user-dashboard`  | View bookings, posts, and join requests            |
+| Community       | `/community.html`  | Find teammates and publish community posts         |
+| Admin login     | `/admin`           | Open the admin login screen                        |
+| Admin dashboard | `/admin-dashboard` | Review bookings and manage blocked slots           |
 
-| Endpoint                         | Method | Description                                           |
-| :------------------------------- | :----- | :---------------------------------------------------- |
-| `GET /api/turfs`                 | `GET`  | Retrieve list of all sports turfs                     |
-| `GET /api/turfs/:id`             | `GET`  | Retrieve details & slot availability for a turf       |
-| `POST /api/bookings`             | `POST` | Book a turf slot                                      |
-| `GET /api/bookings`              | `GET`  | Fetch user booking history                            |
-| `POST /api/users/register`       | `POST` | Register a new user                                   |
-| `POST /api/users/login`          | `POST` | Authenticate user                                     |
-| `POST /api/admin/login`          | `POST` | Authenticate admin operator                           |
-| `PUT /api/admin/slots`           | `PUT`  | Update slot status (Available / Booked / Maintenance) |
-| `GET /api/community/free-agents` | `GET`  | List active free agents                               |
-| `GET /api/community/turf-wars`   | `GET`  | List active team challenges                           |
+## Seeded Test Accounts
 
----
+The backend creates the default user only when the `Users` table is empty:
 
-## 👨‍💻 Author & Attribution
+| Role | Email           | Password      |
+| ---- | --------------- | ------------- |
+| User | `test@turf.com` | `password123` |
 
-**Made by Abijith Thennarasu**  
-_Vellore Institute of Technology, Chennai_
+The admin login is currently checked in the frontend and is not backed by an API authentication route:
+
+| Role       | Email                 | Password   |
+| ---------- | --------------------- | ---------- |
+| Admin demo | `admin@turfarena.com` | `admin123` |
+
+These credentials are for local demonstration only. They must be replaced before deploying the application.
+
+## API Reference
+
+### Authentication and Users
+
+| Method | Endpoint             | Description                   |
+| ------ | -------------------- | ----------------------------- |
+| `POST` | `/api/auth/register` | Register a user               |
+| `POST` | `/api/auth/login`    | Log in a user                 |
+| `GET`  | `/api/users`         | List users for the admin view |
+
+### Turfs and Bookings
+
+| Method   | Endpoint                        | Description                                |
+| -------- | ------------------------------- | ------------------------------------------ |
+| `GET`    | `/api/turfs`                    | Return all turfs and prices                |
+| `GET`    | `/api/bookings?date=YYYY-MM-DD` | Return bookings grouped by turf for a date |
+| `GET`    | `/api/bookings`                 | Return all bookings for the admin view     |
+| `POST`   | `/api/bookings`                 | Create bookings for selected slots         |
+| `DELETE` | `/api/bookings/:id`             | Delete a booking                           |
+| `GET`    | `/api/user/bookings/:phone`     | Return a user's booking history            |
+
+### Availability and Team Matching
+
+| Method   | Endpoint                             | Description                           |
+| -------- | ------------------------------------ | ------------------------------------- |
+| `GET`    | `/api/blocked-slots?date=YYYY-MM-DD` | Return blocked slots for a date       |
+| `POST`   | `/api/blocked-slots`                 | Block a turf slot                     |
+| `DELETE` | `/api/blocked-slots`                 | Unblock a turf slot                   |
+| `GET`    | `/api/openings`                      | List team openings grouped by turf    |
+| `POST`   | `/api/openings`                      | Create a team opening                 |
+| `POST`   | `/api/openings/:id/request`          | Request to join an opening            |
+| `GET`    | `/api/user/openings/:phone`          | Return a user's openings and requests |
+| `POST`   | `/api/requests/:id/respond`          | Approve or reject a team request      |
+
+### Community
+
+| Method   | Endpoint                                | Description                              |
+| -------- | --------------------------------------- | ---------------------------------------- |
+| `GET`    | `/api/community`                        | List community posts and requests        |
+| `POST`   | `/api/community`                        | Create a community post                  |
+| `DELETE` | `/api/community/:id`                    | Delete a community post                  |
+| `POST`   | `/api/community/:id/request`            | Apply to a community post                |
+| `PATCH`  | `/api/community/:id/request/:requestId` | Update an application status             |
+| `DELETE` | `/api/community/:id/request/:requestId` | Remove an application                    |
+| `GET`    | `/api/user/community/:phone`            | Return posts and applications for a user |
+
+## Database
+
+On first startup, the server creates `backend/turf.db` and the tables for users, turfs, bookings, blocked slots, team openings, team requests, community posts, and community requests. It also seeds three turfs, a default user, and sample community posts when those tables are empty.
+
+To recreate the team-opening tables during local development:
+
+```bash
+node backend/reset-db.js
+```
+
+The server recreates the dropped tables on its next startup. This command does not reset every table or delete all application data.
+
+## Testing
+
+Run the API smoke test from the repository root:
+
+```bash
+npm run test:api
+```
+
+The smoke test starts the backend if it is not already running and checks the turf, opening, booking, blocked-slot, community, and user endpoints.
+
+The frontend currently has a manual smoke-test script placeholder:
+
+```bash
+npm run test:frontend
+```
+
+## Notes for Deployment
+
+- The application is a local/demo implementation and has no production admin authorization middleware.
+- CORS is enabled globally by the backend.
+- Passwords for regular users are hashed with bcrypt; the demo admin credentials are stored in frontend JavaScript.
+- Replace the demo credentials, add real authorization, validate ownership on write operations, and use a production database before deployment.
+
+## Author
+
+Created by Abijith Thennarasu.
