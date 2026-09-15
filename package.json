@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "npm run start --prefix backend",
+    "test": "npm run test --prefix backend",
+    "test:security": "npm run test:security --prefix backend",
     "test:api": "npm run test:api --prefix backend",
     "test:frontend": "echo Manual frontend testing steps available in README.md"
   }

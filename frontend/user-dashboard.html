@@ -453,43 +453,55 @@
     <!-- Scripts -->
     <script src="theme-toggle.js"></script>
     <script>
-      function getCurrentUser() {
+      function escapeHtml(str) {
+        if (str === null || str === undefined) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      async function loadUserData() {
         try {
-          return JSON.parse(localStorage.getItem("currentUser"));
-        } catch (e) {
-          localStorage.removeItem("currentUser");
-          return null;
-        }
-      }
+          const res = await fetch("/api/auth/me", { credentials: "include" });
+          if (!res.ok) {
+            window.location.href = "user-login.html";
+            return;
+          }
 
-      function loadUserData() {
-        const user = getCurrentUser();
-        if (!user) {
+          const data = await res.json();
+          const user = data.user;
+          if (!user) {
+            window.location.href = "user-login.html";
+            return;
+          }
+
+          document.getElementById("userNameDisplay").textContent = user.name || "Player";
+          document.getElementById("userEmailDisplay").textContent = user.email || "—";
+          document.getElementById("userPhoneDisplay").textContent = user.phone || "—";
+          document.getElementById("userJoinDisplay").textContent = user.joinedDate || "Recent";
+
+          const initials = (user.name || "AT")
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase();
+          document.getElementById("avatarInit").textContent = initials;
+
+          await fetchBookings();
+          await fetchCommunityActivity();
+        } catch (err) {
           window.location.href = "user-login.html";
-          return;
         }
-
-        document.getElementById("userNameDisplay").textContent = user.name || "Player";
-        document.getElementById("userEmailDisplay").textContent = user.email || "—";
-        document.getElementById("userPhoneDisplay").textContent = user.phone || "—";
-        document.getElementById("userJoinDisplay").textContent = user.joinedDate || "March 2026";
-
-        const initials = (user.name || "AT")
-          .split(" ")
-          .map((n) => n[0])
-          .join("")
-          .slice(0, 2)
-          .toUpperCase();
-        document.getElementById("avatarInit").textContent = initials;
-
-        fetchBookings(user.phone);
-        fetchCommunityActivity(user.phone);
       }
 
-      async function fetchBookings(phone) {
+      async function fetchBookings() {
         const list = document.getElementById("userBookingsList");
         try {
-          const res = await fetch(`/api/user/bookings/${encodeURIComponent(phone)}`);
+          const res = await fetch("/api/user/bookings", { credentials: "include" });
           if (!res.ok) throw new Error("Could not fetch bookings");
 
           const history = await res.json();
@@ -514,18 +526,18 @@
             <div class="reservation-card">
               <div>
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                  <span class="badge badge-green"><i class="fa-solid fa-check"></i> ${b.status || "Confirmed"}</span>
-                  <span class="badge badge-dark">Pass ID: #TA-${Math.floor(10000 + Math.random() * 90000)}</span>
+                  <span class="badge badge-green"><i class="fa-solid fa-check"></i> ${escapeHtml(b.status || "Confirmed")}</span>
+                  <span class="badge badge-dark">Pass ID: #TA-${escapeHtml(b.id || "0000")}</span>
                 </div>
-                <div class="res-turf-name">${b.turf}</div>
+                <div class="res-turf-name">${escapeHtml(b.turf)}</div>
                 <div class="res-meta">
-                  <span><i class="fa-regular fa-calendar" style="color: var(--primary);"></i> ${b.date}</span>
-                  <span><i class="fa-regular fa-clock" style="color: var(--primary);"></i> ${b.time}</span>
+                  <span><i class="fa-regular fa-calendar" style="color: var(--primary);"></i> ${escapeHtml(b.date)}</span>
+                  <span><i class="fa-regular fa-clock" style="color: var(--primary);"></i> ${escapeHtml(b.time)}</span>
                   <span style="color: var(--secondary);"><i class="fa-solid fa-shield-check"></i> Gate Pass Active</span>
                 </div>
               </div>
               <div>
-                <div class="res-price">${b.price}</div>
+                <div class="res-price">${escapeHtml(b.price)}</div>
                 <div style="font-size: 11px; color: var(--secondary); font-family: var(--font-mono); text-align: right;">Paid Online</div>
               </div>
             </div>
@@ -537,10 +549,10 @@
         }
       }
 
-      async function fetchCommunityActivity(phone) {
+      async function fetchCommunityActivity() {
         const list = document.getElementById("userCommunityList");
         try {
-          const res = await fetch(`/api/user/community/${encodeURIComponent(phone)}`);
+          const res = await fetch("/api/user/community", { credentials: "include" });
           if (!res.ok) throw new Error("Could not fetch community activity");
 
           const data = await res.json();
@@ -568,12 +580,12 @@
                 <div class="reservation-card">
                   <div>
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                      <span class="badge badge-lime">${p.sport} • ${p.post_type}</span>
-                      <span class="badge badge-dark">${p.spots} spots open</span>
+                      <span class="badge badge-lime">${escapeHtml(p.sport)} • ${escapeHtml(p.post_type)}</span>
+                      <span class="badge badge-dark">${Number(p.spots)} spots open</span>
                     </div>
-                    <div class="res-turf-name">${p.team_name}</div>
+                    <div class="res-turf-name">${escapeHtml(p.team_name)}</div>
                     <div class="res-meta">
-                      <span><i class="fa-solid fa-location-dot"></i> ${p.turf || "GreenLine Arena"}</span>
+                      <span><i class="fa-solid fa-location-dot"></i> ${escapeHtml(p.turf || "GreenLine Arena")}</span>
                       <span style="color: var(--accent-gold); font-weight: 600;">${(p.requests || []).length} applicants (${pending} pending)</span>
                     </div>
                   </div>
@@ -594,13 +606,13 @@
                 return `
                 <div class="reservation-card">
                   <div>
-                    <div class="res-turf-name">${r.team_name} <span style="font-size: 13px; color: var(--text-muted); font-weight: normal;">(${r.sport})</span></div>
+                    <div class="res-turf-name">${escapeHtml(r.team_name)} <span style="font-size: 13px; color: var(--text-muted); font-weight: normal;">(${escapeHtml(r.sport)})</span></div>
                     <div class="res-meta">
-                      <span><i class="fa-solid fa-location-dot"></i> ${r.turf || "Chennai Pitch"}</span>
-                      <span style="color: ${statusColor}; font-weight: 700;">Status: ${r.status}</span>
+                      <span><i class="fa-solid fa-location-dot"></i> ${escapeHtml(r.turf || "Chennai Pitch")}</span>
+                      <span style="color: ${statusColor}; font-weight: 700;">Status: ${escapeHtml(r.status)}</span>
                     </div>
                   </div>
-                  <div class="res-price">₹${r.fare || 0}</div>
+                  <div class="res-price">₹${Number(r.fare || 0)}</div>
                 </div>
               `;
               })
@@ -613,7 +625,10 @@
         }
       }
 
-      function handleLogout() {
+      async function handleLogout() {
+        try {
+          await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+        } catch (e) {}
         localStorage.removeItem("currentUser");
         window.location.href = "index.html";
       }

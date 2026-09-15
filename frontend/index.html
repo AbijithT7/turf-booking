@@ -1421,13 +1421,20 @@
         ],
       };
 
+      let currentUser = null;
+
+      function escapeHtml(str) {
+        if (str === null || str === undefined) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
       function getCurrentUser() {
-        try {
-          return JSON.parse(localStorage.getItem("currentUser"));
-        } catch (e) {
-          localStorage.removeItem("currentUser");
-          return null;
-        }
+        return currentUser;
       }
 
       // ───────────────────────────────────────────
@@ -1458,13 +1465,23 @@
           renderSlots();
         });
 
-        const user = getCurrentUser();
-        if (user) {
-          document.getElementById("userName").value = user.name || "";
-          document.getElementById("userPhone").value = user.phone || "";
+        try {
+          const authRes = await fetch("/api/auth/me", { credentials: "include" });
+          if (authRes.ok) {
+            const authData = await authRes.json();
+            currentUser = authData.user;
+          }
+        } catch (e) {}
+
+        if (currentUser) {
+          const nameInput = document.getElementById("userName");
+          if (nameInput) nameInput.value = currentUser.name || "";
+          const phoneInput = document.getElementById("userPhone");
+          if (phoneInput) phoneInput.value = currentUser.phone || "";
+
           document.getElementById("userAuthActions").innerHTML = `
             <a href="user-dashboard.html" class="btn btn-outline btn-sm">
-              <i class="fa-solid fa-user-circle"></i> ${user.name.split(" ")[0]}
+              <i class="fa-solid fa-user-circle"></i> ${escapeHtml((currentUser.name || "Player").split(" ")[0])}
             </a>
             <button onclick="handleLogout()" class="btn btn-ghost btn-sm" title="Sign Out">
               <i class="fa-solid fa-power-off"></i>
@@ -1473,7 +1490,10 @@
         }
       }
 
-      function handleLogout() {
+      async function handleLogout() {
+        try {
+          await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+        } catch (e) {}
         localStorage.removeItem("currentUser");
         window.location.reload();
       }
@@ -1522,10 +1542,10 @@
 
       async function fetchBookingsForDate(date) {
         try {
-          const bookingRes = await fetch(`/api/bookings?date=${date}`);
+          const bookingRes = await fetch(`/api/bookings?date=${encodeURIComponent(date)}`, { credentials: "include" });
           if (bookingRes.ok) bookings = await bookingRes.json();
 
-          const blockedRes = await fetch(`/api/blocked-slots?date=${date}`);
+          const blockedRes = await fetch(`/api/blocked-slots?date=${encodeURIComponent(date)}`, { credentials: "include" });
           if (blockedRes.ok) blocked = await blockedRes.json();
         } catch (error) {
           console.error("Error fetching date availability:", error);
@@ -1534,7 +1554,7 @@
 
       async function fetchAllOpenings() {
         try {
-          const res = await fetch("/api/openings");
+          const res = await fetch("/api/openings", { credentials: "include" });
           if (res.ok) teamOpenings = await res.json();
         } catch (e) {
           console.error("Error fetching team openings:", e);
@@ -1859,10 +1879,9 @@
           const res = await fetch("/api/bookings", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({
               turfId: payload.turfId,
-              userName: payload.userName,
-              userPhone: payload.userPhone,
               sportType: payload.sportType,
               date: payload.date,
               selectedSlots: payload.selectedSlots,
@@ -1871,19 +1890,16 @@
 
           if (!res.ok) {
             const data = await res.json().catch(() => ({}));
-            backendMsg = data.error || "Server processing issue";
+            if (res.status === 401) {
+              backendMsg = "Authentication required. Please sign in to book your turf.";
+            } else {
+              backendMsg = data.error || "Server processing issue";
+            }
           } else {
             backendOk = true;
           }
         } catch (err) {
-          // Offline fallback
-          const dateKey = `bookings_${payload.date}`;
-          let local = JSON.parse(localStorage.getItem(dateKey)) || {};
-          local[payload.turfId] = [...(local[payload.turfId] || []), ...payload.selectedSlots];
-          localStorage.setItem(dateKey, JSON.stringify(local));
-          bookings = local;
-          backendOk = true;
-          backendMsg = "saved_local";
+          backendMsg = "Network error: Unable to connect to booking server.";
         }
 
         await new Promise((r) => setTimeout(r, totalMs + 200));
@@ -1989,6 +2005,7 @@
           const res = await fetch(`/api/openings/${openingId}/request`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({
               requesterName: currentUser.name,
               requesterPhone: currentUser.phone,
@@ -2024,14 +2041,13 @@
           const res = await fetch("/api/openings", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({
               turfId: currentTurfId,
               sport: sport,
               seats: seats,
               teamSize: size,
               fare: fare,
-              creatorPhone: currentUser.phone,
-              creatorName: currentUser.name,
             }),
           });
           const data = await res.json();

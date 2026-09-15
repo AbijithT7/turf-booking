@@ -125,10 +125,33 @@ async function runChecks() {
     "/api/community did not return an array",
   );
 
-  const users = await fetchJson("/api/users");
-  assertCondition(users.ok, `/api/users failed with ${users.status}`);
+  const unauthUsers = await fetchJson("/api/users");
   assertCondition(
-    Array.isArray(users.payload),
+    unauthUsers.status === 401,
+    `/api/users expected HTTP 401 for unauthenticated request, got ${unauthUsers.status}`
+  );
+
+  // Authenticate as Admin
+  const loginRes = await fetch(`${BASE_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: process.env.ADMIN_EMAIL || "admin@turfarena.com",
+      password: process.env.ADMIN_PASSWORD || "admin123",
+    }),
+  });
+  assertCondition(loginRes.ok, `Admin login failed with status ${loginRes.status}`);
+  const cookieHeader = loginRes.headers.get("set-cookie");
+  assertCondition(Boolean(cookieHeader), "Admin login did not return session cookie");
+
+  // Fetch /api/users with Admin session
+  const adminUsersRes = await fetch(`${BASE_URL}/api/users`, {
+    headers: { Cookie: cookieHeader.split(";")[0] },
+  });
+  assertCondition(adminUsersRes.ok, `/api/users failed with admin session: ${adminUsersRes.status}`);
+  const usersPayload = await adminUsersRes.json();
+  assertCondition(
+    Array.isArray(usersPayload),
     "/api/users did not return an array",
   );
 }

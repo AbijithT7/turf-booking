@@ -570,14 +570,42 @@
       let blocked = {};
       let allBookingsList = [];
 
+      function escapeHtml(str) {
+        if (str === null || str === undefined) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
       async function init() {
+        try {
+          const authRes = await fetch("/api/auth/me", { credentials: "include" });
+          if (!authRes.ok) {
+            window.location.href = "admin-login.html";
+            return;
+          }
+          const authData = await authRes.json();
+          if (!authData.user || authData.user.role !== "admin") {
+            window.location.href = "admin-login.html";
+            return;
+          }
+        } catch (e) {
+          window.location.href = "admin-login.html";
+          return;
+        }
+
         const today = new Date().toISOString().split("T")[0];
         document.getElementById("adminDateInput").value = today;
         await refreshAdminData();
       }
 
-      function handleLogout() {
-        sessionStorage.removeItem("adminSession");
+      async function handleLogout() {
+        try {
+          await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+        } catch (e) {}
         window.location.href = "admin-login.html";
       }
 
@@ -603,14 +631,14 @@
         const date = document.getElementById("adminDateInput").value;
 
         try {
-          const bRes = await fetch(`/api/bookings?date=${date}`);
+          const bRes = await fetch(`/api/bookings?date=${encodeURIComponent(date)}`, { credentials: "include" });
           if (bRes.ok) bookings = await bRes.json();
 
-          const blRes = await fetch(`/api/blocked-slots?date=${date}`);
+          const blRes = await fetch(`/api/blocked-slots?date=${encodeURIComponent(date)}`, { credentials: "include" });
           if (blRes.ok) blocked = await blRes.json();
 
           // Also fetch detailed bookings if available
-          const allRes = await fetch(`/api/bookings`);
+          const allRes = await fetch(`/api/bookings`, { credentials: "include" });
           if (allRes.ok) allBookingsList = await allRes.json();
         } catch (err) {
           console.error("Error refreshing data:", err);
@@ -707,6 +735,7 @@
           const res = await fetch("/api/blocked-slots", {
             method: method,
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({
               turfId: currentTurfId,
               date: date,
@@ -733,6 +762,7 @@
           await fetch("/api/blocked-slots", {
             method: method,
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({
               turfId: currentTurfId,
               date: date,

@@ -232,6 +232,7 @@
             const res = await fetch("/api/auth/login", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
+              credentials: "include",
               body: JSON.stringify({ email, password }),
             });
             const data = await res.json();
@@ -241,7 +242,7 @@
             msg.className = "message-box success";
             msg.textContent = "Welcome back! Redirecting...";
             setTimeout(() => {
-              window.location.href = "index.html";
+              window.location.href = data.user.role === "admin" ? "admin-dashboard.html" : "index.html";
             }, 800);
           } catch (err) {
             msg.className = "message-box error";
@@ -267,6 +268,7 @@
             const res = await fetch("/api/auth/register", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
+              credentials: "include",
               body: JSON.stringify({ name, email, phone, password }),
             });
             const data = await res.json();
@@ -285,12 +287,23 @@
         }
       }
 
-      // Check query param for auto-selecting sign up tab
-      window.onload = () => {
+      // Check existing session on load
+      window.onload = async () => {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get("mode") === "signup") {
           switchAuthTab("register");
         }
+
+        try {
+          const checkRes = await fetch("/api/auth/me", { credentials: "include" });
+          if (checkRes.ok) {
+            const data = await checkRes.json();
+            if (data.user) {
+              localStorage.setItem("currentUser", JSON.stringify(data.user));
+              window.location.href = data.user.role === "admin" ? "admin-dashboard.html" : "index.html";
+            }
+          }
+        } catch (e) {}
       };
     </script>
   </body>

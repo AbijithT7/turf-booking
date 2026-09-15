@@ -107,21 +107,34 @@
     <!-- Scripts -->
     <script src="theme-toggle.js"></script>
     <script>
-      const ADMIN_CREDENTIALS = {
-        email: "admin@turfarena.com",
-        password: "admin123",
-      };
-
-      document.getElementById("adminLoginForm").addEventListener("submit", (e) => {
+      document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         const email = document.getElementById("adminEmail").value.trim();
         const password = document.getElementById("adminPassword").value.trim();
         const errorEl = document.getElementById("loginError");
 
-        if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
-          localStorage.setItem("adminLoggedIn", "true");
+        try {
+          const res = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ email, password }),
+          });
+
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            throw new Error(data.error || "Authentication failed.");
+          }
+
+          if (data.user.role !== "admin") {
+            // Invalidate session if non-admin attempts to log into admin portal
+            await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+            throw new Error("Access denied: Account does not have administrator privileges.");
+          }
+
           window.location.href = "admin-dashboard.html";
-        } else {
+        } catch (err) {
+          errorEl.textContent = err.message || "Invalid credentials.";
           errorEl.style.display = "block";
           setTimeout(() => {
             errorEl.style.display = "none";
