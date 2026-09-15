@@ -2,8 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>TurfArena - Player Profile & Reservations</title>
+    <title>TurfArena - Athlete Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      try {
+        const t = localStorage.getItem("turf_theme") || "dark";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    </script>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,55 +19,13 @@
     <!-- Theme CSS -->
     <link rel="stylesheet" href="theme.css" />
     <style>
-      header {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        padding: 16px 5vw;
-        background: var(--surface-1);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-        border-bottom: 1px solid var(--line-soft);
-      }
-
-      .navbar-inner {
-        max-width: 1360px;
-        margin: 0 auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 16px;
-      }
-
-      .logo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        text-decoration: none;
-        color: var(--text-main);
-        cursor: pointer;
-      }
-
-      .logo-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, var(--primary) 0%, #22c55e 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #050a0d;
-        font-size: 18px;
-        box-shadow: var(--shadow-neon-soft);
-      }
-
       .dashboard-container {
         max-width: 1360px;
         margin: 0 auto;
-        padding: 40px 5vw;
+        padding: var(--space-6) var(--space-5);
         display: grid;
-        grid-template-columns: 360px 1fr;
-        gap: 32px;
+        grid-template-columns: 340px 1fr;
+        gap: var(--space-5);
         position: relative;
         z-index: 10;
       }
@@ -69,52 +33,40 @@
       @media (max-width: 960px) {
         .dashboard-container {
           grid-template-columns: 1fr;
+          padding: var(--space-4);
         }
       }
 
-      /* Profile Left Column */
+      /* Profile Aside Card */
       .profile-card {
         background: var(--card-bg);
-        border: 1px solid var(--line-soft);
-        border-radius: 28px;
-        padding: 32px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-lg);
+        padding: var(--space-5);
         display: flex;
         flex-direction: column;
-        gap: 20px;
-        position: relative;
-        overflow: hidden;
+        gap: var(--space-4);
         box-shadow: var(--shadow-card);
       }
 
-      .profile-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, var(--primary), var(--secondary));
-      }
-
       .avatar-box {
-        width: 88px;
-        height: 88px;
-        border-radius: 50%;
+        width: 72px;
+        height: 72px;
+        border-radius: var(--radius-full);
         background: linear-gradient(135deg, var(--primary), var(--secondary));
-        padding: 3px;
-        margin-bottom: 4px;
-        box-shadow: var(--shadow-neon-lime);
+        padding: 2px;
+        box-shadow: var(--shadow-neon-soft);
       }
 
       .avatar-inner {
         width: 100%;
         height: 100%;
-        border-radius: 50%;
+        border-radius: var(--radius-full);
         background: var(--bg-surface-high);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 32px;
+        font-size: 26px;
         color: var(--primary);
         font-weight: 800;
         text-transform: uppercase;
@@ -123,17 +75,17 @@
       .profile-details-list {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: var(--space-2);
         background: var(--surface-2);
-        padding: 16px;
-        border-radius: 18px;
+        padding: var(--space-3);
+        border-radius: var(--radius-md);
         border: 1px solid var(--line-soft);
       }
 
       .profile-detail-row {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
         font-size: 13px;
         color: var(--text-muted);
       }
@@ -146,127 +98,99 @@
       .bento-metrics {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
+        gap: var(--space-2);
         text-align: center;
       }
 
       .bento-box {
         background: var(--surface-2);
         border: 1px solid var(--line-soft);
-        border-radius: 14px;
-        padding: 12px 8px;
+        border-radius: var(--radius-sm);
+        padding: var(--space-2) var(--space-1);
       }
 
       .bento-num {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 800;
         font-family: var(--font-mono);
         color: var(--primary);
-        line-height: 1;
+        line-height: 1.1;
       }
 
       .bento-lbl {
-        font-size: 10px;
+        font-size: 9.5px;
         font-family: var(--font-mono);
         text-transform: uppercase;
         color: var(--text-muted);
-        margin-top: 4px;
+        margin-top: 3px;
         font-weight: 700;
       }
 
-      /* Performance Stamina Bar Chart */
-      .stamina-card {
-        background: var(--surface-2);
-        border: 1px solid var(--line-soft);
-        border-radius: 18px;
-        padding: 16px;
+      /* Quick Actions */
+      .quick-actions-panel {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: var(--space-2);
       }
 
-      .chart-bars-wrap {
-        display: flex;
-        align-items: flex-end;
-        gap: 8px;
-        height: 60px;
-        padding-top: 8px;
-      }
-
-      .chart-bar {
-        flex: 1;
-        background: var(--surface-3);
-        border-radius: 6px 6px 0 0;
-        transition: background 0.2s, height 0.3s;
-      }
-
-      .chart-bar:hover, .chart-bar.active {
-        background: var(--primary);
-        box-shadow: var(--shadow-neon-soft);
-      }
-
-      /* Right Column: Reservations Hub */
+      /* Right Column: Content Panels */
       .hub-section {
         display: flex;
         flex-direction: column;
-        gap: 24px;
+        gap: var(--space-5);
       }
 
       .hub-panel {
         background: var(--card-bg);
-        border: 1px solid var(--line-soft);
-        border-radius: 28px;
-        padding: 32px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-lg);
+        padding: var(--space-5);
         box-shadow: var(--shadow-card);
       }
 
       .hub-header {
         display: flex;
-        flex-wrap: wrap;
         justify-content: space-between;
         align-items: center;
-        gap: 16px;
-        margin-bottom: 24px;
-        padding-bottom: 16px;
+        margin-bottom: var(--space-4);
+        padding-bottom: var(--space-3);
         border-bottom: 1px solid var(--line-soft);
       }
 
       .reservation-card {
         background: var(--surface-2);
         border: 1px solid var(--line-soft);
-        border-radius: 20px;
-        padding: 20px 24px;
-        display: grid;
-        grid-template-columns: 1fr auto;
+        border-radius: var(--radius-md);
+        padding: var(--space-4);
+        display: flex;
+        justify-content: space-between;
         align-items: center;
-        gap: 16px;
-        transition: all 0.3s;
+        gap: var(--space-4);
+        transition: border-color 0.2s ease, transform 0.2s ease;
       }
 
       .reservation-card:hover {
         border-color: var(--line-lime);
-        background: var(--surface-3);
-        transform: translateY(-2px);
+        transform: translateY(-1px);
       }
 
       .res-turf-name {
-        font-size: 18px;
-        font-weight: 800;
+        font-size: 16px;
+        font-weight: 700;
         color: var(--text-main);
-        margin-bottom: 4px;
+        margin: 3px 0 2px;
       }
 
       .res-meta {
-        font-size: 13px;
+        font-size: 12.5px;
         color: var(--text-muted);
         display: flex;
-        align-items: center;
-        gap: 12px;
         flex-wrap: wrap;
+        gap: 12px;
       }
 
       .res-price {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 800;
         font-family: var(--font-mono);
         color: var(--primary);
@@ -275,114 +199,139 @@
     </style>
   </head>
 
-  <body>
-    <!-- Ambient Glow Layer -->
-    <div class="ambient-glow-mesh" aria-hidden="true">
-      <div class="glow-orb-1"></div>
-      <div class="glow-orb-2"></div>
+  <body class="page-dashboard">
+    <!-- Layered Sports Background System -->
+    <div class="sports-bg-layer" aria-hidden="true">
+      <div class="sports-bg-stadium"></div>
+      <div class="sports-bg-turf-stripes"></div>
+      <div class="sports-bg-pitch-lines"></div>
+      <div class="sports-bg-court-geometry"></div>
     </div>
 
-    <!-- Header / Nav -->
-    <header>
+    <!-- Global Standard Header -->
+    <header class="global-header">
       <div class="navbar-inner">
-        <a class="logo" href="index.html">
+        <!-- LEFT: Brand Logo -->
+        <a class="logo" href="index.html" aria-label="TurfArena Home">
           <div class="logo-icon">
             <i class="fa-solid fa-crown"></i>
           </div>
-          <div>
-            <div class="logo-brand">TURF<span>ARENA</span></div>
-            <div class="logo-sub">Player Portal</div>
+          <div class="logo-text">
+            <span class="logo-brand">TURF<span>ARENA</span></span>
+            <span class="logo-sub">Athlete Portal</span>
           </div>
         </a>
 
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <a href="index.html" class="btn btn-outline btn-sm">
-            <i class="fa-solid fa-arrow-left"></i> Book More Turfs
+        <!-- CENTER: Navigation Links -->
+        <nav class="top-nav" aria-label="Main Navigation">
+          <a href="index.html" class="nav-link">
+            <i class="fa-solid fa-house"></i> Home
           </a>
-          <a href="community.html" class="btn btn-outline btn-sm">
-            <i class="fa-solid fa-users"></i> Community Lobby
+          <a href="index.html#available-turfs" class="nav-link">
+            <i class="fa-solid fa-calendar-check"></i> Book Turf
           </a>
-          <button class="theme-toggle-btn" data-theme-toggle type="button"></button>
-          <button class="btn btn-ghost btn-sm" onclick="handleLogout()" title="Sign Out">
-            <i class="fa-solid fa-power-off" style="color: var(--danger);"></i>
+          <a href="community.html" class="nav-link">
+            <i class="fa-solid fa-users"></i> Community
+          </a>
+          <a href="user-dashboard.html" class="nav-link active">
+            <i class="fa-solid fa-gauge-high"></i> Dashboard
+          </a>
+        </nav>
+
+        <!-- RIGHT: Theme Toggle & User Profile Controls -->
+        <div class="header-actions">
+          <button class="theme-toggle-btn" data-theme-toggle type="button" aria-label="Toggle theme"></button>
+          <div id="userAuthActions" class="auth-actions-slot">
+            <button class="btn btn-ghost btn-sm" onclick="handleLogout()" title="Sign Out" aria-label="Sign Out">
+              <i class="fa-solid fa-power-off" style="color: var(--danger);"></i>
+            </button>
+          </div>
+          <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle menu" onclick="toggleMobileNav()">
+            <i class="fa-solid fa-bars"></i>
           </button>
         </div>
       </div>
+
+      <!-- Mobile Dropdown Navigation -->
+      <div class="mobile-nav-drawer" id="mobileNavDrawer">
+        <a href="index.html" class="mobile-nav-link" onclick="closeMobileNav()">
+          <i class="fa-solid fa-house"></i> Home
+        </a>
+        <a href="index.html#available-turfs" class="mobile-nav-link" onclick="closeMobileNav()">
+          <i class="fa-solid fa-calendar-check"></i> Book Turf
+        </a>
+        <a href="community.html" class="mobile-nav-link" onclick="closeMobileNav()">
+          <i class="fa-solid fa-users"></i> Community Lobby
+        </a>
+        <a href="user-dashboard.html" class="mobile-nav-link active" onclick="closeMobileNav()">
+          <i class="fa-solid fa-gauge-high"></i> Dashboard
+        </a>
+        <button onclick="handleLogout()" class="btn btn-danger btn-sm" style="width: 100%; margin-top: 8px;">
+          <i class="fa-solid fa-power-off"></i> Sign Out
+        </button>
+      </div>
     </header>
 
+    <!-- Main Content -->
     <main class="dashboard-container">
       <!-- ───────────────────────────────────────────
            LEFT COLUMN: PLAYER PROFILE CARD
       ─────────────────────────────────────────── -->
-      <aside style="display: flex; flex-direction: column; gap: 24px;">
+      <aside style="display: flex; flex-direction: column; gap: var(--space-4);">
         <div class="profile-card">
           <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div class="avatar-box">
               <div class="avatar-inner" id="avatarInit">AT</div>
             </div>
             <span class="badge badge-lime">
-              <i class="fa-solid fa-gem"></i> VIP Member
+              <i class="fa-solid fa-shield-halved"></i> Active Player
             </span>
           </div>
 
           <div>
-            <h1 id="userNameDisplay" style="font-size: 24px; font-weight: 800; margin-bottom: 2px;">Athlete Profile</h1>
-            <div style="font-size: 13px; color: var(--primary); font-weight: 600;">@turfathlete · All-Rounder</div>
+            <h1 id="userNameDisplay" style="font-size: 20px; font-weight: 800; margin-bottom: 2px;">Athlete Profile</h1>
+            <div style="font-size: 13px; color: var(--primary); font-weight: 600;">TurfArena Verified Athlete</div>
           </div>
 
           <div class="profile-details-list">
             <div class="profile-detail-row">
               <i class="fa-regular fa-envelope"></i>
-              <span id="userEmailDisplay" class="truncate">user@turf.com</span>
+              <span id="userEmailDisplay" style="word-break: break-all;">user@turf.com</span>
             </div>
             <div class="profile-detail-row">
               <i class="fa-solid fa-phone"></i>
               <span id="userPhoneDisplay">9999999999</span>
             </div>
-            <div class="profile-detail-row" style="color: var(--secondary); font-weight: 600;">
-              <i class="fa-solid fa-shield-check"></i>
-              <span>KYC & UPI Verified</span>
-            </div>
             <div class="profile-detail-row" style="font-size: 12px;">
               <i class="fa-regular fa-calendar-check"></i>
-              <span>Member Since <b id="userJoinDisplay" style="color: var(--text-main);">March 2026</b></span>
+              <span>Member Since <b id="userJoinDisplay" style="color: var(--text-main);">Recent</b></span>
             </div>
           </div>
 
           <!-- Bento Stats -->
           <div class="bento-metrics">
             <div class="bento-box">
-              <div class="bento-num" id="metricMatches">24</div>
-              <div class="bento-lbl">Matches</div>
+              <div class="bento-num" id="metricMatches">0</div>
+              <div class="bento-lbl">Bookings</div>
             </div>
             <div class="bento-box">
-              <div class="bento-num" style="color: var(--secondary);">98%</div>
+              <div class="bento-num" style="color: var(--secondary);">100%</div>
               <div class="bento-lbl">Turnout</div>
             </div>
             <div class="bento-box">
-              <div class="bento-num" style="color: var(--accent-gold);">4.9</div>
+              <div class="bento-num" style="color: var(--accent-gold);">5.0</div>
               <div class="bento-lbl">Fair Play</div>
             </div>
           </div>
 
-          <!-- Stamina Chart Widget -->
-          <div class="stamina-card">
-            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700;">
-              <span>Weekly Play Stamina</span>
-              <span style="color: var(--primary);">6.5 hrs</span>
-            </div>
-            <div class="chart-bars-wrap">
-              <div class="chart-bar" style="height: 35%;" title="Mon: 1h"></div>
-              <div class="chart-bar" style="height: 60%;" title="Tue: 2h"></div>
-              <div class="chart-bar" style="height: 25%;" title="Wed: 45m"></div>
-              <div class="chart-bar" style="height: 80%;" title="Thu: 2.5h"></div>
-              <div class="chart-bar active" style="height: 100%;" title="Fri: 3h"></div>
-              <div class="chart-bar" style="height: 55%;" title="Sat: 1.5h"></div>
-              <div class="chart-bar" style="height: 10%;" title="Sun: Rest"></div>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 10px; font-family: var(--font-mono); color: var(--text-muted);">
-              <span>M</span><span>T</span><span>W</span><span>T</span><span style="color:var(--primary); font-weight:bold;">F</span><span>S</span><span>S</span>
-            </div>
+          <!-- Quick Actions -->
+          <div class="quick-actions-panel">
+            <a href="index.html#available-turfs" class="btn btn-primary btn-sm" style="width: 100%;">
+              <i class="fa-solid fa-plus"></i> Book Turf Slot
+            </a>
+            <a href="community.html" class="btn btn-outline btn-sm" style="width: 100%;">
+              <i class="fa-solid fa-users"></i> Join Community Lobby
+            </a>
           </div>
         </div>
       </aside>
@@ -391,16 +340,16 @@
            RIGHT COLUMN: RESERVATIONS & SQUAD HUB
       ─────────────────────────────────────────── -->
       <section class="hub-section">
-        <!-- Past Reservations Panel -->
+        <!-- Pitch Reservations Panel -->
         <div class="hub-panel">
           <div class="hub-header">
             <div>
-              <h2 style="font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px;">
-                <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i>
-                Your Pitch Reservations
+              <h2 style="font-size: 19px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-calendar-check" style="color: var(--primary);"></i>
+                Pitch Reservations
               </h2>
               <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
-                Live slot confirmations and past match digital passes.
+                Your confirmed hourly ground bookings and digital passes.
               </p>
             </div>
             <a href="index.html#available-turfs" class="btn btn-primary btn-sm">
@@ -408,9 +357,9 @@
             </a>
           </div>
 
-          <div id="userBookingsList" style="display: flex; flex-direction: column; gap: 14px;">
+          <div id="userBookingsList" style="display: flex; flex-direction: column; gap: var(--space-3);">
             <div style="color: var(--text-muted); text-align: center; padding: 32px;">
-              <i class="fa-solid fa-spinner fa-spin" style="color: var(--primary); font-size: 24px; margin-bottom: 8px;"></i>
+              <i class="fa-solid fa-spinner fa-spin" style="color: var(--primary); font-size: 20px; margin-bottom: 8px;"></i>
               <div>Loading reservations...</div>
             </div>
           </div>
@@ -420,23 +369,23 @@
         <div class="hub-panel">
           <div class="hub-header">
             <div>
-              <h2 style="font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px;">
-                <i class="fa-solid fa-shield-heart" style="color: var(--secondary);"></i>
-                Your Community Squads & Applications
+              <h2 style="font-size: 19px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-users" style="color: var(--secondary);"></i>
+                Community Squad Activity
               </h2>
               <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
-                Lobby challenges created by you and join requests submitted to host captains.
+                Matches you initiated and join requests sent to captains.
               </p>
             </div>
             <a href="community.html" class="btn btn-secondary btn-sm">
-              <i class="fa-solid fa-users"></i> Lobby
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Lobby
             </a>
           </div>
 
-          <div id="userCommunityList" style="display: flex; flex-direction: column; gap: 14px;">
+          <div id="userCommunityList" style="display: flex; flex-direction: column; gap: var(--space-3);">
             <div style="color: var(--text-muted); text-align: center; padding: 32px;">
-              <i class="fa-solid fa-spinner fa-spin" style="color: var(--secondary); font-size: 24px; margin-bottom: 8px;"></i>
-              <div>Loading community items...</div>
+              <i class="fa-solid fa-spinner fa-spin" style="color: var(--secondary); font-size: 20px; margin-bottom: 8px;"></i>
+              <div>Loading squad activity...</div>
             </div>
           </div>
         </div>
@@ -444,9 +393,9 @@
     </main>
 
     <!-- Footer -->
-    <footer>
-      <div style="max-width: 1360px; margin: 0 auto; text-align: center; color: var(--text-muted); font-size: 13px;">
-        © 2026 TurfArena Inc. All verified reservations are protected with live anti-double booking sync.
+    <footer style="border-top: 1px solid var(--line-soft); padding: var(--space-5) var(--space-4); margin-top: var(--space-6); background: var(--surface-1);">
+      <div style="max-width: 1360px; margin: 0 auto; text-align: center; color: var(--text-muted); font-size: 12.5px;">
+        © 2026 TurfArena Inc. Verified sports facility booking platform.
       </div>
     </footer>
 
@@ -507,10 +456,10 @@
           const history = await res.json();
           if (!history.length) {
             list.innerHTML = `
-              <div style="text-align: center; padding: 36px 20px; background: var(--surface-2); border-radius: 20px; border: 1px dashed var(--line-soft);">
-                <i class="fa-regular fa-calendar-xmark" style="font-size: 32px; color: var(--primary); margin-bottom: 10px; opacity: 0.8;"></i>
-                <h4 style="font-size: 16px; font-weight: 700;">No reservations found</h4>
-                <p style="color: var(--text-muted); font-size: 13px; margin: 4px 0 14px;">You haven't booked any turf slots yet.</p>
+              <div style="text-align: center; padding: 32px 16px; background: var(--surface-2); border-radius: var(--radius-md); border: 1px dashed var(--line-soft);">
+                <i class="fa-regular fa-calendar-xmark" style="font-size: 28px; color: var(--primary); margin-bottom: 8px; opacity: 0.8;"></i>
+                <h4 style="font-size: 15px; font-weight: 700;">No reservations found</h4>
+                <p style="color: var(--text-muted); font-size: 13px; margin: 4px 0 12px;">You haven't booked any turf slots yet.</p>
                 <a href="index.html#available-turfs" class="btn btn-primary btn-sm">Explore & Book Turfs</a>
               </div>
             `;
@@ -533,12 +482,12 @@
                 <div class="res-meta">
                   <span><i class="fa-regular fa-calendar" style="color: var(--primary);"></i> ${escapeHtml(b.date)}</span>
                   <span><i class="fa-regular fa-clock" style="color: var(--primary);"></i> ${escapeHtml(b.time)}</span>
-                  <span style="color: var(--secondary);"><i class="fa-solid fa-shield-check"></i> Gate Pass Active</span>
+                  <span style="color: var(--primary);"><i class="fa-solid fa-shield-check"></i> Pass Verified</span>
                 </div>
               </div>
               <div>
                 <div class="res-price">${escapeHtml(b.price)}</div>
-                <div style="font-size: 11px; color: var(--secondary); font-family: var(--font-mono); text-align: right;">Paid Online</div>
+                <div style="font-size: 11px; color: var(--primary); font-family: var(--font-mono); text-align: right;">Confirmed</div>
               </div>
             </div>
           `,
@@ -560,10 +509,10 @@
 
           if (createdPosts.length === 0 && appliedRequests.length === 0) {
             list.innerHTML = `
-              <div style="text-align: center; padding: 36px 20px; background: var(--surface-2); border-radius: 20px; border: 1px dashed var(--line-soft);">
-                <i class="fa-solid fa-users" style="font-size: 32px; color: var(--secondary); margin-bottom: 10px; opacity: 0.8;"></i>
-                <h4 style="font-size: 16px; font-weight: 700;">No squad activity yet</h4>
-                <p style="color: var(--text-muted); font-size: 13px; margin: 4px 0 14px;">Post an opening or join existing matches in the Community Lobby.</p>
+              <div style="text-align: center; padding: 32px 16px; background: var(--surface-2); border-radius: var(--radius-md); border: 1px dashed var(--line-soft);">
+                <i class="fa-solid fa-users" style="font-size: 28px; color: var(--secondary); margin-bottom: 8px; opacity: 0.8;"></i>
+                <h4 style="font-size: 15px; font-weight: 700;">No squad activity yet</h4>
+                <p style="color: var(--text-muted); font-size: 13px; margin: 4px 0 12px;">Post an opening or join existing matches in the Community Lobby.</p>
                 <a href="community.html" class="btn btn-secondary btn-sm">Go to Community Lobby</a>
               </div>
             `;
@@ -572,7 +521,7 @@
 
           let html = "";
           if (createdPosts.length > 0) {
-            html += `<div style="font-size: 12px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 4px;">Matches & Challenges You Created</div>`;
+            html += `<div style="font-size: 11.5px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 6px;">Matches & Challenges You Created</div>`;
             html += createdPosts
               .map((p) => {
                 const pending = (p.requests || []).filter((r) => (r.status || "").toLowerCase() === "pending").length;
@@ -599,10 +548,10 @@
           }
 
           if (appliedRequests.length > 0) {
-            html += `<div style="font-size: 12px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin: 16px 0 4px;">Your Applications to Squads</div>`;
+            html += `<div style="font-size: 11.5px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin: 16px 0 6px;">Your Applications to Squads</div>`;
             html += appliedRequests
               .map((r) => {
-                const statusColor = r.status === "Accepted" ? "var(--secondary)" : r.status === "Rejected" ? "var(--danger)" : "var(--accent-gold)";
+                const statusColor = r.status === "Accepted" ? "var(--primary)" : r.status === "Rejected" ? "var(--danger)" : "var(--accent-gold)";
                 return `
                 <div class="reservation-card">
                   <div>
@@ -620,20 +569,12 @@
           }
 
           list.innerHTML = html;
-        } catch (e) {
-          list.innerHTML = `<div style="color: var(--text-muted); text-align: center; padding: 20px;">Could not load community items.</div>`;
+        } catch (err) {
+          list.innerHTML = `<div style="color: var(--danger); text-align: center; padding: 20px;">Could not connect to community activity.</div>`;
         }
       }
 
-      async function handleLogout() {
-        try {
-          await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-        } catch (e) {}
-        localStorage.removeItem("currentUser");
-        window.location.href = "index.html";
-      }
-
-      window.onload = loadUserData;
+      window.addEventListener("DOMContentLoaded", loadUserData);
     </script>
   </body>
 </html>

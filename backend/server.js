@@ -21,6 +21,18 @@ const {
   isValidDate
 } = require('./middleware/validate');
 
+// Production Session Secret Validation
+if (process.env.NODE_ENV === 'production') {
+  if (
+    !process.env.SESSION_SECRET ||
+    process.env.SESSION_SECRET.length < 32 ||
+    process.env.SESSION_SECRET.includes('default_development_secret')
+  ) {
+    console.error('FATAL: In production, SESSION_SECRET must be set to a secure string of at least 32 characters.');
+    process.exit(1);
+  }
+}
+
 const app = express();
 
 // Security Headers
@@ -31,19 +43,20 @@ app.use(
   })
 );
 
-// Controlled CORS
+// Controlled CORS & Allowed Origins
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5000';
+const ALLOWED_ORIGIN_SET = new Set([
+  FRONTEND_ORIGIN.replace(/\/$/, ''),
+  'http://127.0.0.1:5000',
+  'http://localhost:5000',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
+]);
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (
-        !origin ||
-        origin === FRONTEND_ORIGIN ||
-        origin === 'http://127.0.0.1:5000' ||
-        origin === 'http://localhost:5000' ||
-        origin === 'http://localhost:3000' ||
-        origin === 'http://127.0.0.1:3000'
-      ) {
+      if (!origin || ALLOWED_ORIGIN_SET.has(origin.replace(/\/$/, ''))) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
@@ -52,6 +65,27 @@ app.use(
     credentials: true
   })
 );
+
+// CSRF Defense Middleware for state-changing requests
+app.use((req, res, next) => {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+    return next();
+  }
+
+  // Reject cross-site requests signaled by modern browsers
+  const secFetchSite = req.headers['sec-fetch-site'];
+  if (secFetchSite === 'cross-site') {
+    return res.status(403).json({ error: 'Cross-origin request blocked by CSRF protection.' });
+  }
+
+  // If origin is present, check against allowed list
+  const origin = req.headers.origin;
+  if (origin && !ALLOWED_ORIGIN_SET.has(origin.replace(/\/$/, ''))) {
+    return res.status(403).json({ error: 'Origin not permitted by CSRF protection.' });
+  }
+
+  next();
+});
 
 app.use(express.json());
 
@@ -724,6 +758,38 @@ app.get('/api/user/openings/:phone', requireAuth, async (req, res, next) => {
     }
 
     res.json(openings);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Delete team opening (Owner or Admin only)
+app.delete('/api/openings/:id', requireAuth, async (req, res, next) => {
+  try {
+    const openingId = req.params.id;
+    if (!isValidId(openingId)) {
+      return res.status(400).json({ error: 'Invalid opening ID.' });
+    }
+
+    const db = getDB();
+    const opening = await db.get('SELECT * FROM TeamOpenings WHERE id = ?', [openingId]);
+    if (!opening) {
+      return res.status(404).json({ error: 'Opening not found' });
+    }
+
+    const isOwner =
+      opening.user_id === req.user.id ||
+      opening.creator_phone === req.user.phone ||
+      req.user.role === 'admin';
+
+    if (!isOwner) {
+      return res.status(403).json({ error: 'Forbidden. You do not have permission to delete this opening.' });
+    }
+
+    await db.run('DELETE FROM TeamRequests WHERE opening_id = ?', [openingId]);
+    await db.run('DELETE FROM TeamOpenings WHERE id = ?', [openingId]);
+
+    res.json({ message: 'Team opening deleted successfully.' });
   } catch (err) {
     next(err);
   }

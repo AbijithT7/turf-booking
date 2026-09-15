@@ -2,8 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <title>TurfArena - Admin Facility Controller</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TurfArena - Admin Control Slot Suite</title>
+    <script>
+      try {
+        const t = localStorage.getItem("turf_theme") || "dark";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    </script>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,270 +19,151 @@
     <!-- Theme CSS -->
     <link rel="stylesheet" href="theme.css" />
     <style>
-      body {
-        padding: 0;
-        margin: 0;
-        background-color: var(--bg-dark);
-      }
-
-      header {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        padding: 16px 5vw;
-        background: var(--surface-1);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-        border-bottom: 1px solid var(--line-soft);
-      }
-
-      .navbar-inner {
-        max-width: 1400px;
-        margin: 0 auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 16px;
-      }
-
-      .logo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        text-decoration: none;
-        color: var(--text-main);
-        cursor: pointer;
-      }
-
-      .logo-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, var(--primary) 0%, #22c55e 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #050a0d;
-        font-size: 20px;
-        box-shadow: var(--shadow-neon-soft);
-      }
-
-      .logo-brand {
-        font-size: 20px;
-        font-weight: 800;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        line-height: 1;
-      }
-
-      .logo-brand span {
-        color: var(--primary);
-      }
-
-      .logo-sub {
-        font-size: 9.5px;
-        font-family: var(--font-mono);
-        text-transform: uppercase;
-        letter-spacing: 0.22em;
-        color: var(--text-muted);
-        margin-top: 3px;
-        font-weight: 600;
-      }
-
       .admin-layout {
-        max-width: 1400px;
+        max-width: 1360px;
         margin: 0 auto;
-        padding: 32px 5vw 60px;
+        padding: var(--space-6) var(--space-5);
         display: flex;
         flex-direction: column;
-        gap: 28px;
+        gap: var(--space-5);
         position: relative;
         z-index: 10;
       }
 
-      /* Command Header Card */
+      /* Command Banner */
       .command-banner {
         background: var(--card-bg);
-        border: 1px solid var(--line-soft);
-        border-radius: 28px;
-        padding: 32px;
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-        position: relative;
-        overflow: hidden;
-        box-shadow: var(--shadow-glass);
-      }
-
-      .command-banner::before {
-        content: "";
-        position: absolute;
-        top: -30%;
-        right: -10%;
-        width: 350px;
-        height: 350px;
-        background: radial-gradient(circle, rgba(163, 230, 53, 0.1) 0%, transparent 70%);
-        filter: blur(60px);
-        pointer-events: none;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-lg);
+        padding: var(--space-5);
+        box-shadow: var(--shadow-card);
       }
 
       .command-header-top {
         display: flex;
-        flex-wrap: wrap;
         justify-content: space-between;
         align-items: center;
-        gap: 20px;
-        position: relative;
-        z-index: 2;
+        flex-wrap: wrap;
+        gap: var(--space-4);
+        padding-bottom: var(--space-4);
+        border-bottom: 1px solid var(--line-soft);
       }
 
       .command-controls-bar {
         display: flex;
-        flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
-        background: var(--surface-2);
-        padding: 16px 20px;
-        border-radius: 20px;
-        border: 1px solid var(--line-soft);
-        position: relative;
-        z-index: 2;
+        flex-wrap: wrap;
+        gap: var(--space-4);
+        margin-top: var(--space-4);
       }
 
-      /* Metric KPI Grid */
+      .filter-pill-select {
+        background: var(--surface-2);
+        border: 1px solid var(--line-strong);
+        color: var(--text-main);
+        padding: 8px 14px;
+        border-radius: var(--radius-md);
+        font-family: var(--font-main);
+        font-size: 13.5px;
+        font-weight: 600;
+        outline: none;
+      }
+
+      /* KPI Cards */
       .kpi-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: var(--space-3);
       }
 
       .kpi-card {
-        background: var(--card-bg);
+        background: var(--surface-1);
         border: 1px solid var(--line-soft);
-        border-radius: 20px;
-        padding: 20px 24px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        gap: 12px;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .kpi-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        width: 4px;
-        background: var(--primary);
-      }
-
-      .kpi-card.warn::before {
-        background: var(--danger);
-      }
-
-      .kpi-card.secondary::before {
-        background: var(--secondary);
-      }
-
-      .kpi-card.blue::before {
-        background: var(--tertiary);
+        border-radius: var(--radius-md);
+        padding: var(--space-4);
+        box-shadow: var(--shadow-card);
       }
 
       .kpi-lbl {
         font-size: 11px;
         font-family: var(--font-mono);
         text-transform: uppercase;
-        letter-spacing: 0.05em;
         color: var(--text-muted);
         font-weight: 700;
+        letter-spacing: 0.05em;
       }
 
       .kpi-val {
-        font-size: 28px;
+        font-size: 24px;
         font-weight: 800;
         font-family: var(--font-mono);
-        color: var(--text-main);
+        margin-top: var(--space-1);
       }
 
-      /* Shift Sections & Slot Cards */
+      /* Shift Container */
       .shift-container {
         background: var(--card-bg);
         border: 1px solid var(--line-soft);
-        border-radius: 24px;
-        padding: 28px;
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-        box-shadow: var(--shadow-card);
+        border-radius: var(--radius-lg);
+        padding: var(--space-5);
       }
 
       .shift-header {
         display: flex;
-        flex-wrap: wrap;
         justify-content: space-between;
         align-items: center;
-        gap: 12px;
-        padding-bottom: 12px;
+        margin-bottom: var(--space-4);
+        padding-bottom: var(--space-3);
         border-bottom: 1px solid var(--line-soft);
       }
 
       .slot-admin-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-        gap: 14px;
+        gap: var(--space-3);
       }
 
       .slot-admin-card {
         background: var(--surface-2);
         border: 1px solid var(--line-soft);
-        border-radius: 18px;
-        padding: 16px;
+        border-radius: var(--radius-md);
+        padding: var(--space-3);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        min-height: 120px;
+        min-height: 105px;
         cursor: pointer;
-        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: transform 0.18s ease, border-color 0.18s ease;
         user-select: none;
-        position: relative;
       }
 
       .slot-admin-card:hover {
-        transform: translateY(-3px);
-      }
-
-      .slot-admin-card.state-free {
-        border-color: rgba(255, 255, 255, 0.12);
+        transform: translateY(-2px);
       }
 
       .slot-admin-card.state-free:hover {
         border-color: var(--line-lime);
         background: var(--surface-3);
-        box-shadow: var(--shadow-neon-soft);
       }
 
       .slot-admin-card.state-blocked {
-        background: rgba(255, 82, 82, 0.08);
-        border-color: rgba(255, 82, 82, 0.35);
+        background: rgba(239, 68, 68, 0.08);
+        border-color: rgba(239, 68, 68, 0.35);
       }
 
       .slot-admin-card.state-blocked:hover {
         border-color: var(--danger);
-        background: rgba(255, 82, 82, 0.14);
       }
 
       .slot-admin-card.state-booked {
-        background: rgba(74, 225, 118, 0.08);
-        border-color: rgba(74, 225, 118, 0.35);
+        background: rgba(34, 197, 94, 0.08);
+        border-color: rgba(34, 197, 94, 0.35);
         cursor: not-allowed;
       }
 
       .slot-time-badge {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 800;
         font-family: var(--font-mono);
       }
@@ -290,107 +177,138 @@
         margin-top: 4px;
       }
 
-      .state-free .slot-status-pill {
-        color: var(--text-muted);
-      }
-
-      .state-blocked .slot-status-pill {
-        color: #f87171;
-      }
-
-      .state-booked .slot-status-pill {
-        color: var(--secondary);
-      }
+      .state-free .slot-status-pill { color: var(--text-muted); }
+      .state-blocked .slot-status-pill { color: #f87171; }
+      .state-booked .slot-status-pill { color: var(--primary); }
 
       .slot-card-foot {
         display: flex;
         justify-content: space-between;
-        align-items: center;
         font-size: 11px;
+        font-family: var(--font-mono);
         color: var(--text-muted);
-        padding-top: 8px;
         border-top: 1px solid var(--line-soft);
+        padding-top: 6px;
+        margin-top: 6px;
       }
 
-      /* Toast Notifications */
+      /* Toast Notification */
       #adminToast {
         position: fixed;
-        bottom: 30px;
-        right: 30px;
-        z-index: 1000;
-        background: var(--surface-3);
-        border: 1px solid var(--line-lime);
-        color: var(--text-main);
-        padding: 14px 22px;
-        border-radius: 16px;
-        box-shadow: var(--shadow-glass), var(--shadow-neon-soft);
+        bottom: 24px;
+        right: 24px;
+        background: var(--surface-1);
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-md);
+        padding: 12px 18px;
         display: none;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
+        box-shadow: var(--shadow-elevated);
+        z-index: 2000;
         font-weight: 600;
-        font-size: 14px;
-        animation: modalAppear 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        font-size: 13.5px;
       }
     </style>
   </head>
 
-  <body>
-    <!-- Ambient Glow Layer -->
-    <div class="ambient-glow-mesh" aria-hidden="true">
-      <div class="glow-orb-1"></div>
-      <div class="glow-orb-2"></div>
+  <body class="page-dashboard">
+    <!-- Layered Sports Background System -->
+    <div class="sports-bg-layer" aria-hidden="true">
+      <div class="sports-bg-stadium"></div>
+      <div class="sports-bg-turf-stripes"></div>
+      <div class="sports-bg-pitch-lines"></div>
+      <div class="sports-bg-court-geometry"></div>
     </div>
 
-    <!-- Header Navigation -->
-    <header>
+    <!-- Global Standard Header -->
+    <header class="global-header">
       <div class="navbar-inner">
-        <a class="logo" href="index.html">
+        <!-- LEFT: Brand Logo -->
+        <a class="logo" href="index.html" aria-label="TurfArena Home">
           <div class="logo-icon">
             <i class="fa-solid fa-crown"></i>
           </div>
-          <div>
-            <div class="logo-brand">TURF<span>ARENA</span></div>
-            <div class="logo-sub">HQ Master Slot Suite</div>
+          <div class="logo-text">
+            <span class="logo-brand">TURF<span>ARENA</span></span>
+            <span class="logo-sub">HQ Facility Controller</span>
           </div>
         </a>
 
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <div class="badge badge-green" style="display: none; sm:display: inline-flex;">
-            <span class="live-dot"></span> Master Operational Node
-          </div>
-          <a href="index.html" class="btn btn-outline btn-sm">
-            <i class="fa-solid fa-house"></i> Public App
+        <!-- CENTER: Navigation Links -->
+        <nav class="top-nav" aria-label="Main Navigation">
+          <a href="index.html" class="nav-link">
+            <i class="fa-solid fa-house"></i> Home
           </a>
-          <button class="theme-toggle-btn" data-theme-toggle type="button"></button>
-          <button class="btn btn-ghost btn-sm" onclick="handleLogout()" title="Sign Out">
-            <i class="fa-solid fa-power-off" style="color: var(--danger);"></i>
+          <a href="index.html#available-turfs" class="nav-link">
+            <i class="fa-solid fa-calendar-check"></i> Book Turf
+          </a>
+          <a href="community.html" class="nav-link">
+            <i class="fa-solid fa-users"></i> Community
+          </a>
+          <a href="admin-dashboard.html" class="nav-link active">
+            <i class="fa-solid fa-sliders"></i> Admin Console
+          </a>
+        </nav>
+
+        <!-- RIGHT: Theme Toggle & Admin Controls -->
+        <div class="header-actions">
+          <button class="theme-toggle-btn" data-theme-toggle type="button" aria-label="Toggle theme"></button>
+          <div id="userAuthActions" class="auth-actions-slot">
+            <span class="badge badge-lime">Admin</span>
+            <button class="btn btn-ghost btn-sm" onclick="handleLogout()" title="Sign Out" aria-label="Sign Out">
+              <i class="fa-solid fa-power-off" style="color: var(--danger);"></i>
+            </button>
+          </div>
+          <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle menu" onclick="toggleMobileNav()">
+            <i class="fa-solid fa-bars"></i>
           </button>
         </div>
       </div>
+
+      <!-- Mobile Dropdown Navigation -->
+      <div class="mobile-nav-drawer" id="mobileNavDrawer">
+        <a href="index.html" class="mobile-nav-link" onclick="closeMobileNav()">
+          <i class="fa-solid fa-house"></i> Home
+        </a>
+        <a href="index.html#available-turfs" class="mobile-nav-link" onclick="closeMobileNav()">
+          <i class="fa-solid fa-calendar-check"></i> Book Turf
+        </a>
+        <a href="community.html" class="mobile-nav-link" onclick="closeMobileNav()">
+          <i class="fa-solid fa-users"></i> Community Lobby
+        </a>
+        <a href="admin-dashboard.html" class="mobile-nav-link active" onclick="closeMobileNav()">
+          <i class="fa-solid fa-sliders"></i> Admin Console
+        </a>
+        <button onclick="handleLogout()" class="btn btn-danger btn-sm" style="width: 100%; margin-top: 8px;">
+          <i class="fa-solid fa-power-off"></i> Sign Out
+        </button>
+      </div>
     </header>
 
+    <!-- Main Content -->
     <main class="admin-layout">
       <!-- ───────────────────────────────────────────
            MASTER COMMAND BANNER
       ─────────────────────────────────────────── -->
       <section class="command-banner">
         <div class="command-header-top">
-          <div style="display: flex; align-items: center; gap: 16px;">
-            <div style="width: 56px; height: 56px; border-radius: 18px; background: var(--surface-2); border: 1px solid var(--line-lime); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 26px; box-shadow: var(--shadow-neon-soft);">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 48px; height: 48px; border-radius: var(--radius-md); background: var(--surface-2); border: 1px solid var(--line-lime); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 22px; box-shadow: var(--shadow-neon-soft);">
               <i class="fa-solid fa-sliders"></i>
             </div>
             <div>
               <div style="display: flex; align-items: center; gap: 8px;">
-                <h1 style="font-size: 24px; font-weight: 800;">Admin Slot Controller</h1>
+                <h1 style="font-size: 20px; font-weight: 800;">Slot Controller & Maintenance</h1>
                 <span class="badge badge-lime">Live Sync Active</span>
               </div>
-              <p style="font-size: 13.5px; color: var(--text-muted); margin-top: 2px;">
-                Manage facility hourly locks, maintenance holds, and real-time slot synchronization.
+              <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+                Manage ground hourly availability, maintenance holds, and operator locks.
               </p>
             </div>
           </div>
 
-          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button class="btn btn-outline btn-sm" onclick="refreshAdminData()">
               <i class="fa-solid fa-rotate"></i> Refresh Matrix
             </button>
@@ -403,10 +321,10 @@
         <!-- Venue & Date Control Bar -->
         <div class="command-controls-bar">
           <!-- Turf Selector -->
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <i class="fa-solid fa-futbol" style="color: var(--primary); font-size: 18px;"></i>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-futbol" style="color: var(--primary); font-size: 16px;"></i>
             <div>
-              <div style="font-size: 10px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Active Pitch Arena</div>
+              <label style="font-size: 10px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block;">Active Pitch Arena</label>
               <select id="adminTurfSelect" class="filter-pill-select" onchange="changeTurf(this.value)">
                 <option value="1">GreenLine Arena (Velachery)</option>
                 <option value="2">Boundary Line Turf (Tambaram)</option>
@@ -416,13 +334,13 @@
           </div>
 
           <!-- Date Selector -->
-          <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
             <button class="btn btn-outline btn-sm" onclick="shiftDate(-1)" title="Previous Day">
               <i class="fa-solid fa-chevron-left"></i>
             </button>
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
               <i class="fa-regular fa-calendar" style="color: var(--secondary);"></i>
-              <input type="date" id="adminDateInput" class="input-premium" style="width: auto; padding: 6px 12px; font-size: 13px;" onchange="handleDateChange()" />
+              <input type="date" id="adminDateInput" class="input-premium" style="width: auto; padding: 6px 10px; font-size: 13px;" onchange="handleDateChange()" />
             </div>
             <button class="btn btn-outline btn-sm" onclick="shiftDate(1)" title="Next Day">
               <i class="fa-solid fa-chevron-right"></i>
@@ -430,15 +348,15 @@
           </div>
 
           <!-- Legend -->
-          <div style="display: flex; gap: 14px; font-size: 12px; font-family: var(--font-mono);">
+          <div style="display: flex; gap: 12px; font-size: 11.5px; font-family: var(--font-mono);">
             <span style="display: flex; align-items: center; gap: 6px;">
-              <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--surface-3); border: 1px solid var(--line-strong);"></span> Free
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--surface-3); border: 1px solid var(--line-strong);"></span> Free
             </span>
             <span style="display: flex; align-items: center; gap: 6px;">
-              <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--danger);"></span> Blocked
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--danger);"></span> Blocked
             </span>
             <span style="display: flex; align-items: center; gap: 6px;">
-              <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--secondary);"></span> User Booked
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--primary);"></span> Booked
             </span>
           </div>
         </div>
@@ -448,9 +366,9 @@
            KPI METRICS STRIP
       ─────────────────────────────────────────── -->
       <section class="kpi-grid">
-        <div class="kpi-card blue">
-          <div class="kpi-lbl">Total Hourly Slots</div>
-          <div class="kpi-val">24 hrs</div>
+        <div class="kpi-card">
+          <div class="kpi-lbl">Total Slots</div>
+          <div class="kpi-val" style="color: var(--secondary);">24 hrs</div>
         </div>
 
         <div class="kpi-card">
@@ -458,14 +376,14 @@
           <div class="kpi-val" id="kpiFree" style="color: var(--primary);">24</div>
         </div>
 
-        <div class="kpi-card warn">
+        <div class="kpi-card">
           <div class="kpi-lbl">Admin Blocked</div>
           <div class="kpi-val" id="kpiBlocked" style="color: var(--danger);">0</div>
         </div>
 
-        <div class="kpi-card secondary">
+        <div class="kpi-card">
           <div class="kpi-lbl">User Booked</div>
-          <div class="kpi-val" id="kpiBooked" style="color: var(--secondary);">0</div>
+          <div class="kpi-val" id="kpiBooked" style="color: var(--primary);">0</div>
         </div>
 
         <div class="kpi-card">
@@ -482,11 +400,11 @@
           <div style="display: flex; align-items: center; gap: 10px;">
             <i class="fa-solid fa-sun" style="color: var(--accent-gold); font-size: 18px;"></i>
             <div>
-              <h2 style="font-size: 17px; font-weight: 800;">Morning Shift</h2>
-              <span style="font-size: 12px; color: var(--text-muted);">06:00 AM – 12:00 PM • Training & Early Bird Slots</span>
+              <h2 style="font-size: 16px; font-weight: 800;">Morning Shift</h2>
+              <span style="font-size: 12px; color: var(--text-muted);">06:00 AM – 12:00 PM • Early Training & Practice</span>
             </div>
           </div>
-          <div style="display: flex; gap: 8px;">
+          <div style="display: flex; gap: 6px;">
             <button class="btn btn-outline btn-sm" onclick="bulkShiftAction([6,7,8,9,10,11], 'block')">Block All</button>
             <button class="btn btn-outline btn-sm" onclick="bulkShiftAction([6,7,8,9,10,11], 'unblock')">Free All</button>
           </div>
@@ -500,13 +418,13 @@
       <section class="shift-container">
         <div class="shift-header">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <i class="fa-solid fa-cloud-sun" style="color: var(--tertiary); font-size: 18px;"></i>
+            <i class="fa-solid fa-cloud-sun" style="color: var(--secondary); font-size: 18px;"></i>
             <div>
-              <h2 style="font-size: 17px; font-weight: 800;">Afternoon Shift</h2>
-              <span style="font-size: 12px; color: var(--text-muted);">12:00 PM – 05:00 PM • Matinee & Practice Matches</span>
+              <h2 style="font-size: 16px; font-weight: 800;">Afternoon Shift</h2>
+              <span style="font-size: 12px; color: var(--text-muted);">12:00 PM – 05:00 PM • Midday Friendly Matches</span>
             </div>
           </div>
-          <div style="display: flex; gap: 8px;">
+          <div style="display: flex; gap: 6px;">
             <button class="btn btn-outline btn-sm" onclick="bulkShiftAction([12,13,14,15,16], 'block')">Block All</button>
             <button class="btn btn-outline btn-sm" onclick="bulkShiftAction([12,13,14,15,16], 'unblock')">Free All</button>
           </div>
@@ -522,11 +440,11 @@
           <div style="display: flex; align-items: center; gap: 10px;">
             <i class="fa-solid fa-moon" style="color: var(--primary); font-size: 18px;"></i>
             <div>
-              <h2 style="font-size: 17px; font-weight: 800;">Evening & Night Floodlight Prime</h2>
-              <span style="font-size: 12px; color: var(--text-muted);">05:00 PM – Midnight • High Demand Prime League Hours</span>
+              <h2 style="font-size: 16px; font-weight: 800;">Evening & Night Floodlight Prime</h2>
+              <span style="font-size: 12px; color: var(--text-muted);">05:00 PM – Midnight • Prime League & Tournament Hours</span>
             </div>
           </div>
-          <div style="display: flex; gap: 8px;">
+          <div style="display: flex; gap: 6px;">
             <button class="btn btn-outline btn-sm" onclick="bulkShiftAction([17,18,19,20,21,22,23], 'block')">Block All</button>
             <button class="btn btn-outline btn-sm" onclick="bulkShiftAction([17,18,19,20,21,22,23], 'unblock')">Free All</button>
           </div>
@@ -540,13 +458,13 @@
       <section class="shift-container">
         <div class="shift-header">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <i class="fa-solid fa-stars" style="color: var(--text-muted); font-size: 18px;"></i>
+            <i class="fa-solid fa-circle-notch" style="color: var(--text-muted); font-size: 18px;"></i>
             <div>
-              <h2 style="font-size: 17px; font-weight: 800;">Late Night Hours</h2>
-              <span style="font-size: 12px; color: var(--text-muted);">Midnight – 06:00 AM • Midnight Tournaments & Maintenance</span>
+              <h2 style="font-size: 16px; font-weight: 800;">Late Night Hours</h2>
+              <span style="font-size: 12px; color: var(--text-muted);">Midnight – 06:00 AM • Facility Maintenance & Midnight Practice</span>
             </div>
           </div>
-          <div style="display: gap: 8px;">
+          <div style="display: flex; gap: 6px;">
             <button class="btn btn-outline btn-sm" onclick="bulkShiftAction([0,1,2,3,4,5], 'block')">Block All</button>
             <button class="btn btn-outline btn-sm" onclick="bulkShiftAction([0,1,2,3,4,5], 'unblock')">Free All</button>
           </div>
@@ -568,27 +486,16 @@
       let turfBasePrice = 1200;
       let bookings = {};
       let blocked = {};
-      let allBookingsList = [];
-
-      function escapeHtml(str) {
-        if (str === null || str === undefined) return "";
-        return String(str)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#39;");
-      }
 
       async function init() {
         try {
-          const authRes = await fetch("/api/auth/me", { credentials: "include" });
-          if (!authRes.ok) {
+          const res = await fetch("/api/auth/me", { credentials: "include" });
+          if (!res.ok) {
             window.location.href = "admin-login.html";
             return;
           }
-          const authData = await authRes.json();
-          if (!authData.user || authData.user.role !== "admin") {
+          const data = await res.json();
+          if (!data.user || data.user.role !== "admin") {
             window.location.href = "admin-login.html";
             return;
           }
@@ -636,10 +543,6 @@
 
           const blRes = await fetch(`/api/blocked-slots?date=${encodeURIComponent(date)}`, { credentials: "include" });
           if (blRes.ok) blocked = await blRes.json();
-
-          // Also fetch detailed bookings if available
-          const allRes = await fetch(`/api/bookings`, { credentials: "include" });
-          if (allRes.ok) allBookingsList = await allRes.json();
         } catch (err) {
           console.error("Error refreshing data:", err);
         }
@@ -678,7 +581,6 @@
 
         const bookedList = bookings[currentTurfId] || [];
         const blockedList = blocked[currentTurfId] || [];
-        const date = document.getElementById("adminDateInput").value;
 
         hoursList.forEach((h) => {
           const isBooked = bookedList.includes(h);
@@ -708,14 +610,14 @@
             <div>
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="slot-time-badge">${timeLabel}</span>
-                <i class="fa-solid ${icon}" style="font-size: 13px;"></i>
+                <i class="fa-solid ${icon}" style="font-size: 12px;"></i>
               </div>
               <div class="slot-status-pill">${subLabel}</div>
             </div>
 
             <div class="slot-card-foot">
               <span>Rate: ₹${turfBasePrice}</span>
-              <span>${isBooked ? `<span style="color:var(--secondary); font-weight:700;">Locked</span>` : isBlocked ? `<span style="color:var(--danger);">Blocked</span>` : `<span style="color:var(--primary);">Open</span>`}</span>
+              <span>${isBooked ? `<span style="color:var(--primary); font-weight:700;">Locked</span>` : isBlocked ? `<span style="color:var(--danger);">Blocked</span>` : `<span style="color:var(--primary);">Open</span>`}</span>
             </div>
           `;
 
@@ -757,7 +659,7 @@
         const bookedList = bookings[currentTurfId] || [];
 
         for (const h of hoursList) {
-          if (bookedList.includes(h)) continue; // skip already booked slots
+          if (bookedList.includes(h)) continue;
           const method = action === "block" ? "POST" : "DELETE";
           await fetch("/api/blocked-slots", {
             method: method,
@@ -784,7 +686,7 @@
         }, 3000);
       }
 
-      window.onload = init;
+      window.addEventListener("DOMContentLoaded", init);
     </script>
   </body>
 </html>

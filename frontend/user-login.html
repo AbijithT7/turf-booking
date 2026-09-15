@@ -2,8 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>TurfArena - Athlete Authentication</title>
+    <title>TurfArena - Player Sign In & Sign Up</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      try {
+        const t = localStorage.getItem("turf_theme") || "dark";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    </script>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,31 +19,25 @@
     <!-- Theme CSS -->
     <link rel="stylesheet" href="theme.css" />
     <style>
-      body {
+      .auth-layout {
+        min-height: calc(100vh - 70px);
         display: flex;
         align-items: center;
         justify-content: center;
-        min-height: 100vh;
-        padding: 24px;
-        position: relative;
-      }
-
-      .auth-box {
-        background: var(--card-bg);
-        border: 1px solid var(--line-strong);
-        border-radius: 28px;
-        width: 100%;
-        max-width: 440px;
-        padding: 40px 32px;
-        box-shadow: var(--shadow-glass), var(--shadow-neon-soft);
+        padding: var(--space-6) var(--space-4);
         position: relative;
         z-index: 10;
-        animation: modalAppear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       }
 
-      @keyframes modalAppear {
-        from { opacity: 0; transform: scale(0.96) translateY(10px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
+      .auth-card {
+        background: var(--card-bg);
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-lg);
+        width: 100%;
+        max-width: 440px;
+        padding: var(--space-6) var(--space-6);
+        box-shadow: var(--shadow-elevated);
+        position: relative;
       }
 
       .auth-logo-header {
@@ -45,36 +45,36 @@
         flex-direction: column;
         align-items: center;
         text-align: center;
-        margin-bottom: 24px;
+        margin-bottom: var(--space-5);
       }
 
       .auth-logo-icon {
-        width: 52px;
-        height: 52px;
-        border-radius: 16px;
-        background: linear-gradient(135deg, var(--primary) 0%, #22c55e 100%);
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-md);
+        background: linear-gradient(135deg, var(--primary) 0%, #15803d 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         color: #050a0d;
-        font-size: 24px;
+        font-size: 22px;
         box-shadow: var(--shadow-neon-soft);
-        margin-bottom: 12px;
+        margin-bottom: var(--space-3);
       }
 
       .auth-tabs {
         display: grid;
         grid-template-columns: 1fr 1fr;
         background: var(--surface-2);
-        padding: 4px;
-        border-radius: 14px;
+        padding: var(--space-1);
+        border-radius: var(--radius-md);
         border: 1px solid var(--line-soft);
-        margin-bottom: 24px;
+        margin-bottom: var(--space-5);
       }
 
       .auth-tab-btn {
-        padding: 10px;
-        border-radius: 10px;
+        padding: 9px;
+        border-radius: var(--radius-sm);
         border: none;
         background: transparent;
         color: var(--text-muted);
@@ -93,10 +93,10 @@
       }
 
       .input-field-group {
-        margin-bottom: 16px;
+        margin-bottom: var(--space-4);
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: var(--space-1);
       }
 
       .input-field-label {
@@ -106,14 +106,13 @@
         color: var(--text-muted);
         font-weight: 700;
         letter-spacing: 0.05em;
-        margin-left: 2px;
       }
 
       .message-box {
         font-size: 13px;
         text-align: center;
         min-height: 20px;
-        margin-top: 12px;
+        margin-top: var(--space-3);
         font-weight: 600;
       }
 
@@ -122,84 +121,154 @@
       }
 
       .message-box.success {
-        color: var(--secondary);
+        color: var(--primary);
       }
     </style>
   </head>
 
-  <body>
-    <!-- Ambient Glow Layer -->
-    <div class="ambient-glow-mesh" aria-hidden="true">
-      <div class="glow-orb-1"></div>
-      <div class="glow-orb-2"></div>
+  <body class="page-auth">
+    <!-- Layered Sports Background System -->
+    <div class="sports-bg-layer" aria-hidden="true">
+      <div class="sports-bg-stadium"></div>
+      <div class="sports-bg-turf-stripes"></div>
+      <div class="sports-bg-pitch-lines"></div>
+      <div class="sports-bg-court-geometry"></div>
     </div>
 
-    <div class="auth-box">
-      <!-- Logo Header -->
-      <div class="auth-logo-header">
-        <a href="index.html" style="text-decoration: none;">
+    <!-- Global Standard Header -->
+    <header class="global-header">
+      <div class="navbar-inner">
+        <!-- LEFT: Brand Logo -->
+        <a class="logo" href="index.html" aria-label="TurfArena Home">
+          <div class="logo-icon">
+            <i class="fa-solid fa-crown"></i>
+          </div>
+          <div class="logo-text">
+            <span class="logo-brand">TURF<span>ARENA</span></span>
+            <span class="logo-sub">Book. Play. Connect.</span>
+          </div>
+        </a>
+
+        <!-- CENTER: Navigation Links -->
+        <nav class="top-nav" aria-label="Main Navigation">
+          <a href="index.html" class="nav-link">
+            <i class="fa-solid fa-house"></i> Home
+          </a>
+          <a href="index.html#available-turfs" class="nav-link">
+            <i class="fa-solid fa-calendar-check"></i> Book Turf
+          </a>
+          <a href="community.html" class="nav-link">
+            <i class="fa-solid fa-users"></i> Community
+          </a>
+          <a href="community.html#tournaments" class="nav-link">
+            <i class="fa-solid fa-trophy"></i> Tournaments
+          </a>
+        </nav>
+
+        <!-- RIGHT: Theme Toggle & Controls -->
+        <div class="header-actions">
+          <button class="theme-toggle-btn" data-theme-toggle type="button" aria-label="Toggle theme"></button>
+          <div id="userAuthActions" class="auth-actions-slot">
+            <a href="index.html" class="btn btn-outline btn-sm">
+              <i class="fa-solid fa-arrow-left"></i> Home
+            </a>
+          </div>
+          <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle menu" onclick="toggleMobileNav()">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Dropdown Navigation -->
+      <div class="mobile-nav-drawer" id="mobileNavDrawer">
+        <a href="index.html" class="mobile-nav-link" onclick="closeMobileNav()">
+          <i class="fa-solid fa-house"></i> Home
+        </a>
+        <a href="index.html#available-turfs" class="mobile-nav-link" onclick="closeMobileNav()">
+          <i class="fa-solid fa-calendar-check"></i> Book Turf
+        </a>
+        <a href="community.html" class="mobile-nav-link" onclick="closeMobileNav()">
+          <i class="fa-solid fa-users"></i> Community
+        </a>
+        <a href="community.html#tournaments" class="mobile-nav-link" onclick="closeMobileNav()">
+          <i class="fa-solid fa-trophy"></i> Tournaments
+        </a>
+        <a href="admin-login.html" class="mobile-nav-link" onclick="closeMobileNav()">
+          <i class="fa-solid fa-shield"></i> Admin Portal
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="auth-layout">
+      <div class="auth-card">
+        <!-- Logo Header -->
+        <div class="auth-logo-header">
           <div class="auth-logo-icon">
             <i class="fa-solid fa-crown"></i>
           </div>
-        </a>
-        <h2 style="font-size: 22px; font-weight: 800; color: var(--text-main);">
-          Welcome to <span class="text-lime-gradient">TURFARENA</span>
-        </h2>
-        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
-          Access live ground slots and squad matchmaking
-        </p>
+          <h1 style="font-size: 22px; font-weight: 800; color: var(--text-main);">
+            Player Portal
+          </h1>
+          <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+            Instant pitch reservations & team matchmaking
+          </p>
+        </div>
+
+        <!-- Segmented Switcher -->
+        <div class="auth-tabs">
+          <button class="auth-tab-btn active" id="tabLogin" onclick="switchAuthTab('login')">
+            <i class="fa-solid fa-lock"></i> Sign In
+          </button>
+          <button class="auth-tab-btn" id="tabRegister" onclick="switchAuthTab('register')">
+            <i class="fa-solid fa-user-plus"></i> Sign Up
+          </button>
+        </div>
+
+        <!-- Form -->
+        <form id="authForm" onsubmit="handleAuthSubmit(event)">
+          <!-- Name (Register Only) -->
+          <div class="input-field-group" id="groupName" style="display: none;">
+            <label class="input-field-label" for="authName">Full Name</label>
+            <input type="text" id="authName" class="input-premium" placeholder="e.g. Alex Morgan" />
+          </div>
+
+          <!-- Email -->
+          <div class="input-field-group">
+            <label class="input-field-label" for="authEmail">Email Address</label>
+            <input type="email" id="authEmail" class="input-premium" placeholder="name@example.com" required />
+          </div>
+
+          <!-- Phone (Register Only) -->
+          <div class="input-field-group" id="groupPhone" style="display: none;">
+            <label class="input-field-label" for="authPhone">Mobile Number (10 digits)</label>
+            <input type="tel" id="authPhone" class="input-premium" placeholder="9876543210" />
+          </div>
+
+          <!-- Password -->
+          <div class="input-field-group">
+            <label class="input-field-label" for="authPassword">Password</label>
+            <input type="password" id="authPassword" class="input-premium" placeholder="At least 6 characters" required />
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="authSubmitBtn" style="width: 100%; padding: 12px; margin-top: var(--space-2);">
+            Sign In to TurfArena
+          </button>
+
+          <div id="authMessage" class="message-box" role="status" aria-live="polite"></div>
+        </form>
+
+        <!-- Sub Links -->
+        <div style="margin-top: var(--space-5); text-align: center; border-top: 1px solid var(--line-soft); padding-top: var(--space-4); display: flex; justify-content: space-between; align-items: center; font-size: 12.5px;">
+          <a href="index.html" style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-arrow-left"></i> Home
+          </a>
+          <a href="admin-login.html" style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-shield"></i> Facility Admin
+          </a>
+        </div>
       </div>
-
-      <!-- Segmented Switcher -->
-      <div class="auth-tabs">
-        <button class="auth-tab-btn active" id="tabLogin" onclick="switchAuthTab('login')">
-          <i class="fa-solid fa-lock"></i> Sign In
-        </button>
-        <button class="auth-tab-btn" id="tabRegister" onclick="switchAuthTab('register')">
-          <i class="fa-solid fa-user-plus"></i> Sign Up
-        </button>
-      </div>
-
-      <!-- Form -->
-      <form id="authForm" onsubmit="handleAuthSubmit(event)">
-        <!-- Name (Register Only) -->
-        <div class="input-field-group" id="groupName" style="display: none;">
-          <label class="input-field-label">Full Name</label>
-          <input type="text" id="authName" class="input-premium" placeholder="Full name" />
-        </div>
-
-        <!-- Email -->
-        <div class="input-field-group">
-          <label class="input-field-label">Email Address</label>
-          <input type="email" id="authEmail" class="input-premium" placeholder="name@example.com" required />
-        </div>
-
-        <!-- Phone (Register Only) -->
-        <div class="input-field-group" id="groupPhone" style="display: none;">
-          <label class="input-field-label">Mobile Number</label>
-          <input type="tel" id="authPhone" class="input-premium" placeholder="10-digit phone number" />
-        </div>
-
-        <!-- Password -->
-        <div class="input-field-group">
-          <label class="input-field-label">Password</label>
-          <input type="password" id="authPassword" class="input-premium" placeholder="••••••••" required />
-        </div>
-
-        <button type="submit" class="btn btn-primary" id="authSubmitBtn" style="width: 100%; padding: 14px; margin-top: 8px;">
-          Sign In to TurfArena
-        </button>
-
-        <div id="authMessage" class="message-box"></div>
-      </form>
-
-      <!-- Back Link -->
-      <div style="margin-top: 24px; text-align: center; border-top: 1px solid var(--line-soft); padding-top: 16px;">
-        <a href="index.html" style="color: var(--text-muted); font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-          <i class="fa-solid fa-arrow-left"></i> Back to Homepage
-        </a>
-      </div>
-    </div>
+    </main>
 
     <!-- Scripts -->
     <script src="theme-toggle.js"></script>
@@ -214,7 +283,7 @@
         document.getElementById("groupName").style.display = mode === "register" ? "flex" : "none";
         document.getElementById("groupPhone").style.display = mode === "register" ? "flex" : "none";
 
-        document.getElementById("authSubmitBtn").textContent = mode === "login" ? "Sign In to TurfArena" : "Create Athlete Account";
+        document.getElementById("authSubmitBtn").textContent = mode === "login" ? "Sign In to TurfArena" : "Create Player Account";
         document.getElementById("authMessage").textContent = "";
       }
 
@@ -243,7 +312,7 @@
             msg.textContent = "Welcome back! Redirecting...";
             setTimeout(() => {
               window.location.href = data.user.role === "admin" ? "admin-dashboard.html" : "index.html";
-            }, 800);
+            }, 700);
           } catch (err) {
             msg.className = "message-box error";
             msg.textContent = err.message;
@@ -254,7 +323,7 @@
 
           if (!name || !phone) {
             msg.className = "message-box error";
-            msg.textContent = "Please fill in all fields.";
+            msg.textContent = "Please fill in all registration fields.";
             return;
           }
 
@@ -276,10 +345,10 @@
 
             localStorage.setItem("currentUser", JSON.stringify(data.user));
             msg.className = "message-box success";
-            msg.textContent = "Account created successfully! Redirecting...";
+            msg.textContent = "Account created! Redirecting...";
             setTimeout(() => {
               window.location.href = "index.html";
-            }, 800);
+            }, 700);
           } catch (err) {
             msg.className = "message-box error";
             msg.textContent = err.message;

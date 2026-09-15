@@ -5,6 +5,12 @@
     <title>TurfArena - Find Your Turf. Fuel Your Game.</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Discover and book premium sports turfs near you. Live slots, no double booking, instant reservations for Football, Cricket and more." />
+    <script>
+      try {
+        const t = localStorage.getItem("turf_theme") || "dark";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    </script>
     <!-- Google Fonts: Plus Jakarta Sans & Space Grotesk -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,145 +23,6 @@
     <!-- Custom Theme & Sports-Tech Design System -->
     <link rel="stylesheet" href="theme.css" />
     <style>
-      /* Page Specific Styles */
-      header {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        padding: 16px 5vw;
-        background: var(--surface-1);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-        border-bottom: 1px solid var(--line-soft);
-        transition: all 0.3s ease;
-      }
-
-      .navbar-inner {
-        max-width: 1360px;
-        margin: 0 auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 16px;
-      }
-
-      .logo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        text-decoration: none;
-        color: var(--text-main);
-        cursor: pointer;
-      }
-
-      .logo-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, var(--primary) 0%, #22c55e 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #050a0d;
-        font-size: 20px;
-        box-shadow: var(--shadow-neon-soft);
-        transition: transform 0.3s ease;
-      }
-
-      .logo:hover .logo-icon {
-        transform: scale(1.05);
-      }
-
-      .logo-text {
-        display: flex;
-        flex-direction: column;
-      }
-
-      .logo-brand {
-        font-size: 20px;
-        font-weight: 800;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        line-height: 1;
-      }
-
-      .logo-brand span {
-        color: var(--primary);
-      }
-
-      .logo-sub {
-        font-size: 9.5px;
-        font-family: var(--font-mono);
-        text-transform: uppercase;
-        letter-spacing: 0.22em;
-        color: var(--text-muted);
-        margin-top: 3px;
-        font-weight: 600;
-      }
-
-      .top-nav {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        background: var(--surface-2);
-        padding: 4px 6px;
-        border-radius: 999px;
-        border: 1px solid var(--line-soft);
-      }
-
-      .nav-link {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 18px;
-        border-radius: 999px;
-        text-decoration: none;
-        color: var(--text-muted);
-        font-weight: 600;
-        font-size: 13.5px;
-        transition: all 0.2s ease;
-      }
-
-      .nav-link:hover {
-        color: var(--text-main);
-        background: var(--surface-3);
-      }
-
-      .nav-link.active {
-        color: var(--on-primary);
-        background: var(--primary);
-        box-shadow: var(--shadow-neon-soft);
-      }
-
-      .header-actions {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-      }
-
-      .visit-pill {
-        font-size: 11.5px;
-        font-family: var(--font-mono);
-        color: var(--tertiary);
-        background: var(--surface-2);
-        padding: 6px 12px;
-        border-radius: 999px;
-        border: 1px solid var(--line-soft);
-        font-weight: 600;
-        display: none;
-      }
-
-      @media (min-width: 992px) {
-        .visit-pill {
-          display: inline-flex;
-        }
-      }
-
-      @media (max-width: 860px) {
-        .top-nav {
-          display: none;
-        }
-      }
 
       /* ── Hero Section ── */
       .hero-section {
@@ -848,32 +715,31 @@
     </style>
   </head>
 
-  <body>
-    <!-- Ambient Stadium Lighting & Glow Mesh -->
-    <div class="ambient-glow-mesh" aria-hidden="true">
-      <div class="glow-orb-1"></div>
-      <div class="glow-orb-2"></div>
-      <div class="glow-orb-3"></div>
+  <body class="page-home">
+    <!-- Layered Sports Background System -->
+    <div class="sports-bg-layer" aria-hidden="true">
+      <div class="sports-bg-stadium"></div>
+      <div class="sports-bg-turf-stripes"></div>
+      <div class="sports-bg-pitch-lines"></div>
+      <div class="sports-bg-court-geometry"></div>
     </div>
 
-    <!-- ───────────────────────────────────────────
-         HEADER / NAVIGATION
-    ─────────────────────────────────────────── -->
-    <header>
+    <!-- Global Standard Header -->
+    <header class="global-header">
       <div class="navbar-inner">
-        <!-- Logo -->
-        <a class="logo" href="index.html">
+        <!-- LEFT: Brand Logo -->
+        <a class="logo" href="index.html" aria-label="TurfArena Home">
           <div class="logo-icon">
             <i class="fa-solid fa-crown"></i>
           </div>
           <div class="logo-text">
             <span class="logo-brand">TURF<span>ARENA</span></span>
-            <span class="logo-sub">Play Beyond Boundaries</span>
+            <span class="logo-sub">Book. Play. Connect.</span>
           </div>
         </a>
 
-        <!-- Center Nav Links -->
-        <nav class="top-nav">
+        <!-- CENTER: Navigation Links -->
+        <nav class="top-nav" aria-label="Main Navigation">
           <a href="index.html" class="nav-link active">
             <i class="fa-solid fa-house"></i> Home
           </a>
@@ -886,17 +752,12 @@
           <a href="community.html#tournaments" class="nav-link">
             <i class="fa-solid fa-trophy"></i> Tournaments
           </a>
-          <a href="#about" class="nav-link">
-            <i class="fa-solid fa-shield-halved"></i> About
-          </a>
         </nav>
 
-        <!-- Right User Actions -->
+        <!-- RIGHT: Theme Toggle & Controls -->
         <div class="header-actions">
-          <button class="theme-toggle-btn" data-theme-toggle type="button"></button>
-          <span id="visitCountDisplay" class="visit-pill">Visits: 0</span>
-          
-          <div id="userAuthActions" style="display: flex; gap: 8px;">
+          <button class="theme-toggle-btn" data-theme-toggle type="button" aria-label="Toggle theme"></button>
+          <div id="userAuthActions" class="auth-actions-slot">
             <a href="user-login.html" class="btn btn-outline btn-sm">
               <i class="fa-solid fa-user"></i> Login
             </a>
@@ -904,7 +765,27 @@
               Sign Up
             </a>
           </div>
+          <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle menu" onclick="toggleMobileNav()">
+            <i class="fa-solid fa-bars"></i>
+          </button>
         </div>
+      </div>
+
+      <!-- Mobile Dropdown Navigation -->
+      <div class="mobile-nav-drawer" id="mobileNavDrawer">
+        <a href="index.html" class="mobile-nav-link active" onclick="closeMobileNav()">
+          <i class="fa-solid fa-house"></i> Home
+        </a>
+        <a href="#available-turfs" class="mobile-nav-link" onclick="closeMobileNav()">
+          <i class="fa-solid fa-calendar-check"></i> Book Turf
+        </a>
+        <a href="community.html" class="mobile-nav-link" onclick="closeMobileNav()">
+          <i class="fa-solid fa-users"></i> Community Lobby
+        </a>
+        <a href="community.html#tournaments" class="mobile-nav-link" onclick="closeMobileNav()">
+          <i class="fa-solid fa-trophy"></i> Tournaments
+        </a>
+        <div id="mobileAuthSlot" class="mobile-auth-slot"></div>
       </div>
     </header>
 
@@ -916,7 +797,7 @@
         <!-- Hero Left Content -->
         <div>
           <div class="badge badge-lime" style="margin-bottom: 8px;">
-            <i class="fa-solid fa-bolt"></i> PLAY. BOOK. REPEAT.
+            <i class="fa-solid fa-bolt"></i> BOOK. PLAY. CONNECT.
           </div>
 
           <h1 class="hero-headline">
@@ -925,7 +806,7 @@
           </h1>
 
           <p class="hero-subtitle">
-            Discover and book premium turfs near you. Play your favourite sport, anytime — no calls, no hassle.
+            Discover and book verified turf pitches near you in seconds. Real-time slot locking, zero double bookings, instant digital entry passes.
           </p>
 
           <!-- Search & Filter Bar Dock -->
@@ -1108,7 +989,8 @@
         <div>
           <span>© 2026 TurfArena Inc. All rights reserved. High-performance pitch booking.</span>
         </div>
-        <div style="display: flex; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <span id="visitCountDisplay" style="font-size: 11px; font-family: var(--font-mono); color: var(--text-dim);"></span>
           <a href="admin-login.html" style="color: var(--text-muted); text-decoration: none; font-size: 12px;">
             <i class="fa-solid fa-shield"></i> Admin Control
           </a>
@@ -1183,14 +1065,14 @@
 
           <!-- 24-Hour Slot Matrix Section -->
           <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
               <span style="font-weight: 700; font-size: 15px;">Available Hourly Slots</span>
-              <!-- Legend -->
-              <div style="display: flex; gap: 12px; font-size: 11px; font-family: var(--font-mono); color: var(--text-muted);">
-                <span><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--surface-3); border:1px solid var(--line-strong);"></span> Free</span>
-                <span><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--primary);"></span> Selected</span>
-                <span><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:rgba(37,43,46,0.6);"></span> Booked</span>
-                <span><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--danger);"></span> Blocked</span>
+              <!-- Legend with distinct icons & labels -->
+              <div style="display: flex; gap: 12px; font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); flex-wrap: wrap;">
+                <span style="display: flex; align-items: center; gap: 4px;"><i class="fa-regular fa-circle" style="color: var(--primary); font-size: 9px;"></i> Available</span>
+                <span style="display: flex; align-items: center; gap: 4px;"><i class="fa-solid fa-check" style="color: var(--on-primary); background: var(--primary); border-radius: 50%; width: 12px; height: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 8px;"></i> Selected</span>
+                <span style="display: flex; align-items: center; gap: 4px;"><i class="fa-solid fa-lock" style="color: var(--text-dim); font-size: 9px;"></i> Booked</span>
+                <span style="display: flex; align-items: center; gap: 4px;"><i class="fa-solid fa-ban" style="color: var(--danger); font-size: 9px;"></i> Blocked</span>
               </div>
             </div>
 
@@ -1478,15 +1360,9 @@
           if (nameInput) nameInput.value = currentUser.name || "";
           const phoneInput = document.getElementById("userPhone");
           if (phoneInput) phoneInput.value = currentUser.phone || "";
-
-          document.getElementById("userAuthActions").innerHTML = `
-            <a href="user-dashboard.html" class="btn btn-outline btn-sm">
-              <i class="fa-solid fa-user-circle"></i> ${escapeHtml((currentUser.name || "Player").split(" ")[0])}
-            </a>
-            <button onclick="handleLogout()" class="btn btn-ghost btn-sm" title="Sign Out">
-              <i class="fa-solid fa-power-off"></i>
-            </button>
-          `;
+        }
+        if (window.syncGlobalHeaderAuth) {
+          await window.syncGlobalHeaderAuth();
         }
       }
 
@@ -1578,27 +1454,27 @@
 
           card.innerHTML = `
             <div class="turf-media">
-              <div class="turf-image-bg" id="turf-img-${id}" style="background-image: url('${img}');"></div>
+              <div class="turf-image-bg" id="turf-img-${escapeHtml(id)}" style="background-image: url('${escapeHtml(img)}');"></div>
               <div class="turf-media-overlay"></div>
               <div class="turf-badge-top-left">
-                <span class="badge badge-dark">${sportMeta}</span>
+                <span class="badge badge-dark"><i class="fa-solid fa-trophy" style="font-size: 10px;"></i> ${escapeHtml(sportMeta)}</span>
               </div>
-              <div class="turf-price-badge">₹${turf.basePrice}/hr</div>
+              <div class="turf-price-badge">₹${escapeHtml(String(turf.basePrice))}/hr</div>
             </div>
             <div class="turf-info">
               <div>
-                <h3 class="turf-title">${turf.name}</h3>
+                <h3 class="turf-title">${escapeHtml(turf.name)}</h3>
                 <div class="turf-meta-row">
-                  <span><i class="fa-solid fa-location-dot" style="color: var(--primary);"></i> ${locMeta}</span>
+                  <span><i class="fa-solid fa-location-dot" style="color: var(--primary);"></i> ${escapeHtml(locMeta)}</span>
                   <span style="color: var(--accent-gold); font-weight: 700;"><i class="fa-solid fa-star"></i> 4.8 (200+)</span>
                 </div>
               </div>
               <div class="turf-card-bottom">
                 <span style="font-size: 12px; color: var(--secondary); font-weight: 600; display: flex; align-items: center; gap: 6px;">
-                  <span class="live-dot"></span> Slots Open Today
+                  <span class="live-dot"></span> Live Slots Open
                 </span>
-                <button class="btn btn-primary btn-sm" onclick="openModal(${id})">
-                  View Details & Book <i class="fa-solid fa-arrow-right"></i>
+                <button class="btn btn-primary btn-sm" onclick="openModal(${Number(id)})">
+                  <i class="fa-solid fa-calendar-check"></i> Book Slot
                 </button>
               </div>
             </div>
@@ -1687,12 +1563,38 @@
 
           const ampm = h < 12 ? "AM" : "PM";
           const hr = h % 12 || 12;
-          const label = `${hr}:00 ${ampm}`;
-          const sub = isBlocked ? "Blocked" : isBooked ? "Booked" : `₹${turfData[currentTurfId]?.basePrice || 1000}`;
+          const timeLabel = `${hr}:00 ${ampm}`;
+
+          let statusText = "Available";
+          let iconHtml = '<i class="fa-regular fa-circle" style="font-size: 9px; opacity: 0.7;"></i>';
+
+          if (isBlocked) {
+            statusText = "Blocked";
+            iconHtml = '<i class="fa-solid fa-ban" style="font-size: 9px;"></i>';
+            btn.disabled = true;
+            btn.setAttribute("aria-disabled", "true");
+            btn.setAttribute("aria-label", `${timeLabel} - Slot Blocked by Arena`);
+          } else if (isBooked) {
+            statusText = "Booked";
+            iconHtml = '<i class="fa-solid fa-lock" style="font-size: 9px;"></i>';
+            btn.disabled = true;
+            btn.setAttribute("aria-disabled", "true");
+            btn.setAttribute("aria-label", `${timeLabel} - Slot Already Reserved`);
+          } else if (isSelected) {
+            statusText = "Selected";
+            iconHtml = '<i class="fa-solid fa-check" style="font-size: 9px;"></i>';
+            btn.setAttribute("aria-label", `${timeLabel} - Selected slot`);
+          } else {
+            const price = turfData[currentTurfId]?.basePrice ? `₹${turfData[currentTurfId].basePrice}` : "Available";
+            statusText = price;
+            btn.setAttribute("aria-label", `${timeLabel} - Available for ${price}`);
+          }
 
           btn.innerHTML = `
-            <span>${label}</span>
-            <span style="font-size: 10px; font-weight: normal; opacity: 0.85;">${sub}</span>
+            <span style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+              ${iconHtml} ${timeLabel}
+            </span>
+            <span style="font-size: 10px; font-weight: 600; opacity: 0.9;">${statusText}</span>
           `;
 
           if (!isBlocked && !isBooked) {
@@ -1979,15 +1881,15 @@
         }
 
         ops.forEach((op) => {
-          const isFull = op.seats <= 0;
+          const isFull = Number(op.seats) <= 0;
           const card = document.createElement("div");
           card.style.cssText = "background: var(--surface-2); border: 1px solid var(--line-soft); border-radius: 12px; padding: 10px; display: flex; justify-content: space-between; align-items: center;";
           card.innerHTML = `
             <div>
-              <div style="font-weight: 700; color: var(--primary); font-size: 13px;">${op.sport}</div>
-              <div style="font-size: 11px; color: var(--text-muted);">Seats Left: ${op.seats} / ${op.teamSize} · Share: ₹${op.fare}/pp</div>
+              <div style="font-weight: 700; color: var(--primary); font-size: 13px;">${escapeHtml(op.sport)}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">Seats Left: ${Number(op.seats)} / ${Number(op.teamSize)} · Share: ₹${Number(op.fare)}/pp</div>
             </div>
-            ${isFull ? `<span class="badge badge-dark">Full</span>` : `<button class="btn btn-secondary btn-sm" onclick="joinTeam(${op.id})">Join</button>`}
+            ${isFull ? `<span class="badge badge-dark">Full</span>` : `<button class="btn btn-secondary btn-sm" onclick="joinTeam(${Number(op.id)})"><i class="fa-solid fa-user-plus"></i> Join</button>`}
           `;
           list.appendChild(card);
         });
