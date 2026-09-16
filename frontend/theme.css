@@ -154,6 +154,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 80px;
 }
 
 body {
@@ -515,6 +516,60 @@ body.page-auth .sports-bg-stadium {
     padding: 0 10px;
     width: 38px;
   }
+
+  .auth-actions-slot {
+    display: none;
+  }
+
+  .navbar-inner {
+    padding: 0 var(--space-4);
+    gap: var(--space-2);
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-inner {
+    padding: 0 12px;
+  }
+
+  .logo-brand {
+    font-size: 16.5px;
+  }
+
+  .logo-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+  }
+
+  .slots-grid-24 {
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+    gap: 6px;
+  }
+
+  .slot-pill {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  .modal-box {
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+  }
+}
+
+@media (max-width: 390px) {
+  .logo-sub {
+    display: none;
+  }
+
+  .logo {
+    gap: 8px;
+  }
+
+  .logo-brand {
+    font-size: 15.5px;
+  }
 }
 
 /* ───────────────────────────────────────────
@@ -726,8 +781,9 @@ body.page-auth .sports-bg-stadium {
 ─────────────────────────────────────────── */
 .slots-grid-24 {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
-  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: var(--space-2);
+  min-width: 0;
 }
 
 .slot-pill {
@@ -792,10 +848,12 @@ body.page-auth .sports-bg-stadium {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   display: none;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 2000;
   padding: var(--space-4);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .modal-box {
@@ -807,6 +865,9 @@ body.page-auth .sports-bg-stadium {
   padding: var(--space-6);
   position: relative;
   box-shadow: var(--shadow-elevated);
+  margin: 0 auto 32px auto;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
 }
 
 .modal-close-btn {
@@ -829,6 +890,27 @@ body.page-auth .sports-bg-stadium {
 .modal-close-btn:hover {
   color: var(--text-main);
   border-color: var(--primary);
+}
+
+@media (max-width: 640px) {
+  .modal-backdrop {
+    padding: 10px;
+  }
+  .modal-box {
+    padding: 18px 14px;
+    border-radius: var(--radius-md);
+    max-height: 94vh;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 400px) {
+  .modal-backdrop {
+    padding: 6px;
+  }
+  .modal-box {
+    padding: 16px 10px;
+  }
 }
 
 /* ───────────────────────────────────────────

@@ -5,6 +5,8 @@
     <title>TurfArena - Players & Community Lobby</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Find teammates for weekend matches, challenge rival squads in 50-50 turf wars, register for regional tournaments on TurfArena." />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="alternate icon" href="favicon.ico" />
     <script>
       try {
         const t = localStorage.getItem("turf_theme") || "dark";
@@ -29,6 +31,14 @@
         gap: var(--space-5);
         position: relative;
         z-index: 10;
+        min-width: 0;
+      }
+
+      @media (max-width: 640px) {
+        .container-main {
+          padding: 20px 14px;
+          gap: 16px;
+        }
       }
 
       /* Hero Lobby Header */
@@ -46,6 +56,13 @@
         letter-spacing: -0.02em;
         line-height: 1.15;
         margin-top: var(--space-2);
+        word-break: break-word;
+      }
+
+      @media (max-width: 640px) {
+        .lobby-title {
+          font-size: clamp(24px, 6vw, 32px);
+        }
       }
 
       .lobby-sub {
@@ -61,6 +78,20 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: var(--space-3);
+        min-width: 0;
+      }
+
+      @media (max-width: 480px) {
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 8px;
+        }
+      }
+
+      @media (max-width: 360px) {
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
       }
 
       .stat-card {
@@ -74,6 +105,17 @@
         gap: var(--space-3);
         box-shadow: var(--shadow-card);
         transition: transform 0.2s ease, border-color 0.2s ease;
+        min-width: 0;
+      }
+
+      @media (max-width: 480px) {
+        .stat-card {
+          padding: 12px;
+          gap: 8px;
+        }
+        .stat-num {
+          font-size: 22px !important;
+        }
       }
 
       .stat-card:hover {
@@ -141,10 +183,11 @@
         gap: var(--space-1);
         overflow-x: auto;
         max-width: 100%;
+        -webkit-overflow-scrolling: touch;
       }
 
       .tab-btn {
-        padding: 8px 20px;
+        padding: 8px 16px;
         border-radius: var(--radius-full);
         border: none;
         background: transparent;
@@ -174,6 +217,21 @@
         justify-content: space-between;
         align-items: center;
         gap: var(--space-4);
+        min-width: 0;
+      }
+
+      @media (max-width: 640px) {
+        .filter-toolbar {
+          padding: 14px 12px;
+          gap: 10px;
+        }
+        .filter-group {
+          width: 100%;
+        }
+        .filter-pill-select {
+          flex: 1;
+          min-width: 120px;
+        }
       }
 
       .filter-group {
@@ -181,6 +239,7 @@
         flex-wrap: wrap;
         align-items: center;
         gap: var(--space-2);
+        min-width: 0;
       }
 
       .filter-pill-select {
@@ -194,6 +253,7 @@
         outline: none;
         cursor: pointer;
         font-family: var(--font-main);
+        box-sizing: border-box;
       }
 
       .filter-pill-select option {
@@ -204,8 +264,16 @@
       /* Community Card Grid */
       .community-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
         gap: var(--space-4);
+        min-width: 0;
+      }
+
+      @media (max-width: 640px) {
+        .community-grid {
+          grid-template-columns: 1fr;
+          gap: 14px;
+        }
       }
 
       .community-card {
@@ -219,6 +287,14 @@
         gap: var(--space-4);
         transition: transform 0.2s ease, border-color 0.2s ease;
         box-shadow: var(--shadow-card);
+        min-width: 0;
+      }
+
+      @media (max-width: 640px) {
+        .community-card {
+          padding: 18px 14px;
+          border-radius: 18px;
+        }
       }
 
       .community-card:hover {
@@ -288,6 +364,19 @@
         padding-top: var(--space-3);
         border-top: 1px solid var(--line-soft);
       }
+
+      .modal-two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      @media (max-width: 480px) {
+        .modal-two-col {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+      }
     </style>
   </head>
 
@@ -328,6 +417,9 @@
           <a href="community.html#tournaments" class="nav-link" onclick="setTab('tournament')">
             <i class="fa-solid fa-trophy"></i> Tournaments
           </a>
+          <a href="admin-login.html" class="nav-link">
+            <i class="fa-solid fa-shield"></i> Admin Portal
+          </a>
         </nav>
 
         <!-- RIGHT: Theme Toggle & Controls -->
@@ -357,6 +449,9 @@
         </a>
         <a href="community.html#tournaments" class="mobile-nav-link" onclick="setTab('tournament'); closeMobileNav()">
           <i class="fa-solid fa-trophy"></i> Tournaments
+        </a>
+        <a href="admin-login.html" class="mobile-nav-link" onclick="closeMobileNav()">
+          <i class="fa-solid fa-shield"></i> Admin Portal
         </a>
         <div id="mobileAuthSlot" class="mobile-auth-slot"></div>
       </div>
@@ -529,7 +624,7 @@
             <input type="text" id="teamNameInput" class="input-premium" placeholder="e.g. Marina Strikers 7v7" required />
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="modal-two-col">
             <div>
               <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Sport</label>
               <select id="postSportInput" class="input-premium">
@@ -547,7 +642,7 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="modal-two-col">
             <div id="spotsWrap">
               <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;" id="lblSpots">Open Spots</label>
               <input type="number" id="spotsInput" class="input-premium" value="2" min="1" max="16" />
@@ -558,7 +653,7 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="modal-two-col">
             <div>
               <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Match Date</label>
               <input type="date" id="eventDateInput" class="input-premium" required />
@@ -692,29 +787,28 @@
       }
 
       async function setupUserAuth() {
-        try {
-          const res = await fetch("/api/auth/me", { credentials: "include" });
-          if (res.ok) {
-            const data = await res.json();
-            currentUser = data.user;
-          } else {
+        if (window.getAuthUser) {
+          currentUser = await window.getAuthUser();
+        } else if (localStorage.getItem("currentUser")) {
+          try {
+            const res = await fetch("/api/auth/me", { credentials: "include" });
+            currentUser = res.ok ? (await res.json()).user : null;
+          } catch (e) {
             currentUser = null;
           }
-        } catch (e) {
+        } else {
           currentUser = null;
         }
 
+        if (window.syncGlobalHeaderAuth) {
+          window.syncGlobalHeaderAuth(currentUser);
+        }
+
         if (currentUser) {
-          document.getElementById("userAuthActions").innerHTML = `
-            <a href="user-dashboard.html" class="btn btn-outline btn-sm">
-              <i class="fa-solid fa-user-circle"></i> ${escapeHtml((currentUser.name || "Player").split(" ")[0])}
-            </a>
-            <button onclick="handleLogout()" class="btn btn-ghost btn-sm" title="Sign Out">
-              <i class="fa-solid fa-power-off"></i>
-            </button>
-          `;
-          document.getElementById("joinNameInput").value = currentUser.name || "";
-          document.getElementById("joinPhoneInput").value = currentUser.phone || "";
+          const nameInput = document.getElementById("joinNameInput");
+          if (nameInput) nameInput.value = currentUser.name || "";
+          const phoneInput = document.getElementById("joinPhoneInput");
+          if (phoneInput) phoneInput.value = currentUser.phone || "";
         }
       }
 
@@ -722,6 +816,7 @@
         try {
           await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
         } catch (e) {}
+        if (window.invalidateAuthCache) window.invalidateAuthCache();
         localStorage.removeItem("currentUser");
         window.location.reload();
       }
@@ -918,11 +1013,23 @@
       // MODAL CONTROLS
       // ───────────────────────────────────────────
       function openModal(id) {
-        document.getElementById(id).style.display = "flex";
+        const el = document.getElementById(id);
+        if (el) {
+          el.style.display = "flex";
+          el.scrollTop = 0;
+          const box = el.querySelector(".modal-box");
+          if (box) box.scrollTop = 0;
+        }
       }
 
       function closeModal(id) {
-        document.getElementById(id).style.display = "none";
+        const el = document.getElementById(id);
+        if (el) {
+          el.style.display = "none";
+          el.scrollTop = 0;
+          const box = el.querySelector(".modal-box");
+          if (box) box.scrollTop = 0;
+        }
       }
 
       function openCreateModal() {

@@ -92,6 +92,62 @@
       .replace(/'/g, "&#39;");
   };
 
+  // Central In-Flight & Cached Auth Promise Manager
+  let cachedUser = null;
+  let authChecked = false;
+  let authPromise = null;
+
+  window.invalidateAuthCache = function () {
+    cachedUser = null;
+    authChecked = false;
+    authPromise = null;
+  };
+
+  window.getAuthUser = async function (forceRefresh = false) {
+    if (!forceRefresh && authChecked) {
+      return cachedUser;
+    }
+    if (!forceRefresh && authPromise) {
+      return authPromise;
+    }
+
+    // Fast-path: If visitor has no currentUser in storage and not forced, they are unauthenticated.
+    // Prevents browser DevTools console from logging unwanted 401 errors on initial page load.
+    if (!forceRefresh && !localStorage.getItem("currentUser")) {
+      cachedUser = null;
+      authChecked = true;
+      return null;
+    }
+
+    authPromise = (async () => {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        if (res.status === 401) {
+          // Session expired or unauthenticated - handle silently and clear stale hint
+          cachedUser = null;
+          localStorage.removeItem("currentUser");
+        } else if (res.ok) {
+          const data = await res.json();
+          cachedUser = data.user || null;
+          if (cachedUser) {
+            localStorage.setItem("currentUser", JSON.stringify(cachedUser));
+          }
+        } else {
+          cachedUser = null;
+        }
+      } catch (e) {
+        // Network or fetch failure - handle silently
+        cachedUser = null;
+      } finally {
+        authChecked = true;
+        authPromise = null;
+      }
+      return cachedUser;
+    })();
+
+    return authPromise;
+  };
+
   // Global Logout Handler
   window.handleLogout = async function () {
     try {
@@ -100,26 +156,18 @@
         credentials: "include"
       });
     } catch (e) {}
+    window.invalidateAuthCache();
     localStorage.removeItem("currentUser");
     window.location.href = "index.html";
   };
 
   // Shared Global Header Auth Synchronizer
-  window.syncGlobalHeaderAuth = async function () {
+  window.syncGlobalHeaderAuth = async function (userParam) {
     const authActions = document.getElementById("userAuthActions");
     const mobileAuth = document.getElementById("mobileAuthSlot");
     if (!authActions && !mobileAuth) return null;
 
-    let user = null;
-    try {
-      const res = await fetch("/api/auth/me", { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        user = data.user;
-      }
-    } catch (e) {
-      user = null;
-    }
+    const user = userParam !== undefined ? userParam : await window.getAuthUser();
 
     if (user) {
       const firstName = window.escapeHtml((user.name || "Player").split(" ")[0]);
@@ -162,7 +210,7 @@
           <a href="user-login.html" class="btn btn-outline btn-sm">
             <i class="fa-solid fa-user"></i> Login
           </a>
-          <a href="user-login.html" class="btn btn-primary btn-sm">
+          <a href="user-login.html?mode=signup" class="btn btn-primary btn-sm">
             Sign Up
           </a>
         `;
@@ -174,7 +222,7 @@
             <a href="user-login.html" class="btn btn-outline btn-sm" style="flex: 1; text-align: center;" onclick="closeMobileNav()">
               Login
             </a>
-            <a href="user-login.html" class="btn btn-primary btn-sm" style="flex: 1; text-align: center;" onclick="closeMobileNav()">
+            <a href="user-login.html?mode=signup" class="btn btn-primary btn-sm" style="flex: 1; text-align: center;" onclick="closeMobileNav()">
               Sign Up
             </a>
           </div>
@@ -185,13 +233,18 @@
     return user;
   };
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
-      initThemeToggle();
-      window.syncGlobalHeaderAuth();
-    });
-  } else {
+  // Safe idempotent bootstrap
+  let isBootstrapped = false;
+  function bootstrap() {
+    if (isBootstrapped) return;
+    isBootstrapped = true;
     initThemeToggle();
     window.syncGlobalHeaderAuth();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootstrap, { once: true });
+  } else {
+    bootstrap();
   }
 })();

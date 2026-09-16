@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <title>TurfArena - Player Sign In & Sign Up</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="alternate icon" href="favicon.ico" />
     <script>
       try {
         const t = localStorage.getItem("turf_theme") || "dark";
@@ -122,6 +124,15 @@
 
       .message-box.success {
         color: var(--primary);
+      }
+
+      @media (max-width: 480px) {
+        .auth-layout {
+          padding: 16px 10px;
+        }
+        .auth-card {
+          padding: 20px 14px;
+        }
       }
     </style>
   </head>
@@ -287,6 +298,20 @@
         document.getElementById("authMessage").textContent = "";
       }
 
+      function checkInitialMode() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const hash = (window.location.hash || "").toLowerCase();
+        const modeParam = (urlParams.get("mode") || "").toLowerCase();
+        if (modeParam === "signup" || modeParam === "register" || hash === "#signup" || hash === "#register") {
+          switchAuthTab("register");
+        } else if (modeParam === "login" || modeParam === "signin" || hash === "#login") {
+          switchAuthTab("login");
+        }
+      }
+
+      // Execute immediately on DOM evaluation
+      checkInitialMode();
+
       async function handleAuthSubmit(e) {
         e.preventDefault();
         const msg = document.getElementById("authMessage");
@@ -307,6 +332,7 @@
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Login failed");
 
+            if (window.invalidateAuthCache) window.invalidateAuthCache();
             localStorage.setItem("currentUser", JSON.stringify(data.user));
             msg.className = "message-box success";
             msg.textContent = "Welcome back! Redirecting...";
@@ -343,6 +369,7 @@
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Registration failed");
 
+            if (window.invalidateAuthCache) window.invalidateAuthCache();
             localStorage.setItem("currentUser", JSON.stringify(data.user));
             msg.className = "message-box success";
             msg.textContent = "Account created! Redirecting...";
@@ -358,22 +385,18 @@
 
       // Check existing session on load
       window.onload = async () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get("mode") === "signup") {
-          switchAuthTab("register");
-        }
+        checkInitialMode();
 
         try {
-          const checkRes = await fetch("/api/auth/me", { credentials: "include" });
-          if (checkRes.ok) {
-            const data = await checkRes.json();
-            if (data.user) {
-              localStorage.setItem("currentUser", JSON.stringify(data.user));
-              window.location.href = data.user.role === "admin" ? "admin-dashboard.html" : "index.html";
-            }
+          const user = window.getAuthUser ? await window.getAuthUser() : null;
+          if (user) {
+            localStorage.setItem("currentUser", JSON.stringify(user));
+            window.location.href = user.role === "admin" ? "admin-dashboard.html" : "index.html";
           }
         } catch (e) {}
       };
+
+      window.addEventListener("hashchange", checkInitialMode);
     </script>
   </body>
 </html>

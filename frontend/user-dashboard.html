@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <title>TurfArena - Athlete Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="alternate icon" href="favicon.ico" />
     <script>
       try {
         const t = localStorage.getItem("turf_theme") || "dark";
@@ -195,6 +197,34 @@
         font-family: var(--font-mono);
         color: var(--primary);
         text-align: right;
+      }
+
+      @media (max-width: 640px) {
+        .reservation-card {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+        .res-price {
+          text-align: left;
+        }
+        .hub-header {
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .dashboard-container {
+          padding: 16px 12px;
+        }
+        .profile-card,
+        .hub-panel {
+          padding: 18px 12px;
+        }
+        .bento-num {
+          font-size: 16px;
+        }
       }
     </style>
   </head>
@@ -414,17 +444,14 @@
 
       async function loadUserData() {
         try {
-          const res = await fetch("/api/auth/me", { credentials: "include" });
-          if (!res.ok) {
+          const user = window.getAuthUser ? await window.getAuthUser() : null;
+          if (!user) {
             window.location.href = "user-login.html";
             return;
           }
 
-          const data = await res.json();
-          const user = data.user;
-          if (!user) {
-            window.location.href = "user-login.html";
-            return;
+          if (window.syncGlobalHeaderAuth) {
+            window.syncGlobalHeaderAuth(user);
           }
 
           document.getElementById("userNameDisplay").textContent = user.name || "Player";
@@ -482,7 +509,7 @@
                 <div class="res-meta">
                   <span><i class="fa-regular fa-calendar" style="color: var(--primary);"></i> ${escapeHtml(b.date)}</span>
                   <span><i class="fa-regular fa-clock" style="color: var(--primary);"></i> ${escapeHtml(b.time)}</span>
-                  <span style="color: var(--primary);"><i class="fa-solid fa-shield-check"></i> Pass Verified</span>
+                  <span style="color: var(--primary);"><i class="fa-solid fa-shield-halved"></i> Pass Verified</span>
                 </div>
               </div>
               <div>

@@ -120,6 +120,11 @@ const authLimiter = rateLimit({
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, '../frontend')));
 
+// Favicon handler
+app.get('/favicon.ico', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/favicon.ico'));
+});
+
 // Helper: format joinedDate
 function formatJoinedDate(createdAt) {
   try {

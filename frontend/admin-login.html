@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <title>TurfArena - Admin Facility Gateway</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="alternate icon" href="favicon.ico" />
     <script>
       try {
         const t = localStorage.getItem("turf_theme") || "dark";
@@ -69,6 +71,15 @@
         color: var(--text-muted);
         font-weight: 700;
         letter-spacing: 0.05em;
+      }
+
+      @media (max-width: 480px) {
+        .auth-layout {
+          padding: 16px 10px;
+        }
+        .admin-auth-card {
+          padding: 20px 14px;
+        }
       }
     </style>
   </head>
@@ -213,9 +224,11 @@
 
           if (data.user.role !== "admin") {
             await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+            if (window.invalidateAuthCache) window.invalidateAuthCache();
             throw new Error("Access denied: Account does not have administrator privileges.");
           }
 
+          if (window.invalidateAuthCache) window.invalidateAuthCache();
           window.location.href = "admin-dashboard.html";
         } catch (err) {
           errorEl.textContent = err.message || "Invalid credentials.";

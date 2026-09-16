@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <title>TurfArena - Admin Facility Controller</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="alternate icon" href="favicon.ico" />
     <script>
       try {
         const t = localStorage.getItem("turf_theme") || "dark";
@@ -209,6 +211,43 @@
         font-weight: 600;
         font-size: 13.5px;
       }
+
+      @media (max-width: 640px) {
+        .admin-layout {
+          padding: 16px 12px;
+        }
+        .command-banner,
+        .shift-container {
+          padding: 18px 12px;
+        }
+        .slot-admin-grid {
+          grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
+          gap: 8px;
+        }
+        .kpi-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 8px;
+        }
+        .shift-header,
+        .command-header-top {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+      }
+
+      @media (max-width: 400px) {
+        .kpi-grid {
+          grid-template-columns: 1fr;
+        }
+        .admin-layout {
+          padding: 12px 8px;
+        }
+        .command-banner,
+        .shift-container {
+          padding: 14px 10px;
+        }
+      }
     </style>
   </head>
 
@@ -300,7 +339,6 @@
             <div>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <h1 style="font-size: 20px; font-weight: 800;">Slot Controller & Maintenance</h1>
-                <span class="badge badge-lime">Live Sync Active</span>
               </div>
               <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
                 Manage ground hourly availability, maintenance holds, and operator locks.
@@ -489,13 +527,8 @@
 
       async function init() {
         try {
-          const res = await fetch("/api/auth/me", { credentials: "include" });
-          if (!res.ok) {
-            window.location.href = "admin-login.html";
-            return;
-          }
-          const data = await res.json();
-          if (!data.user || data.user.role !== "admin") {
+          const user = window.getAuthUser ? await window.getAuthUser() : null;
+          if (!user || user.role !== "admin") {
             window.location.href = "admin-login.html";
             return;
           }
@@ -513,6 +546,8 @@
         try {
           await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
         } catch (e) {}
+        if (window.invalidateAuthCache) window.invalidateAuthCache();
+        localStorage.removeItem("currentUser");
         window.location.href = "admin-login.html";
       }
 
