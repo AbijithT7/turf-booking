@@ -175,10 +175,10 @@ The demo credentials are for local development only. Configure `ADMIN_EMAIL`, `A
 
 On first startup, the server creates `backend/turf.db` and the tables for users, turfs, bookings, blocked slots, team openings, team requests, community posts, and community requests. It also seeds three turfs, a default user, and sample community posts when those tables are empty.
 
-The following helper is destructive and for local development only. It drops `TeamOpenings` and `TeamRequests` and does not reset other tables. Back up your database before running it:
+The following helper is destructive and for local development only. It drops `TeamOpenings` and `TeamRequests` and does not reset other tables. It refuses to run in production and requires an explicit confirmation environment variable. Back up your database before running it:
 
 ```bash
-node backend/reset-db.js
+CONFIRM_RESET_DB=1 node backend/reset-db.js
 ```
 
 The server recreates the dropped tables on its next startup. This command does not reset every table or delete all application data.
