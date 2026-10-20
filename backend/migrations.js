@@ -2,6 +2,10 @@ const fs = require('fs');
 const path = require('path');
 
 async function runMigrations(db) {
+  if (process.env.NODE_ENV === 'production' &&
+      (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD.length < 12)) {
+    throw new Error('Production requires explicit ADMIN_EMAIL and ADMIN_PASSWORD (at least 12 characters) before migrations or seeding.');
+  }
   // Ensure migrations tracking table exists
   await db.exec(`
     CREATE TABLE IF NOT EXISTS _migrations (
@@ -47,13 +51,17 @@ async function runMigrations(db) {
       // Ensure there's a fallback user for unmatched bookings
       const fallbackUser = await db.get("SELECT id FROM Users WHERE email = 'test@turf.com' LIMIT 1");
       if (!fallbackUser) {
-        // Find first user or insert a system user if none
+        // A fallback identity is only needed when legacy booking rows must be assigned.
+        const bookingCount = await db.get('SELECT COUNT(*) AS count FROM Bookings');
         const firstUser = await db.get("SELECT id FROM Users ORDER BY id ASC LIMIT 1");
-        if (!firstUser) {
+        if (!firstUser && bookingCount.count > 0) {
+          if (process.env.NODE_ENV === 'production') {
+            throw new Error('Cannot normalize legacy bookings in production without an existing user to own orphaned records. Resolve booking ownership manually before migrating.');
+          }
           const bcrypt = require('bcryptjs');
-          const hash = await bcrypt.hash('password123', 10);
+          const hash = await bcrypt.hash('password123', 12);
           await db.run("INSERT INTO Users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)",
-            ['Default User', 'default@turfarena.com', '0000000000', hash, 'user']
+            ['Development Migration User', 'default@turfarena.com', '0000000000', hash, 'user']
           );
         }
       }
@@ -96,33 +104,55 @@ async function runMigrations(db) {
     console.log('Applied migration: 004_security_constraints.sql');
   }
 
-  // Seed Admin user if does not exist
-  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@turfarena.com').trim().toLowerCase();
-  const existingAdmin = await db.get('SELECT * FROM Users WHERE LOWER(email) = ?', [adminEmail]);
+  // Admin provisioning: production must be explicitly configured. Never promote
+  // an existing player account to admin merely because its email matches.
+  const isProduction = process.env.NODE_ENV === 'production';
+  const configuredEmail = process.env.ADMIN_EMAIL;
+  const configuredPassword = process.env.ADMIN_PASSWORD;
+
+  if (isProduction && (!configuredEmail || !configuredPassword || configuredPassword.length < 12)) {
+    throw new Error('Production requires explicit ADMIN_EMAIL and ADMIN_PASSWORD (at least 12 characters).');
+  }
+
+  const adminEmail = (configuredEmail || 'admin@turfarena.com').trim().toLowerCase();
+  const existingAdmin = await db.get('SELECT id, role FROM Users WHERE LOWER(email) = ?', [adminEmail]);
+
   if (!existingAdmin) {
     const bcrypt = require('bcryptjs');
-    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
-    const hash = await bcrypt.hash(adminPassword, 10);
+    const adminPassword = configuredPassword || 'admin123';
+    const hash = await bcrypt.hash(adminPassword, 12);
     await db.run(
       'INSERT INTO Users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)',
       ['TurfArena Admin', adminEmail, '9999999999', hash, 'admin']
     );
-    console.log(`Seeded admin user (${adminEmail} / [CONFIGURED PASSWORD])`);
+    console.log('Seeded admin account from configured credentials.');
   } else if (existingAdmin.role !== 'admin') {
-    await db.run('UPDATE Users SET role = ? WHERE id = ?', ['admin', existingAdmin.id]);
-    console.log(`Promoted existing user ${adminEmail} to admin role.`);
+    throw new Error('ADMIN_EMAIL belongs to a non-admin account. Refusing automatic role promotion; configure a different ADMIN_EMAIL or promote the account manually.');
+  } else if (isProduction) {
+    // Ensure the explicitly configured production password is actually applied
+    // to an existing admin account, rather than leaving an old demo hash in place.
+    const bcrypt = require('bcryptjs');
+    const currentAdmin = await db.get('SELECT password FROM Users WHERE id = ?', [existingAdmin.id]);
+    const passwordMatches = currentAdmin && await bcrypt.compare(configuredPassword, currentAdmin.password);
+    if (!passwordMatches) {
+      const hash = await bcrypt.hash(configuredPassword, 12);
+      await db.run('UPDATE Users SET password = ? WHERE id = ?', [hash, existingAdmin.id]);
+      console.log('Updated existing admin password from production configuration.');
+    }
   }
 
-  // Ensure default normal test user exists if none exists
-  const userCount = await db.get('SELECT COUNT(*) as count FROM Users WHERE role = "user"');
-  if (userCount.count === 0) {
-    const bcrypt = require('bcryptjs');
-    const defaultPassword = await bcrypt.hash('password123', 10);
-    await db.run(
-      'INSERT INTO Users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)',
-      ['Test User', 'test@turf.com', '9876543210', defaultPassword, 'user']
-    );
-    console.log('Seeded default user: test@turf.com / password123');
+  // Demo account is development-only; never create a known-password user in production.
+  if (!isProduction) {
+    const userCount = await db.get("SELECT COUNT(*) as count FROM Users WHERE role = 'user'");
+    if (userCount.count === 0) {
+      const bcrypt = require('bcryptjs');
+      const defaultPassword = await bcrypt.hash('password123', 12);
+      await db.run(
+        'INSERT INTO Users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)',
+        ['Test User', 'test@turf.com', '9876543210', defaultPassword, 'user']
+      );
+      console.log('Seeded development-only test user: test@turf.com');
+    }
   }
 }
 

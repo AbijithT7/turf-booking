@@ -17,7 +17,7 @@ function isValidPhone(phone) {
 }
 
 function isValidPassword(password) {
-  return typeof password === 'string' && password.length >= 6 && password.length <= 128;
+  return typeof password === 'string' && password.length >= 8 && password.length <= 128;
 }
 
 function isValidName(name) {
@@ -29,7 +29,28 @@ function isValidName(name) {
 function isValidDate(dateStr) {
   if (typeof dateStr !== 'string' || !DATE_REGEX.test(dateStr)) return false;
   const d = new Date(dateStr + 'T00:00:00Z');
-  return !isNaN(d.getTime());
+  if (Number.isNaN(d.getTime())) return false;
+  return d.toISOString().slice(0, 10) === dateStr;
+}
+
+function getIndiaDateTimeParts(now = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    hourCycle: 'h23'
+  }).formatToParts(now);
+  return Object.fromEntries(parts.filter(p => p.type !== 'literal').map(p => [p.type, p.value]));
+}
+
+function isBookingTimeInFuture(dateStr, slotHour, now = new Date()) {
+  const india = getIndiaDateTimeParts(now);
+  const today = `${india.year}-${india.month}-${india.day}`;
+  if (dateStr < today) return false;
+  if (dateStr > today) return true;
+  return Number(slotHour) > Number(india.hour);
 }
 
 function isValidSlotHour(slot) {
@@ -56,7 +77,7 @@ function validateRegister(req, res, next) {
     return res.status(400).json({ error: 'Valid 10-digit phone number is required.' });
   }
   if (!isValidPassword(password)) {
-    return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    return res.status(400).json({ error: 'Password must be between 8 and 128 characters long.' });
   }
 
   req.body.name = name.trim();
@@ -94,11 +115,18 @@ function validateBooking(req, res, next) {
     return res.status(400).json({ error: 'selectedSlots must be a non-empty array of slot hours.' });
   }
 
-  // Verify all slots are valid integers between 0 and 23
+  if (selectedSlots.length > 8) {
+    return res.status(400).json({ error: 'A booking may contain at most 8 slots at a time.' });
+  }
+
+  // Validate each slot once, including its date/time and duplicate status.
   const slotSet = new Set();
   for (const slot of selectedSlots) {
     if (!isValidSlotHour(slot)) {
       return res.status(400).json({ error: `Invalid slot hour: ${slot}. Must be integer between 0 and 23.` });
+    }
+    if (!isBookingTimeInFuture(date, slot)) {
+      return res.status(400).json({ error: 'Bookings must be for a future time in Asia/Kolkata.' });
     }
     const intSlot = Number(slot);
     if (slotSet.has(intSlot)) {
@@ -107,6 +135,9 @@ function validateBooking(req, res, next) {
     slotSet.add(intSlot);
   }
 
+  if (sportType !== undefined && typeof sportType !== 'string') {
+    return res.status(400).json({ error: 'Sport type must be text.' });
+  }
   const sport = (sportType || 'Football').trim();
   if (sport.length < 2 || sport.length > 50) {
     return res.status(400).json({ error: 'Sport type must be between 2 and 50 characters.' });
@@ -206,6 +237,7 @@ module.exports = {
   isValidPassword,
   isValidName,
   isValidDate,
+  isBookingTimeInFuture,
   isValidSlotHour,
   isValidId,
   validateRegister,

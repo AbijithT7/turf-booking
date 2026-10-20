@@ -11,6 +11,8 @@ process.env.ADMIN_PASSWORD = 'admin123';
 
 const TEST_DB = path.join(__dirname, 'test-turf.db');
 const TEST_SESSIONS_DB = path.join(__dirname, 'test-sessions.db');
+process.env.SESSION_DB_NAME = path.basename(TEST_SESSIONS_DB);
+process.env.SESSION_DB_DIR = path.dirname(TEST_SESSIONS_DB);
 
 // Remove any prior test db files
 if (fs.existsSync(TEST_DB)) fs.unlinkSync(TEST_DB);
@@ -62,6 +64,18 @@ class CookieClient {
 
     return { status: res.status, ok: res.ok, body: data };
   }
+}
+
+function dateOffset(days) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.filter(p => p.type !== 'literal').map(p => [p.type, p.value]));
+  return new Date(Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day) + days))
+    .toISOString().slice(0, 10);
 }
 
 async function runTests() {
@@ -179,7 +193,7 @@ async function runTests() {
     console.log('\n--- Phase 3: Bookings & Security Constraints Tests ---');
 
     // 9. Authenticated user can create booking
-    const bookingDate = '2026-10-15';
+    const bookingDate = dateOffset(1);
     const createBookingRes = await normalUser.request('/api/bookings', {
       method: 'POST',
       body: {
@@ -254,6 +268,11 @@ async function runTests() {
       body: { turfId: 1, date: bookingDate, selectedSlots: [10], sportType: 'Football' }
     });
     assert(bookBlockedRes.status === 409, '13. Blocked slot cannot be booked by user (HTTP 409 Conflict)');
+    const blockExistingBooking = await adminClient.request('/api/blocked-slots', {
+      method: 'POST',
+      body: { turfId: 1, date: bookingDate, slotHour: 18 }
+    });
+    assert(blockExistingBooking.status === 409, 'Admin cannot block a slot that already has a booking');
 
     // 14. User can only see their own bookings
     const userABookings = await normalUser.request('/api/user/bookings');
@@ -305,6 +324,19 @@ async function runTests() {
     assert(reqRes.status === 201, '18. User B can request to join community post (HTTP 201)');
     const reqId = reqRes.body.requestId;
 
+    // Public community listings must not expose creator/applicant contact details or payment references.
+    const publicCommunity = await unauthClient.request('/api/community');
+    assert(publicCommunity.status === 200 && Array.isArray(publicCommunity.body), 'Public community listing remains accessible');
+    const publicPost = publicCommunity.body.find(p => p.id === postId);
+    assert(Boolean(publicPost), 'New community post appears in public listing');
+    assert(!('createdByPhone' in publicPost) && !('createdByEmail' in publicPost), 'Public listing omits creator phone and email');
+    assert(Array.isArray(publicPost.requests) && publicPost.requests.length === 0, 'Public listing hides applicant details from non-owners');
+    assert(publicPost.requestsCount >= 1, 'Public listing may show aggregate request count without applicant details');
+    const publicOpenings = await unauthClient.request('/api/openings');
+    assert(publicOpenings.status === 200, 'Public team openings remain accessible');
+    const allOpenings = Object.values(publicOpenings.body || {}).flat();
+    assert(allOpenings.every(o => !('creatorPhone' in o)), 'Public team openings omit creator phone numbers');
+
     // 17. User cannot modify another user's post/opening
     const bobModifyAttempt = await clientB.request(`/api/community/${postId}/request/${reqId}`, {
       method: 'PATCH',
@@ -341,7 +373,7 @@ async function runTests() {
       method: 'POST',
       body: {
         turfId: 1,
-        date: '2026-10-16',
+        date: dateOffset(2),
         selectedSlots: [15],
         sportType: 'Cricket',
         userId: 999999,
@@ -353,7 +385,8 @@ async function runTests() {
     // Check in database that the booking was assigned to Alice's real ID, not 999999
     const db = require('../db').getDB();
     const bookedRecord = await db.get(
-      'SELECT user_id, user_name FROM Bookings WHERE booking_date = "2026-10-16" AND slot_hour = 15'
+      'SELECT user_id, user_name FROM Bookings WHERE booking_date = ? AND slot_hour = 15',
+      [dateOffset(2)]
     );
     assert(
       bookedRecord.user_id === normalUser.body?.user?.id || bookedRecord.user_name === 'Alice Athlete',
@@ -381,11 +414,25 @@ async function runTests() {
     });
     assert(badEmailReg.status === 400, '22. Registration with invalid email/short password rejected with HTTP 400');
 
+    const oversizedJson = JSON.stringify({
+      name: 'Oversized Payload',
+      email: 'oversized@example.com',
+      phone: '9876543210',
+      password: 'password123',
+      extra: 'x'.repeat(40 * 1024)
+    });
+    const oversizedPayloadRes = await unauthClient.request('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: oversizedJson
+    });
+    assert(oversizedPayloadRes.status === 413, 'Oversized JSON request body rejected with HTTP 413');
+
     const badBookingSlot = await normalUser.request('/api/bookings', {
       method: 'POST',
       body: {
         turfId: 1,
-        date: '2026-10-17',
+        date: dateOffset(3),
         selectedSlots: [25], // invalid slot hour > 23
         sportType: 'Football'
       }
@@ -396,12 +443,18 @@ async function runTests() {
       method: 'POST',
       body: {
         turfId: 1,
-        date: '2026-10-17',
+        date: dateOffset(3),
         selectedSlots: [10, 10], // duplicate slot in array
         sportType: 'Football'
       }
     });
     assert(dupSlotInReq.status === 400, '22. Booking with duplicate slots in request array rejected with HTTP 400');
+
+    const pastBooking = await normalUser.request('/api/bookings', {
+      method: 'POST',
+      body: { turfId: 1, date: dateOffset(-1), selectedSlots: [18], sportType: 'Football' }
+    });
+    assert(pastBooking.status === 400, 'Booking for a past date is rejected with HTTP 400');
 
     console.log('\n==================================================');
     console.log(`ALL TESTS COMPLETED: ${passed} PASSED, ${failed} FAILED`);

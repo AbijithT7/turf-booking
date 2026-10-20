@@ -35,6 +35,12 @@ if (process.env.NODE_ENV === 'production') {
 
 const app = express();
 
+function regenerateSession(req) {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((err) => (err ? reject(err) : resolve()));
+  });
+}
+
 // Security Headers
 app.use(
   helmet({
@@ -87,14 +93,14 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || '32kb' }));
 
 // Server-side Session Management with SQLite Store
 app.use(
   session({
     store: new SQLiteStore({
-      db: 'sessions.db',
-      dir: __dirname
+      db: process.env.SESSION_DB_NAME || 'sessions.db',
+      dir: process.env.SESSION_DB_DIR || __dirname
     }),
     secret: process.env.SESSION_SECRET || 'turfarena_default_development_secret_do_not_use_in_prod',
     resave: false,
@@ -108,11 +114,46 @@ app.use(
   })
 );
 
-// Rate Limiters
+// This app uses one shared SQLite connection. Serialize API/community requests so
+// statements from one async transaction cannot accidentally run inside another.
+function serializeDatabaseRequests(req, res, next) {
+  bookingLock.acquire().then((release) => {
+    let released = false;
+    const unlock = () => {
+      if (released) return;
+      released = true;
+      release();
+    };
+    res.once('finish', unlock);
+    res.once('close', unlock);
+    next();
+  }).catch(next);
+}
+
+app.use('/api', serializeDatabaseRequests);
+app.use('/community', serializeDatabaseRequests);
+
+// Rate limiters. Login has a stricter limit to slow password guessing;
+// registration has a separate cap to reduce automated account creation.
+const isTest = process.env.NODE_ENV === 'test';
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'test' ? 2000 : 100,
+  max: isTest ? 2000 : 100,
   message: { error: 'Too many authentication attempts. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isTest ? 2000 : 10,
+  message: { error: 'Too many login attempts. Please try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+const registrationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: isTest ? 2000 : 20,
+  message: { error: 'Too many registration attempts. Please try again later.' },
   standardHeaders: true,
   legacyHeaders: false
 });
@@ -139,7 +180,7 @@ function formatJoinedDate(createdAt) {
 // AUTHENTICATION ROUTES (Phase 2 & 3)
 // ───────────────────────────────────────────
 
-app.post('/api/auth/register', authLimiter, validateRegister, async (req, res, next) => {
+app.post('/api/auth/register', authLimiter, registrationLimiter, validateRegister, async (req, res, next) => {
   try {
     const db = getDB();
     const { name, email, phone, password } = req.body;
@@ -157,7 +198,8 @@ app.post('/api/auth/register', authLimiter, validateRegister, async (req, res, n
 
     const user = await db.get('SELECT id, name, email, phone, role, created_at FROM Users WHERE id = ?', [result.lastID]);
 
-    // Create server-side authenticated session
+    // Rotate session ID to prevent session fixation.
+    await regenerateSession(req);
     req.session.userId = user.id;
 
     res.status(201).json({
@@ -176,7 +218,7 @@ app.post('/api/auth/register', authLimiter, validateRegister, async (req, res, n
   }
 });
 
-app.post('/api/auth/login', authLimiter, validateLogin, async (req, res, next) => {
+app.post('/api/auth/login', authLimiter, loginLimiter, validateLogin, async (req, res, next) => {
   try {
     const db = getDB();
     const { email, password } = req.body;
@@ -191,7 +233,8 @@ app.post('/api/auth/login', authLimiter, validateLogin, async (req, res, next) =
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Set server-side session user id
+    // Rotate session ID to prevent session fixation.
+    await regenerateSession(req);
     req.session.userId = user.id;
 
     res.json({
@@ -355,7 +398,6 @@ app.post('/api/bookings', requireAuth, validateBooking, async (req, res, next) =
   const userId = req.session.userId;
   const user = req.user;
 
-  const release = await bookingLock.acquire();
   try {
     // Verify turf exists and get basePrice
     const turf = await db.get('SELECT id, name, basePrice FROM Turfs WHERE id = ?', [turfId]);
@@ -428,8 +470,6 @@ app.post('/api/bookings', requireAuth, validateBooking, async (req, res, next) =
       return res.status(409).json({ error: 'One or more requested slots are already booked.' });
     }
     next(err);
-  } finally {
-    release();
   }
 });
 
@@ -570,11 +610,18 @@ app.post('/api/blocked-slots', requireAdmin, validateBlockedSlot, async (req, re
       return res.status(404).json({ error: 'Turf not found.' });
     }
 
+    const existingBooking = await db.get(
+        'SELECT id FROM Bookings WHERE turf_id = ? AND booking_date = ? AND slot_hour = ?',
+        [turfId, date, slotHour]
+      );
+      if (existingBooking) {
+        return res.status(409).json({ error: 'This slot already has a booking and cannot be blocked.' });
+      }
+
     await db.run(
       'INSERT INTO BlockedSlots (turf_id, blocked_date, slot_hour) VALUES (?, ?, ?)',
       [turfId, date, slotHour]
     );
-
     res.status(201).json({ message: 'Slot blocked successfully!' });
   } catch (err) {
     if (err.message && err.message.includes('UNIQUE constraint failed')) {
@@ -614,7 +661,7 @@ app.get('/api/openings', async (req, res, next) => {
   try {
     const db = getDB();
     const rows = await db.all(`
-      SELECT id, turf_id, sport, seats, team_size as teamSize, fare, creator_phone, creator_name, user_id
+      SELECT id, turf_id, sport, seats, team_size as teamSize, fare, creator_name, user_id
       FROM TeamOpenings 
       ORDER BY created_at DESC
     `);
@@ -630,7 +677,6 @@ app.get('/api/openings', async (req, res, next) => {
         seats: row.seats,
         teamSize: row.teamSize,
         fare: row.fare,
-        creatorPhone: row.creator_phone,
         creatorName: row.creator_name
       });
     });
@@ -825,16 +871,28 @@ app.post('/api/requests/:id/respond', requireAuth, async (req, res, next) => {
 
     await db.exec('BEGIN IMMEDIATE TRANSACTION');
 
-    if (action === 'approve') {
-      if (opening.seats <= 0) {
+      // Re-read under the write lock so concurrent approvals cannot overbook seats.
+      const currentRequest = await db.get('SELECT * FROM TeamRequests WHERE id = ?', [requestId]);
+      const currentOpening = await db.get('SELECT * FROM TeamOpenings WHERE id = ?', [request.opening_id]);
+      if (!currentRequest || currentRequest.status !== 'pending') {
         await db.exec('ROLLBACK');
-        return res.status(400).json({ error: 'No seats available to approve this request.' });
+        return res.status(409).json({ error: 'Request was already processed.' });
       }
-      await db.run('UPDATE TeamOpenings SET seats = seats - 1 WHERE id = ?', [opening.id]);
-      await db.run('UPDATE TeamRequests SET status = ? WHERE id = ?', ['approved', requestId]);
-    } else {
-      await db.run('UPDATE TeamRequests SET status = ? WHERE id = ?', ['rejected', requestId]);
-    }
+      if (!currentOpening) {
+        await db.exec('ROLLBACK');
+        return res.status(404).json({ error: 'Opening not found.' });
+      }
+
+      if (action === 'approve') {
+        if (currentOpening.seats <= 0) {
+          await db.exec('ROLLBACK');
+          return res.status(409).json({ error: 'No seats available to approve this request.' });
+        }
+        await db.run('UPDATE TeamOpenings SET seats = seats - 1 WHERE id = ?', [currentOpening.id]);
+        await db.run('UPDATE TeamRequests SET status = ? WHERE id = ?', ['approved', requestId]);
+      } else {
+        await db.run('UPDATE TeamRequests SET status = ? WHERE id = ?', ['rejected', requestId]);
+      }
 
     await db.exec('COMMIT');
     res.json({ message: `Request ${action}d successfully.` });
@@ -850,15 +908,22 @@ app.post('/api/requests/:id/respond', requireAuth, async (req, res, next) => {
 // COMMUNITY HUB ROUTES (Phase 9)
 // ───────────────────────────────────────────
 
-async function getCommunityPostsList() {
+async function getCommunityPostsList(req) {
   const db = getDB();
   const posts = await db.all('SELECT * FROM CommunityPosts ORDER BY created_at DESC');
+  let viewer = null;
+  if (req.session && req.session.userId) {
+    viewer = await db.get('SELECT id, role FROM Users WHERE id = ?', [req.session.userId]);
+  }
+
   const result = [];
   for (const p of posts) {
-    const requests = await db.all(
-      'SELECT * FROM CommunityRequests WHERE post_id = ? ORDER BY created_at ASC',
-      [p.id]
-    );
+    const canViewRequests = Boolean(viewer && (viewer.role === 'admin' || p.user_id === viewer.id));
+    const requests = canViewRequests
+      ? await db.all('SELECT id, user_id, applicant_name, applicant_phone, applicant_team, applicant_email, upi_ref, status, created_at FROM CommunityRequests WHERE post_id = ? ORDER BY created_at ASC', [p.id])
+      : [];
+    const requestCount = await db.get('SELECT COUNT(*) AS count FROM CommunityRequests WHERE post_id = ?', [p.id]);
+
     result.push({
       id: p.id,
       _id: String(p.id),
@@ -884,12 +949,11 @@ async function getCommunityPostsList() {
       status: p.status || 'Open',
       createdByName: p.created_by_name,
       hostName: p.created_by_name,
-      createdByPhone: p.created_by_phone,
-      hostPhone: p.created_by_phone,
-      createdByEmail: p.created_by_email,
-      hostEmail: p.created_by_email,
-      createdBy: p.created_by_email || p.created_by_phone || p.created_by_name || 'Admin',
+      // Personal contact details are intentionally excluded from the public listing.
+      createdBy: p.created_by_name || 'Admin',
       createdAt: p.created_at,
+      requestsCount: requestCount.count,
+      // Applicant contact/payment details are visible only to the post owner or admin.
       requests: requests.map((r) => ({
         id: r.id,
         _id: String(r.id),
@@ -916,7 +980,7 @@ const communityRouter = express.Router();
 // Public: Get all community posts
 communityRouter.get('/', async (req, res, next) => {
   try {
-    const list = await getCommunityPostsList();
+    const list = await getCommunityPostsList(req);
     res.json(list);
   } catch (err) {
     next(err);
