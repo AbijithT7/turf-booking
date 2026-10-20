@@ -51,9 +51,10 @@ async function runMigrations(db) {
       // Ensure there's a fallback user for unmatched bookings
       const fallbackUser = await db.get("SELECT id FROM Users WHERE email = 'test@turf.com' LIMIT 1");
       if (!fallbackUser) {
-        // Find first user or insert a system user if none
+        // A fallback identity is only needed when legacy booking rows must be assigned.
+        const bookingCount = await db.get('SELECT COUNT(*) AS count FROM Bookings');
         const firstUser = await db.get("SELECT id FROM Users ORDER BY id ASC LIMIT 1");
-        if (!firstUser) {
+        if (!firstUser && bookingCount.count > 0) {
           if (process.env.NODE_ENV === 'production') {
             throw new Error('Cannot normalize legacy bookings in production without an existing user to own orphaned records. Resolve booking ownership manually before migrating.');
           }
