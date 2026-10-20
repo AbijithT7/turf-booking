@@ -578,12 +578,25 @@ app.post('/api/blocked-slots', requireAdmin, validateBlockedSlot, async (req, re
       return res.status(404).json({ error: 'Turf not found.' });
     }
 
-    await db.run(
-      'INSERT INTO BlockedSlots (turf_id, blocked_date, slot_hour) VALUES (?, ?, ?)',
-      [turfId, date, slotHour]
-    );
+    // Serialize block operations with booking writes so a slot cannot become both booked and blocked.
+    const release = await bookingLock.acquire();
+    try {
+      const existingBooking = await db.get(
+        'SELECT id FROM Bookings WHERE turf_id = ? AND booking_date = ? AND slot_hour = ?',
+        [turfId, date, slotHour]
+      );
+      if (existingBooking) {
+        return res.status(409).json({ error: 'This slot already has a booking and cannot be blocked.' });
+      }
 
-    res.status(201).json({ message: 'Slot blocked successfully!' });
+      await db.run(
+        'INSERT INTO BlockedSlots (turf_id, blocked_date, slot_hour) VALUES (?, ?, ?)',
+        [turfId, date, slotHour]
+      );
+      res.status(201).json({ message: 'Slot blocked successfully!' });
+    } finally {
+      release();
+    }
   } catch (err) {
     if (err.message && err.message.includes('UNIQUE constraint failed')) {
       return res.json({ message: 'Already blocked' });
