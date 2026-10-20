@@ -312,6 +312,154 @@ app.get('/api/users', requireAdmin, async (req, res, next) => {
   }
 });
 
+// ───────────────────────────────────────────
+// TURF OWNER FOUNDATION
+// ───────────────────────────────────────────
+
+async function requireTurfOwnerOrAdmin(req, res, turfId) {
+  const db = getDB();
+  const turf = await db.get('SELECT id, owner_id FROM Turfs WHERE id = ?', [turfId]);
+  if (!turf) {
+    res.status(404).json({ error: 'Turf not found.' });
+    return null;
+  }
+  if (req.user.role !== 'admin' && !(req.user.role === 'owner' && Number(turf.owner_id) === Number(req.user.id))) {
+    res.status(403).json({ error: 'You do not manage this turf.' });
+    return null;
+  }
+  return turf;
+}
+
+// Admin assigns an existing account the owner role. Role changes are never self-service.
+app.patch('/api/admin/users/:id/role', requireAdmin, async (req, res, next) => {
+  try {
+    if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid user ID.' });
+    const role = req.body && req.body.role;
+    if (!['user', 'owner'].includes(role)) {
+      return res.status(400).json({ error: 'Role must be user or owner.' });
+    }
+    const db = getDB();
+    const target = await db.get('SELECT id, role FROM Users WHERE id = ?', [req.params.id]);
+    if (!target) return res.status(404).json({ error: 'User not found.' });
+    if (target.role === 'admin') return res.status(400).json({ error: 'Admin role cannot be changed through this endpoint.' });
+    await db.run('UPDATE Users SET role = ? WHERE id = ?', [role, req.params.id]);
+    res.json({ message: 'User role updated.', userId: Number(req.params.id), role });
+  } catch (err) { next(err); }
+});
+
+// Admin assigns or unassigns a turf to an account already promoted to owner.
+app.patch('/api/admin/turfs/:id/owner', requireAdmin, async (req, res, next) => {
+  try {
+    if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid turf ID.' });
+    const ownerId = req.body && req.body.ownerId;
+    const db = getDB();
+    const turf = await db.get('SELECT id FROM Turfs WHERE id = ?', [req.params.id]);
+    if (!turf) return res.status(404).json({ error: 'Turf not found.' });
+    if (ownerId !== null && ownerId !== undefined && ownerId !== '') {
+      if (!isValidId(ownerId)) return res.status(400).json({ error: 'ownerId must be a valid user ID or null.' });
+      const owner = await db.get('SELECT id, role FROM Users WHERE id = ?', [ownerId]);
+      if (!owner || owner.role !== 'owner') return res.status(400).json({ error: 'Assign the owner role to this account first.' });
+      await db.run('UPDATE Turfs SET owner_id = ? WHERE id = ?', [Number(ownerId), req.params.id]);
+    } else {
+      await db.run('UPDATE Turfs SET owner_id = NULL WHERE id = ?', [req.params.id]);
+    }
+    res.json({ message: 'Turf ownership updated.' });
+  } catch (err) { next(err); }
+});
+
+// Admin view of owner accounts and their assigned facilities.
+app.get('/api/admin/owners', requireAdmin, async (req, res, next) => {
+  try {
+    const rows = await getDB().all(`
+      SELECT u.id, u.name, u.email, u.phone, COUNT(t.id) AS turf_count
+      FROM Users u LEFT JOIN Turfs t ON t.owner_id = u.id
+      WHERE u.role = 'owner'
+      GROUP BY u.id ORDER BY u.name COLLATE NOCASE
+    `);
+    res.json(rows);
+  } catch (err) { next(err); }
+});
+
+// Owner dashboard data is scoped by the authenticated owner ID.
+app.get('/api/owner/turfs', requireAuth, async (req, res, next) => {
+  try {
+    if (req.user.role !== 'owner' && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Turf owner access required.' });
+    }
+    const rows = await getDB().all(
+      'SELECT id, name, meta, basePrice, panoramaUrl FROM Turfs WHERE owner_id = ? ORDER BY name',
+      [req.user.role === 'admin' ? (req.query.ownerId || -1) : req.user.id]
+    );
+    res.json(rows);
+  } catch (err) { next(err); }
+});
+
+app.get('/api/owner/bookings', requireAuth, async (req, res, next) => {
+  try {
+    if (req.user.role !== 'owner' && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Turf owner access required.' });
+    }
+    const db = getDB();
+    const rows = await db.all(`
+      SELECT b.id, b.turf_id, t.name AS turf_name, b.booking_date, b.slot_hour,
+             b.sport_type, b.user_name, b.user_phone, t.basePrice
+      FROM Bookings b JOIN Turfs t ON t.id = b.turf_id
+      WHERE t.owner_id = ?
+      ORDER BY b.booking_date DESC, b.slot_hour DESC
+    `, [req.user.role === 'admin' ? (req.query.ownerId || -1) : req.user.id]);
+    res.json(rows);
+  } catch (err) { next(err); }
+});
+
+// Owner pricing is validated and only affects turfs assigned to that owner.
+app.patch('/api/owner/turfs/:id/price', requireAuth, async (req, res, next) => {
+  try {
+    if (!['owner', 'admin'].includes(req.user.role)) return res.status(403).json({ error: 'Turf owner access required.' });
+    if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid turf ID.' });
+    const price = Number(req.body && req.body.basePrice);
+    if (!Number.isInteger(price) || price < 100 || price > 100000) {
+      return res.status(400).json({ error: 'Hourly price must be an integer between ₹100 and ₹100,000.' });
+    }
+    const turf = await requireTurfOwnerOrAdmin(req, res, req.params.id);
+    if (!turf) return;
+    await getDB().run('UPDATE Turfs SET basePrice = ? WHERE id = ?', [price, req.params.id]);
+    res.json({ message: 'Hourly price updated.', turfId: Number(req.params.id), basePrice: price });
+  } catch (err) { next(err); }
+});
+
+// Owner-scoped slot blocks; the existing global admin endpoints remain unchanged.
+app.post('/api/owner/blocked-slots', requireAuth, validateBlockedSlot, async (req, res, next) => {
+  try {
+    if (!['owner', 'admin'].includes(req.user.role)) return res.status(403).json({ error: 'Turf owner access required.' });
+    const { turfId, date, slotHour } = req.body;
+    const turf = await requireTurfOwnerOrAdmin(req, res, turfId);
+    if (!turf) return;
+    const db = getDB();
+    const existingBooking = await db.get(
+      'SELECT id FROM Bookings WHERE turf_id = ? AND booking_date = ? AND slot_hour = ?',
+      [turfId, date, slotHour]
+    );
+    if (existingBooking) return res.status(409).json({ error: 'This slot already has a booking and cannot be blocked.' });
+    await db.run('INSERT OR IGNORE INTO BlockedSlots (turf_id, blocked_date, slot_hour) VALUES (?, ?, ?)', [turfId, date, slotHour]);
+    res.status(201).json({ message: 'Slot blocked successfully.' });
+  } catch (err) { next(err); }
+});
+
+app.delete('/api/owner/blocked-slots', requireAuth, validateBlockedSlot, async (req, res, next) => {
+  try {
+    if (!['owner', 'admin'].includes(req.user.role)) return res.status(403).json({ error: 'Turf owner access required.' });
+    const { turfId, date, slotHour } = req.body;
+    const turf = await requireTurfOwnerOrAdmin(req, res, turfId);
+    if (!turf) return;
+    const result = await getDB().run(
+      'DELETE FROM BlockedSlots WHERE turf_id = ? AND blocked_date = ? AND slot_hour = ?',
+      [turfId, date, slotHour]
+    );
+    if (!result.changes) return res.status(404).json({ error: 'Blocked slot not found.' });
+    res.json({ message: 'Slot unblocked successfully.' });
+  } catch (err) { next(err); }
+});
+
 // Public: List all turfs
 app.get('/api/turfs', async (req, res, next) => {
   try {
