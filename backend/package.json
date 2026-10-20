@@ -4,8 +4,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "node tests/auth-security.test.js && node api-smoke.js",
-    "test:security": "node tests/auth-security.test.js",
+    "test": "node tests/auth-security.test.js && node tests/security-headers.test.js && node api-smoke.js",
+    "test:security": "node tests/auth-security.test.js && node tests/security-headers.test.js",
     "test:api": "node api-smoke.js",
     "start": "node server.js"
   },
