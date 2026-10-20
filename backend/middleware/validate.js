@@ -33,6 +33,26 @@ function isValidDate(dateStr) {
   return d.toISOString().slice(0, 10) === dateStr;
 }
 
+function getIndiaDateTimeParts(now = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    hourCycle: 'h23'
+  }).formatToParts(now);
+  return Object.fromEntries(parts.filter(p => p.type !== 'literal').map(p => [p.type, p.value]));
+}
+
+function isBookingTimeInFuture(dateStr, slotHour, now = new Date()) {
+  const india = getIndiaDateTimeParts(now);
+  const today = `${india.year}-${india.month}-${india.day}`;
+  if (dateStr < today) return false;
+  if (dateStr > today) return true;
+  return Number(slotHour) > Number(india.hour);
+}
+
 function isValidSlotHour(slot) {
   const num = Number(slot);
   return Number.isInteger(num) && num >= 0 && num <= 23;
@@ -93,6 +113,16 @@ function validateBooking(req, res, next) {
 
   if (!Array.isArray(selectedSlots) || selectedSlots.length === 0) {
     return res.status(400).json({ error: 'selectedSlots must be a non-empty array of slot hours.' });
+  }
+
+  // Reject past dates and elapsed hours using India Standard Time (venue timezone).
+  for (const slot of selectedSlots) {
+    if (!isValidSlotHour(slot)) {
+      return res.status(400).json({ error: `Invalid slot hour: ${slot}. Must be integer between 0 and 23.` });
+    }
+    if (!isBookingTimeInFuture(date, slot)) {
+      return res.status(400).json({ error: 'Bookings must be for a future time in Asia/Kolkata.' });
+    }
   }
 
   // Verify all slots are valid integers between 0 and 23
@@ -207,6 +237,7 @@ module.exports = {
   isValidPassword,
   isValidName,
   isValidDate,
+  isBookingTimeInFuture,
   isValidSlotHour,
   isValidId,
   validateRegister,
