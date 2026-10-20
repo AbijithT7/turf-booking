@@ -830,21 +830,39 @@ app.post('/api/requests/:id/respond', requireAuth, async (req, res, next) => {
       return res.status(403).json({ error: 'Forbidden. You do not have permission to manage this request.' });
     }
 
-    await db.exec('BEGIN IMMEDIATE TRANSACTION');
+    // Serialize this transaction with booking writes because the app shares one SQLite connection.
+    const release = await bookingLock.acquire();
+    try {
+      await db.exec('BEGIN IMMEDIATE TRANSACTION');
 
-    if (action === 'approve') {
-      if (opening.seats <= 0) {
+      // Re-read under the write lock so concurrent approvals cannot overbook seats.
+      const currentRequest = await db.get('SELECT * FROM TeamRequests WHERE id = ?', [requestId]);
+      const currentOpening = await db.get('SELECT * FROM TeamOpenings WHERE id = ?', [request.opening_id]);
+      if (!currentRequest || currentRequest.status !== 'pending') {
         await db.exec('ROLLBACK');
-        return res.status(400).json({ error: 'No seats available to approve this request.' });
+        return res.status(409).json({ error: 'Request was already processed.' });
       }
-      await db.run('UPDATE TeamOpenings SET seats = seats - 1 WHERE id = ?', [opening.id]);
-      await db.run('UPDATE TeamRequests SET status = ? WHERE id = ?', ['approved', requestId]);
-    } else {
-      await db.run('UPDATE TeamRequests SET status = ? WHERE id = ?', ['rejected', requestId]);
-    }
+      if (!currentOpening) {
+        await db.exec('ROLLBACK');
+        return res.status(404).json({ error: 'Opening not found.' });
+      }
 
-    await db.exec('COMMIT');
-    res.json({ message: `Request ${action}d successfully.` });
+      if (action === 'approve') {
+        if (currentOpening.seats <= 0) {
+          await db.exec('ROLLBACK');
+          return res.status(409).json({ error: 'No seats available to approve this request.' });
+        }
+        await db.run('UPDATE TeamOpenings SET seats = seats - 1 WHERE id = ?', [currentOpening.id]);
+        await db.run('UPDATE TeamRequests SET status = ? WHERE id = ?', ['approved', requestId]);
+      } else {
+        await db.run('UPDATE TeamRequests SET status = ? WHERE id = ?', ['rejected', requestId]);
+      }
+
+      await db.exec('COMMIT');
+      res.json({ message: `Request ${action}d successfully.` });
+    } finally {
+      release();
+    }
   } catch (err) {
     try {
       await db.exec('ROLLBACK');
