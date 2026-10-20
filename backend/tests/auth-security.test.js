@@ -268,6 +268,11 @@ async function runTests() {
       body: { turfId: 1, date: bookingDate, selectedSlots: [10], sportType: 'Football' }
     });
     assert(bookBlockedRes.status === 409, '13. Blocked slot cannot be booked by user (HTTP 409 Conflict)');
+    const blockExistingBooking = await adminClient.request('/api/blocked-slots', {
+      method: 'POST',
+      body: { turfId: 1, date: bookingDate, slotHour: 18 }
+    });
+    assert(blockExistingBooking.status === 409, 'Admin cannot block a slot that already has a booking');
 
     // 14. User can only see their own bookings
     const userABookings = await normalUser.request('/api/user/bookings');
