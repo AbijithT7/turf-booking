@@ -114,6 +114,25 @@ app.use(
   })
 );
 
+// This app uses one shared SQLite connection. Serialize API/community requests so
+// statements from one async transaction cannot accidentally run inside another.
+function serializeDatabaseRequests(req, res, next) {
+  bookingLock.acquire().then((release) => {
+    let released = false;
+    const unlock = () => {
+      if (released) return;
+      released = true;
+      release();
+    };
+    res.once('finish', unlock);
+    res.once('close', unlock);
+    next();
+  }).catch(next);
+}
+
+app.use('/api', serializeDatabaseRequests);
+app.use('/community', serializeDatabaseRequests);
+
 // Rate Limiters
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -363,7 +382,6 @@ app.post('/api/bookings', requireAuth, validateBooking, async (req, res, next) =
   const userId = req.session.userId;
   const user = req.user;
 
-  const release = await bookingLock.acquire();
   try {
     // Verify turf exists and get basePrice
     const turf = await db.get('SELECT id, name, basePrice FROM Turfs WHERE id = ?', [turfId]);
@@ -436,8 +454,6 @@ app.post('/api/bookings', requireAuth, validateBooking, async (req, res, next) =
       return res.status(409).json({ error: 'One or more requested slots are already booked.' });
     }
     next(err);
-  } finally {
-    release();
   }
 });
 
@@ -578,10 +594,7 @@ app.post('/api/blocked-slots', requireAdmin, validateBlockedSlot, async (req, re
       return res.status(404).json({ error: 'Turf not found.' });
     }
 
-    // Serialize block operations with booking writes so a slot cannot become both booked and blocked.
-    const release = await bookingLock.acquire();
-    try {
-      const existingBooking = await db.get(
+    const existingBooking = await db.get(
         'SELECT id FROM Bookings WHERE turf_id = ? AND booking_date = ? AND slot_hour = ?',
         [turfId, date, slotHour]
       );
@@ -589,14 +602,11 @@ app.post('/api/blocked-slots', requireAdmin, validateBlockedSlot, async (req, re
         return res.status(409).json({ error: 'This slot already has a booking and cannot be blocked.' });
       }
 
-      await db.run(
-        'INSERT INTO BlockedSlots (turf_id, blocked_date, slot_hour) VALUES (?, ?, ?)',
-        [turfId, date, slotHour]
-      );
-      res.status(201).json({ message: 'Slot blocked successfully!' });
-    } finally {
-      release();
-    }
+    await db.run(
+      'INSERT INTO BlockedSlots (turf_id, blocked_date, slot_hour) VALUES (?, ?, ?)',
+      [turfId, date, slotHour]
+    );
+    res.status(201).json({ message: 'Slot blocked successfully!' });
   } catch (err) {
     if (err.message && err.message.includes('UNIQUE constraint failed')) {
       return res.json({ message: 'Already blocked' });
@@ -843,10 +853,7 @@ app.post('/api/requests/:id/respond', requireAuth, async (req, res, next) => {
       return res.status(403).json({ error: 'Forbidden. You do not have permission to manage this request.' });
     }
 
-    // Serialize this transaction with booking writes because the app shares one SQLite connection.
-    const release = await bookingLock.acquire();
-    try {
-      await db.exec('BEGIN IMMEDIATE TRANSACTION');
+    await db.exec('BEGIN IMMEDIATE TRANSACTION');
 
       // Re-read under the write lock so concurrent approvals cannot overbook seats.
       const currentRequest = await db.get('SELECT * FROM TeamRequests WHERE id = ?', [requestId]);
@@ -871,11 +878,8 @@ app.post('/api/requests/:id/respond', requireAuth, async (req, res, next) => {
         await db.run('UPDATE TeamRequests SET status = ? WHERE id = ?', ['rejected', requestId]);
       }
 
-      await db.exec('COMMIT');
-      res.json({ message: `Request ${action}d successfully.` });
-    } finally {
-      release();
-    }
+    await db.exec('COMMIT');
+    res.json({ message: `Request ${action}d successfully.` });
   } catch (err) {
     try {
       await db.exec('ROLLBACK');
