@@ -1167,8 +1167,9 @@ communityRouter.patch('/:id/request/:requestId', requireAuth, async (req, res, n
     const { id: postId, requestId } = req.params;
     const { status } = req.body;
 
-    if (!status || !['Accepted', 'Rejected', 'Pending'].includes(status)) {
-      return res.status(400).json({ error: 'Status must be Accepted, Rejected, or Pending.' });
+    // Requests may only transition to a final decision; never re-open a processed request.
+    if (!['Accepted', 'Rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Status must be Accepted or Rejected.' });
     }
 
     const db = getDB();
