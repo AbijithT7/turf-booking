@@ -622,7 +622,7 @@ app.get('/api/openings', async (req, res, next) => {
   try {
     const db = getDB();
     const rows = await db.all(`
-      SELECT id, turf_id, sport, seats, team_size as teamSize, fare, creator_phone, creator_name, user_id
+      SELECT id, turf_id, sport, seats, team_size as teamSize, fare, creator_name, user_id
       FROM TeamOpenings 
       ORDER BY created_at DESC
     `);
@@ -638,7 +638,6 @@ app.get('/api/openings', async (req, res, next) => {
         seats: row.seats,
         teamSize: row.teamSize,
         fare: row.fare,
-        creatorPhone: row.creator_phone,
         creatorName: row.creator_name
       });
     });
