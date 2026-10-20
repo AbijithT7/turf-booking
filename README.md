@@ -1,8 +1,8 @@
 # TurfArena
 
-TurfArena is a full-stack sports turf booking application for browsing venues, reserving time slots, finding teammates, and managing blocked slots.
+TurfArena is a demo full-stack sports turf booking application for browsing seeded venues, checking date-based slot availability, requesting bookings, and finding teammates through community posts.
 
-The project uses a static HTML/CSS/JavaScript frontend served by an Express backend. SQLite is created and seeded automatically when the backend starts.
+The project uses a static HTML/CSS/JavaScript frontend served by an Express backend with SQLite persistence. Availability is refreshed by API requests; the app does **not** currently implement WebSockets/SSE-based live updates, online payment processing, or a tournament bracket/fixture engine. Treat this as a learning/demo project, not a production booking platform.
 
 ## Features
 
@@ -30,9 +30,14 @@ The project uses a static HTML/CSS/JavaScript frontend served by an Express back
 ```text
 Turf_Booking/
 ├── backend/
-│   ├── server.js       # Express server, routes, schema, and seed data
+│   ├── server.js       # Express server and API routes
 │   ├── api-smoke.js    # API smoke test
-│   ├── reset-db.js     # Drops team-opening tables
+│   ├── db.js           # SQLite connection, startup initialization, demo seed data
+│   ├── migrations.js   # Guarded database migrations and account provisioning
+│   ├── middleware/     # Authentication and request validation
+│   ├── migrations/     # SQL schema/data migrations
+│   ├── tests/          # Authentication/security tests
+│   ├── reset-db.js     # Destructive dev-only helper: drops TeamOpenings and TeamRequests
 │   ├── package.json
 │   └── turf.db         # Created at runtime; ignored/generated locally
 ├── frontend/
@@ -110,13 +115,13 @@ The backend creates the default user only when the `Users` table is empty:
 | ---- | --------------- | ------------- |
 | User | `test@turf.com` | `password123` |
 
-The admin login is currently checked in the frontend and is not backed by an API authentication route:
+Development installs may seed a demo admin account using fallback credentials. Do not use these credentials on a deployed or shared instance:
 
 | Role       | Email                 | Password   |
 | ---------- | --------------------- | ---------- |
 | Admin demo | `admin@turfarena.com` | `admin123` |
 
-These credentials are for local demonstration only. They must be replaced before deploying the application.
+The demo credentials are for local development only. Configure `ADMIN_EMAIL`, `ADMIN_PASSWORD` (at least 12 characters), and a strong `SESSION_SECRET` before production. Production startup now refuses to provision an admin without explicit admin credentials; existing non-admin accounts are not auto-promoted.
 
 ## API Reference
 
@@ -126,7 +131,9 @@ These credentials are for local demonstration only. They must be replaced before
 | ------ | -------------------- | ----------------------------- |
 | `POST` | `/api/auth/register` | Register a user               |
 | `POST` | `/api/auth/login`    | Log in a user                 |
-| `GET`  | `/api/users`         | List users for the admin view |
+| `GET`  | `/api/users`         | List users for the admin view (admin session required) |
+| `POST` | `/api/auth/logout`   | Destroy the current session |
+| `GET`  | `/api/auth/me`       | Return the current authenticated user |
 
 ### Turfs and Bookings
 
@@ -168,7 +175,7 @@ These credentials are for local demonstration only. They must be replaced before
 
 On first startup, the server creates `backend/turf.db` and the tables for users, turfs, bookings, blocked slots, team openings, team requests, community posts, and community requests. It also seeds three turfs, a default user, and sample community posts when those tables are empty.
 
-To recreate the team-opening tables during local development:
+The following helper is destructive and for local development only. It drops `TeamOpenings` and `TeamRequests` and does not reset other tables. Back up your database before running it:
 
 ```bash
 node backend/reset-db.js
@@ -194,10 +201,11 @@ npm run test:frontend
 
 ## Notes for Deployment
 
-- The application is a local/demo implementation and has no production admin authorization middleware.
-- CORS is enabled globally by the backend.
-- Passwords for regular users are hashed with bcrypt; the demo admin credentials are stored in frontend JavaScript.
-- Replace the demo credentials, add real authorization, validate ownership on write operations, and use a production database before deployment.
+- The application is a local/demo implementation. Server-side session authentication and role checks exist, but this is not a claim of production readiness.
+- Configure an exact `FRONTEND_ORIGIN`, `SESSION_SECRET`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` in the deployment environment. Never publish `.env` or database/session files.
+- Passwords are bcrypt-hashed. Use unique admin credentials; the fallback credentials are only for local development.
+- Before public deployment, audit every route for authorization and personal-data exposure, test date/slot rules and concurrency, add pagination and automated CI, and establish a backup/migration strategy.
+- Booking confirmation is currently an application record, not a verified payment transaction. Community “tournament” posts are listings, not tournament brackets or fixtures.
 
 ## Author
 
