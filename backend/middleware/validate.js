@@ -115,21 +115,18 @@ function validateBooking(req, res, next) {
     return res.status(400).json({ error: 'selectedSlots must be a non-empty array of slot hours.' });
   }
 
-  // Reject past dates and elapsed hours using India Standard Time (venue timezone).
+  if (selectedSlots.length > 8) {
+    return res.status(400).json({ error: 'A booking may contain at most 8 slots at a time.' });
+  }
+
+  // Validate each slot once, including its date/time and duplicate status.
+  const slotSet = new Set();
   for (const slot of selectedSlots) {
     if (!isValidSlotHour(slot)) {
       return res.status(400).json({ error: `Invalid slot hour: ${slot}. Must be integer between 0 and 23.` });
     }
     if (!isBookingTimeInFuture(date, slot)) {
       return res.status(400).json({ error: 'Bookings must be for a future time in Asia/Kolkata.' });
-    }
-  }
-
-  // Verify all slots are valid integers between 0 and 23
-  const slotSet = new Set();
-  for (const slot of selectedSlots) {
-    if (!isValidSlotHour(slot)) {
-      return res.status(400).json({ error: `Invalid slot hour: ${slot}. Must be integer between 0 and 23.` });
     }
     const intSlot = Number(slot);
     if (slotSet.has(intSlot)) {
@@ -138,6 +135,9 @@ function validateBooking(req, res, next) {
     slotSet.add(intSlot);
   }
 
+  if (sportType !== undefined && typeof sportType !== 'string') {
+    return res.status(400).json({ error: 'Sport type must be text.' });
+  }
   const sport = (sportType || 'Football').trim();
   if (sport.length < 2 || sport.length > 50) {
     return res.status(400).json({ error: 'Sport type must be between 2 and 50 characters.' });
