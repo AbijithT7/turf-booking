@@ -11,6 +11,8 @@ process.env.ADMIN_PASSWORD = 'admin123';
 
 const TEST_DB = path.join(__dirname, 'test-turf.db');
 const TEST_SESSIONS_DB = path.join(__dirname, 'test-sessions.db');
+process.env.SESSION_DB_NAME = path.basename(TEST_SESSIONS_DB);
+process.env.SESSION_DB_DIR = path.dirname(TEST_SESSIONS_DB);
 
 // Remove any prior test db files
 if (fs.existsSync(TEST_DB)) fs.unlinkSync(TEST_DB);
