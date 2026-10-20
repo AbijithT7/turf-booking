@@ -324,6 +324,10 @@ async function runTests() {
     assert(reqRes.status === 201, '18. User B can request to join community post (HTTP 201)');
     const reqId = reqRes.body.requestId;
 
+    const bobPrivateActivity = await clientB.request('/api/user/community');
+    assert(bobPrivateActivity.status === 200, 'Authenticated user can access private community activity');
+    assert(!(bobPrivateActivity.createdPosts || []).some(p => p.id === postId), 'Private community activity does not include another user\'s post');
+
     // Public community listings must not expose creator/applicant contact details or payment references.
     const publicCommunity = await unauthClient.request('/api/community');
     assert(publicCommunity.status === 200 && Array.isArray(publicCommunity.body), 'Public community listing remains accessible');
