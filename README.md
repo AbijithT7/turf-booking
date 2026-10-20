@@ -213,6 +213,7 @@ npm run test:frontend
 - Configure an exact `FRONTEND_ORIGIN`, `SESSION_SECRET`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` in the deployment environment. Never publish `.env` or database/session files.
 - Passwords are bcrypt-hashed. Use unique admin credentials; the fallback credentials are only for local development.
 - Before public deployment, audit every route for authorization and personal-data exposure, test date/slot rules and concurrency, add pagination and automated CI, and establish a backup/migration strategy.
+- Because the current backend shares one SQLite connection, API and community requests are serialized to prevent transaction interleaving. This is a correctness-first demo safeguard; move to a connection/transaction architecture designed for concurrency before expecting production traffic.
 - Booking confirmation is currently an application record, not a verified payment transaction. Community “tournament” posts are listings, not tournament brackets or fixtures.
 
 ## Author
