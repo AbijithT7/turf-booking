@@ -17,7 +17,7 @@ function isValidPhone(phone) {
 }
 
 function isValidPassword(password) {
-  return typeof password === 'string' && password.length >= 6 && password.length <= 128;
+  return typeof password === 'string' && password.length >= 8 && password.length <= 128;
 }
 
 function isValidName(name) {
@@ -29,7 +29,8 @@ function isValidName(name) {
 function isValidDate(dateStr) {
   if (typeof dateStr !== 'string' || !DATE_REGEX.test(dateStr)) return false;
   const d = new Date(dateStr + 'T00:00:00Z');
-  return !isNaN(d.getTime());
+  if (Number.isNaN(d.getTime())) return false;
+  return d.toISOString().slice(0, 10) === dateStr;
 }
 
 function isValidSlotHour(slot) {
@@ -56,7 +57,7 @@ function validateRegister(req, res, next) {
     return res.status(400).json({ error: 'Valid 10-digit phone number is required.' });
   }
   if (!isValidPassword(password)) {
-    return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    return res.status(400).json({ error: 'Password must be between 8 and 128 characters long.' });
   }
 
   req.body.name = name.trim();
