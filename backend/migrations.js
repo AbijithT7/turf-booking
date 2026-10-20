@@ -2,6 +2,10 @@ const fs = require('fs');
 const path = require('path');
 
 async function runMigrations(db) {
+  if (process.env.NODE_ENV === 'production' &&
+      (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD.length < 12)) {
+    throw new Error('Production requires explicit ADMIN_EMAIL and ADMIN_PASSWORD (at least 12 characters) before migrations or seeding.');
+  }
   // Ensure migrations tracking table exists
   await db.exec(`
     CREATE TABLE IF NOT EXISTS _migrations (
@@ -50,10 +54,13 @@ async function runMigrations(db) {
         // Find first user or insert a system user if none
         const firstUser = await db.get("SELECT id FROM Users ORDER BY id ASC LIMIT 1");
         if (!firstUser) {
+          if (process.env.NODE_ENV === 'production') {
+            throw new Error('Cannot normalize legacy bookings in production without an existing user to own orphaned records. Resolve booking ownership manually before migrating.');
+          }
           const bcrypt = require('bcryptjs');
-          const hash = await bcrypt.hash('password123', 10);
+          const hash = await bcrypt.hash('password123', 12);
           await db.run("INSERT INTO Users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)",
-            ['Default User', 'default@turfarena.com', '0000000000', hash, 'user']
+            ['Development Migration User', 'default@turfarena.com', '0000000000', hash, 'user']
           );
         }
       }
