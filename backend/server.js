@@ -93,7 +93,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || '32kb' }));
 
 // Server-side Session Management with SQLite Store
 app.use(
@@ -133,11 +133,27 @@ function serializeDatabaseRequests(req, res, next) {
 app.use('/api', serializeDatabaseRequests);
 app.use('/community', serializeDatabaseRequests);
 
-// Rate Limiters
+// Rate limiters. Login has a stricter limit to slow password guessing;
+// registration has a separate cap to reduce automated account creation.
+const isTest = process.env.NODE_ENV === 'test';
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'test' ? 2000 : 100,
+  max: isTest ? 2000 : 100,
   message: { error: 'Too many authentication attempts. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isTest ? 2000 : 10,
+  message: { error: 'Too many login attempts. Please try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+const registrationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: isTest ? 2000 : 20,
+  message: { error: 'Too many registration attempts. Please try again later.' },
   standardHeaders: true,
   legacyHeaders: false
 });
@@ -164,7 +180,7 @@ function formatJoinedDate(createdAt) {
 // AUTHENTICATION ROUTES (Phase 2 & 3)
 // ───────────────────────────────────────────
 
-app.post('/api/auth/register', authLimiter, validateRegister, async (req, res, next) => {
+app.post('/api/auth/register', authLimiter, registrationLimiter, validateRegister, async (req, res, next) => {
   try {
     const db = getDB();
     const { name, email, phone, password } = req.body;
@@ -202,7 +218,7 @@ app.post('/api/auth/register', authLimiter, validateRegister, async (req, res, n
   }
 });
 
-app.post('/api/auth/login', authLimiter, validateLogin, async (req, res, next) => {
+app.post('/api/auth/login', authLimiter, loginLimiter, validateLogin, async (req, res, next) => {
   try {
     const db = getDB();
     const { email, password } = req.body;
