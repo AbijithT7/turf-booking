@@ -356,6 +356,13 @@ async function runTests() {
     });
     assert(ownerAccept.status === 200, '18. Owner can accept request on their own post (HTTP 200)');
 
+    // A processed community request must not be reset to Pending.
+    const reopenRequest = await normalUser.request(`/api/community/${postId}/request/${reqId}`, {
+      method: 'PATCH',
+      body: { status: 'Pending' }
+    });
+    assert(reopenRequest.status === 400, 'Processed community request cannot be reset to Pending (HTTP 400)');
+
     // 19. Unauthenticated modification rejected
     const unauthModify = await unauthClient.request(`/api/community/${postId}`, {
       method: 'DELETE'
