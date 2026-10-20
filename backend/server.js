@@ -1277,7 +1277,7 @@ app.get('/api/user/community', requireAuth, async (req, res, next) => {
       `SELECT * FROM CommunityPosts 
        WHERE user_id = ? OR created_by_phone = ? OR created_by_email = ? 
        ORDER BY created_at DESC`,
-      [req.user.id, req.user.phone, req.user.email]
+      [req.user.id]
     );
 
     for (const p of createdPosts) {
@@ -1317,7 +1317,7 @@ app.get('/api/user/community/:phone', requireAuth, async (req, res, next) => {
       `SELECT * FROM CommunityPosts 
        WHERE user_id = ? OR created_by_phone = ? 
        ORDER BY created_at DESC`,
-      [req.user.id, phone]
+      [req.user.id]
     );
 
     for (const p of createdPosts) {
