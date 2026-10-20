@@ -96,33 +96,44 @@ async function runMigrations(db) {
     console.log('Applied migration: 004_security_constraints.sql');
   }
 
-  // Seed Admin user if does not exist
-  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@turfarena.com').trim().toLowerCase();
-  const existingAdmin = await db.get('SELECT * FROM Users WHERE LOWER(email) = ?', [adminEmail]);
+  // Admin provisioning: production must be explicitly configured. Never promote
+  // an existing player account to admin merely because its email matches.
+  const isProduction = process.env.NODE_ENV === 'production';
+  const configuredEmail = process.env.ADMIN_EMAIL;
+  const configuredPassword = process.env.ADMIN_PASSWORD;
+
+  if (isProduction && (!configuredEmail || !configuredPassword || configuredPassword.length < 12)) {
+    throw new Error('Production requires explicit ADMIN_EMAIL and ADMIN_PASSWORD (at least 12 characters).');
+  }
+
+  const adminEmail = (configuredEmail || 'admin@turfarena.com').trim().toLowerCase();
+  const existingAdmin = await db.get('SELECT id, role FROM Users WHERE LOWER(email) = ?', [adminEmail]);
+
   if (!existingAdmin) {
     const bcrypt = require('bcryptjs');
-    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
-    const hash = await bcrypt.hash(adminPassword, 10);
+    const adminPassword = configuredPassword || 'admin123';
+    const hash = await bcrypt.hash(adminPassword, 12);
     await db.run(
       'INSERT INTO Users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)',
       ['TurfArena Admin', adminEmail, '9999999999', hash, 'admin']
     );
-    console.log(`Seeded admin user (${adminEmail} / [CONFIGURED PASSWORD])`);
+    console.log('Seeded admin account from configured credentials.');
   } else if (existingAdmin.role !== 'admin') {
-    await db.run('UPDATE Users SET role = ? WHERE id = ?', ['admin', existingAdmin.id]);
-    console.log(`Promoted existing user ${adminEmail} to admin role.`);
+    throw new Error('ADMIN_EMAIL belongs to a non-admin account. Refusing automatic role promotion; configure a different ADMIN_EMAIL or promote the account manually.');
   }
 
-  // Ensure default normal test user exists if none exists
-  const userCount = await db.get('SELECT COUNT(*) as count FROM Users WHERE role = "user"');
-  if (userCount.count === 0) {
-    const bcrypt = require('bcryptjs');
-    const defaultPassword = await bcrypt.hash('password123', 10);
-    await db.run(
-      'INSERT INTO Users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)',
-      ['Test User', 'test@turf.com', '9876543210', defaultPassword, 'user']
-    );
-    console.log('Seeded default user: test@turf.com / password123');
+  // Demo account is development-only; never create a known-password user in production.
+  if (!isProduction) {
+    const userCount = await db.get("SELECT COUNT(*) as count FROM Users WHERE role = 'user'");
+    if (userCount.count === 0) {
+      const bcrypt = require('bcryptjs');
+      const defaultPassword = await bcrypt.hash('password123', 12);
+      await db.run(
+        'INSERT INTO Users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)',
+        ['Test User', 'test@turf.com', '9876543210', defaultPassword, 'user']
+      );
+      console.log('Seeded development-only test user: test@turf.com');
+    }
   }
 }
 
