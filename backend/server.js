@@ -35,6 +35,12 @@ if (process.env.NODE_ENV === 'production') {
 
 const app = express();
 
+function regenerateSession(req) {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((err) => (err ? reject(err) : resolve()));
+  });
+}
+
 // Security Headers
 app.use(
   helmet({
@@ -157,7 +163,8 @@ app.post('/api/auth/register', authLimiter, validateRegister, async (req, res, n
 
     const user = await db.get('SELECT id, name, email, phone, role, created_at FROM Users WHERE id = ?', [result.lastID]);
 
-    // Create server-side authenticated session
+    // Rotate session ID to prevent session fixation.
+    await regenerateSession(req);
     req.session.userId = user.id;
 
     res.status(201).json({
@@ -191,7 +198,8 @@ app.post('/api/auth/login', authLimiter, validateLogin, async (req, res, next) =
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Set server-side session user id
+    // Rotate session ID to prevent session fixation.
+    await regenerateSession(req);
     req.session.userId = user.id;
 
     res.json({
