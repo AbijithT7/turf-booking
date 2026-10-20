@@ -64,6 +64,18 @@ class CookieClient {
   }
 }
 
+function dateOffset(days) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.filter(p => p.type !== 'literal').map(p => [p.type, p.value]));
+  return new Date(Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day) + days))
+    .toISOString().slice(0, 10);
+}
+
 async function runTests() {
   console.log('==================================================');
   console.log('TURFARENA SECURITY & AUTHENTICATION TEST SUITE');
@@ -179,7 +191,7 @@ async function runTests() {
     console.log('\n--- Phase 3: Bookings & Security Constraints Tests ---');
 
     // 9. Authenticated user can create booking
-    const bookingDate = '2026-10-15';
+    const bookingDate = dateOffset(1);
     const createBookingRes = await normalUser.request('/api/bookings', {
       method: 'POST',
       body: {
@@ -341,7 +353,7 @@ async function runTests() {
       method: 'POST',
       body: {
         turfId: 1,
-        date: '2026-10-16',
+        date: dateOffset(2),
         selectedSlots: [15],
         sportType: 'Cricket',
         userId: 999999,
@@ -353,7 +365,8 @@ async function runTests() {
     // Check in database that the booking was assigned to Alice's real ID, not 999999
     const db = require('../db').getDB();
     const bookedRecord = await db.get(
-      'SELECT user_id, user_name FROM Bookings WHERE booking_date = "2026-10-16" AND slot_hour = 15'
+      'SELECT user_id, user_name FROM Bookings WHERE booking_date = ? AND slot_hour = 15',
+      [dateOffset(2)]
     );
     assert(
       bookedRecord.user_id === normalUser.body?.user?.id || bookedRecord.user_name === 'Alice Athlete',
@@ -385,7 +398,7 @@ async function runTests() {
       method: 'POST',
       body: {
         turfId: 1,
-        date: '2026-10-17',
+        date: dateOffset(3),
         selectedSlots: [25], // invalid slot hour > 23
         sportType: 'Football'
       }
