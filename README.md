@@ -7,6 +7,7 @@ The project uses a static HTML/CSS/JavaScript frontend served by an Express back
 ## Features
 
 - Browse seeded sports turfs and their hourly prices.
+- Use the Smart Turf Finder to filter by area, sport, and hourly budget, then rank matching turfs from lowest to highest price.
 - Check booked and blocked slots for a selected date.
 - Book one or more slots in a single request.
 - Register and log in as a user.
