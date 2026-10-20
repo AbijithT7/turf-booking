@@ -317,6 +317,15 @@ async function runTests() {
     assert(reqRes.status === 201, '18. User B can request to join community post (HTTP 201)');
     const reqId = reqRes.body.requestId;
 
+    // Public community listings must not expose creator/applicant contact details or payment references.
+    const publicCommunity = await unauthClient.request('/api/community');
+    assert(publicCommunity.status === 200 && Array.isArray(publicCommunity.body), 'Public community listing remains accessible');
+    const publicPost = publicCommunity.body.find(p => p.id === postId);
+    assert(Boolean(publicPost), 'New community post appears in public listing');
+    assert(!('createdByPhone' in publicPost) && !('createdByEmail' in publicPost), 'Public listing omits creator phone and email');
+    assert(Array.isArray(publicPost.requests) && publicPost.requests.length === 0, 'Public listing hides applicant details from non-owners');
+    assert(publicPost.requestsCount >= 1, 'Public listing may show aggregate request count without applicant details');
+
     // 17. User cannot modify another user's post/opening
     const bobModifyAttempt = await clientB.request(`/api/community/${postId}/request/${reqId}`, {
       method: 'PATCH',
@@ -409,12 +418,18 @@ async function runTests() {
       method: 'POST',
       body: {
         turfId: 1,
-        date: '2026-10-17',
+        date: dateOffset(3),
         selectedSlots: [10, 10], // duplicate slot in array
         sportType: 'Football'
       }
     });
     assert(dupSlotInReq.status === 400, '22. Booking with duplicate slots in request array rejected with HTTP 400');
+
+    const pastBooking = await normalUser.request('/api/bookings', {
+      method: 'POST',
+      body: { turfId: 1, date: dateOffset(-1), selectedSlots: [18], sportType: 'Football' }
+    });
+    assert(pastBooking.status === 400, 'Booking for a past date is rejected with HTTP 400');
 
     console.log('\n==================================================');
     console.log(`ALL TESTS COMPLETED: ${passed} PASSED, ${failed} FAILED`);
