@@ -858,15 +858,22 @@ app.post('/api/requests/:id/respond', requireAuth, async (req, res, next) => {
 // COMMUNITY HUB ROUTES (Phase 9)
 // ───────────────────────────────────────────
 
-async function getCommunityPostsList() {
+async function getCommunityPostsList(req) {
   const db = getDB();
   const posts = await db.all('SELECT * FROM CommunityPosts ORDER BY created_at DESC');
+  let viewer = null;
+  if (req.session && req.session.userId) {
+    viewer = await db.get('SELECT id, role FROM Users WHERE id = ?', [req.session.userId]);
+  }
+
   const result = [];
   for (const p of posts) {
-    const requests = await db.all(
-      'SELECT * FROM CommunityRequests WHERE post_id = ? ORDER BY created_at ASC',
-      [p.id]
-    );
+    const canViewRequests = Boolean(viewer && (viewer.role === 'admin' || p.user_id === viewer.id));
+    const requests = canViewRequests
+      ? await db.all('SELECT id, user_id, applicant_name, applicant_phone, applicant_team, applicant_email, upi_ref, status, created_at FROM CommunityRequests WHERE post_id = ? ORDER BY created_at ASC', [p.id])
+      : [];
+    const requestCount = await db.get('SELECT COUNT(*) AS count FROM CommunityRequests WHERE post_id = ?', [p.id]);
+
     result.push({
       id: p.id,
       _id: String(p.id),
@@ -892,12 +899,11 @@ async function getCommunityPostsList() {
       status: p.status || 'Open',
       createdByName: p.created_by_name,
       hostName: p.created_by_name,
-      createdByPhone: p.created_by_phone,
-      hostPhone: p.created_by_phone,
-      createdByEmail: p.created_by_email,
-      hostEmail: p.created_by_email,
-      createdBy: p.created_by_email || p.created_by_phone || p.created_by_name || 'Admin',
+      // Personal contact details are intentionally excluded from the public listing.
+      createdBy: p.created_by_name || 'Admin',
       createdAt: p.created_at,
+      requestsCount: requestCount.count,
+      // Applicant contact/payment details are visible only to the post owner or admin.
       requests: requests.map((r) => ({
         id: r.id,
         _id: String(r.id),
@@ -924,7 +930,7 @@ const communityRouter = express.Router();
 // Public: Get all community posts
 communityRouter.get('/', async (req, res, next) => {
   try {
-    const list = await getCommunityPostsList();
+    const list = await getCommunityPostsList(req);
     res.json(list);
   } catch (err) {
     next(err);
