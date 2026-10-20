@@ -325,6 +325,10 @@ async function runTests() {
     assert(!('createdByPhone' in publicPost) && !('createdByEmail' in publicPost), 'Public listing omits creator phone and email');
     assert(Array.isArray(publicPost.requests) && publicPost.requests.length === 0, 'Public listing hides applicant details from non-owners');
     assert(publicPost.requestsCount >= 1, 'Public listing may show aggregate request count without applicant details');
+    const publicOpenings = await unauthClient.request('/api/openings');
+    assert(publicOpenings.status === 200, 'Public team openings remain accessible');
+    const allOpenings = Object.values(publicOpenings.body || {}).flat();
+    assert(allOpenings.every(o => !('creatorPhone' in o)), 'Public team openings omit creator phone numbers');
 
     // 17. User cannot modify another user's post/opening
     const bobModifyAttempt = await clientB.request(`/api/community/${postId}/request/${reqId}`, {
