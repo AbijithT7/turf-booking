@@ -99,8 +99,8 @@ app.use(express.json());
 app.use(
   session({
     store: new SQLiteStore({
-      db: 'sessions.db',
-      dir: __dirname
+      db: process.env.SESSION_DB_NAME || 'sessions.db',
+      dir: process.env.SESSION_DB_DIR || __dirname
     }),
     secret: process.env.SESSION_SECRET || 'turfarena_default_development_secret_do_not_use_in_prod',
     resave: false,
