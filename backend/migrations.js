@@ -128,6 +128,17 @@ async function runMigrations(db) {
     console.log('Seeded admin account from configured credentials.');
   } else if (existingAdmin.role !== 'admin') {
     throw new Error('ADMIN_EMAIL belongs to a non-admin account. Refusing automatic role promotion; configure a different ADMIN_EMAIL or promote the account manually.');
+  } else if (isProduction) {
+    // Ensure the explicitly configured production password is actually applied
+    // to an existing admin account, rather than leaving an old demo hash in place.
+    const bcrypt = require('bcryptjs');
+    const currentAdmin = await db.get('SELECT password FROM Users WHERE id = ?', [existingAdmin.id]);
+    const passwordMatches = currentAdmin && await bcrypt.compare(configuredPassword, currentAdmin.password);
+    if (!passwordMatches) {
+      const hash = await bcrypt.hash(configuredPassword, 12);
+      await db.run('UPDATE Users SET password = ? WHERE id = ?', [hash, existingAdmin.id]);
+      console.log('Updated existing admin password from production configuration.');
+    }
   }
 
   // Demo account is development-only; never create a known-password user in production.
