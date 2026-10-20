@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TurfArena — Owner Assignments</title><link rel="stylesheet" href="theme.css">
+<style>
+body{font-family:system-ui,sans-serif;margin:0;background:var(--bg-main,#0b1114);color:var(--text-main,#f4f7f8)}main{max-width:1000px;margin:auto;padding:28px 18px}
+.panel{background:var(--surface-1,#151e22);border:1px solid var(--line-soft,#29363b);border-radius:14px;padding:20px;margin:18px 0}
+.row{display:flex;gap:12px;align-items:end;flex-wrap:wrap}.row>div{flex:1;min-width:190px}label{display:block;margin-bottom:6px;color:var(--text-muted,#aab5ba);font-size:13px}
+select,button{padding:10px;border-radius:8px;border:1px solid var(--line-soft,#35434a);background:var(--surface-2,#202b30);color:inherit;font:inherit}button{cursor:pointer;background:var(--primary,#b8ef4b);color:#17200e;border:0;font-weight:700}
+.muted{color:var(--text-muted,#aab5ba)}#message{min-height:24px}.error{color:#ff9999}.success{color:#a5ec9b}
+table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:10px;border-bottom:1px solid var(--line-soft,#29363b)}.scroll{overflow:auto}
+</style></head>
+<body><main>
+<p class="muted">TURFARENA / PLATFORM ADMIN</p><h1>Owner assignments</h1>
+<p class="muted">Promote an existing user to owner, then assign one or more facilities. Only platform admins can make these changes.</p>
+<p><a href="admin-dashboard.html" style="color:inherit">← Admin console</a></p><p id="message" role="status" aria-live="polite"></p>
+<section class="panel"><h2>Manage account role</h2><div class="row">
+<div><label for="user">User account</label><select id="user"></select></div>
+<div><label for="role">Role</label><select id="role"><option value="owner">Turf owner</option><option value="user">Player / user</option></select></div>
+<div><button id="saveRole">Save role</button></div></div></section>
+<section class="panel"><h2>Assign a turf</h2><div class="row">
+<div><label for="turf">Facility</label><select id="turf"></select></div>
+<div><label for="owner">Owner account</label><select id="owner"><option value="">Unassigned</option></select></div>
+<div><button id="assign">Save assignment</button></div></div></section>
+<section class="panel"><h2>Current owners</h2><div class="scroll"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Assigned turfs</th></tr></thead><tbody id="owners"><tr><td colspan="4">Loading…</td></tr></tbody></table></div></section>
+<script>
+(()=>{const $=id=>document.getElementById(id);let users=[],turfs={};
+const msg=(s,err=false)=>{$('message').textContent=s;$('message').className=err?'error':'success';};
+async function api(url,options={}){const r=await fetch(url,{credentials:'include',...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'Request failed');return d;}
+async function load(){try{const me=await api('/api/auth/me');if(me.user.role!=='admin'){location.href='admin-login.html';return;}
+[users,turfs]=await Promise.all([api('/api/users'),api('/api/turfs')]);
+$('user').innerHTML='';users.filter(u=>u.role!=='admin').forEach(u=>{const o=document.createElement('option');o.value=u.id;o.textContent=u.name+' — '+u.email+' ('+u.role+')';$('user').append(o);});
+$('turf').innerHTML='';Object.values(turfs).forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name+' — '+t.meta;$('turf').append(o);});
+await loadOwners();}catch(e){msg(e.message+' — sign in as an admin.',true);}}
+async function loadOwners(){const owners=await api('/api/admin/owners');$('owner').innerHTML='<option value="">Unassigned</option>';owners.forEach(u=>{const o=document.createElement('option');o.value=u.id;o.textContent=u.name+' — '+u.email;$('owner').append(o);});
+$('owners').innerHTML='';if(!owners.length){$('owners').innerHTML='<tr><td colspan="4">No owner accounts yet.</td></tr>';return;}
+owners.forEach(u=>{const tr=document.createElement('tr');[u.name,u.email,u.phone,String(u.turf_count)].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.append(td);});$('owners').append(tr);});}
+$('saveRole').addEventListener('click',async()=>{try{await api('/api/admin/users/'+$('user').value+'/role',{method:'PATCH',body:JSON.stringify({role:$('role').value})});msg('Account role updated.');await load();}catch(e){msg(e.message,true);}});
+$('assign').addEventListener('click',async()=>{try{const ownerId=$('owner').value||null;await api('/api/admin/turfs/'+$('turf').value+'/owner',{method:'PATCH',body:JSON.stringify({ownerId})});msg('Facility assignment saved.');await loadOwners();}catch(e){msg(e.message,true);}});
+load();})();
+</script></main></body></html>

@@ -104,6 +104,19 @@ async function runMigrations(db) {
     console.log('Applied migration: 004_security_constraints.sql');
   }
 
+  // Migration 005_turf_ownership.sql
+  if (!applied.has('005_turf_ownership.sql')) {
+    const turfCols = await db.all('PRAGMA table_info(Turfs)');
+    if (!turfCols.some(c => c.name === 'owner_id')) {
+      const sql = fs.readFileSync(path.join(__dirname, 'migrations/005_turf_ownership.sql'), 'utf8');
+      await db.exec(sql);
+      console.log('Added turf ownership support.');
+    } else {
+      await db.exec('CREATE INDEX IF NOT EXISTS idx_turfs_owner ON Turfs(owner_id); CREATE INDEX IF NOT EXISTS idx_bookings_turf_date ON Bookings(turf_id, booking_date);');
+    }
+    await db.run('INSERT OR IGNORE INTO _migrations (name) VALUES (?)', ['005_turf_ownership.sql']);
+  }
+
   // Admin provisioning: production must be explicitly configured. Never promote
   // an existing player account to admin merely because its email matches.
   const isProduction = process.env.NODE_ENV === 'production';

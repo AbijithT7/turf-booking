@@ -17,6 +17,18 @@ The project uses a static HTML/CSS/JavaScript frontend served by an Express back
 - Use the admin dashboard to block and unblock slots and review bookings.
 - Switch between the application's light and dark themes.
 
+## Turf Owner Foundation
+
+The owner-management foundation adds a separate `owner` role and nullable `Turfs.owner_id` ownership via migration `005_turf_ownership.sql`. Existing facilities and bookings are preserved; existing turfs remain unassigned until a platform admin assigns them.
+
+- Sign in as an admin and open `/admin-owners.html` to promote an existing user to owner and assign/unassign facilities.
+- Owners can open `/owner-dashboard.html` to view only assigned turfs, inspect bookings for those facilities, update hourly base prices, and block/unblock unbooked slots.
+- Owner API routes enforce ownership on the server. Hiding a UI control is not used as an authorization boundary.
+- The owner dashboard currently edits base prices; peak/weekend pricing, payment verification, slot holds, refunds and SSE updates are planned for later phases and are not implemented by this foundation.
+- Assignments are intentionally admin-controlled. A newly promoted owner sees no facilities until one or more are assigned.
+
+Owner-related endpoints: `GET /api/admin/owners`, `PATCH /api/admin/users/:id/role`, `PATCH /api/admin/turfs/:id/owner`, `GET /api/owner/turfs`, `GET /api/owner/bookings`, `PATCH /api/owner/turfs/:id/price`, and owner-scoped `POST/DELETE /api/owner/blocked-slots`.
+
 ## Tech Stack
 
 - Node.js and Express

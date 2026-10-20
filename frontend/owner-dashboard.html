@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Manage your TurfArena facilities, pricing and bookings.">
+  <title>TurfArena — Owner Console</title>
+  <link rel="stylesheet" href="theme.css">
+  <style>
+    body{font-family:system-ui,sans-serif;margin:0;background:var(--bg-main,#0b1114);color:var(--text-main,#f4f7f8)}
+    .wrap{max-width:1100px;margin:auto;padding:28px 18px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+    .panel{background:var(--surface-1,#151e22);border:1px solid var(--line-soft,#29363b);border-radius:16px;padding:20px;margin-top:18px}
+    label{display:block;font-size:13px;color:var(--text-muted,#aab5ba);margin-bottom:6px}
+    select,input,button{font:inherit;border-radius:9px;padding:10px;border:1px solid var(--line-soft,#35434a);background:var(--surface-2,#202b30);color:inherit}
+    button{cursor:pointer;background:var(--primary,#b8ef4b);color:#14200b;font-weight:700;border:0}
+    .row{display:flex;gap:12px;align-items:end;flex-wrap:wrap}.row>div{min-width:170px}
+    .muted{color:var(--text-muted,#aab5ba)}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+    .stat{padding:14px;border:1px solid var(--line-soft,#29363b);border-radius:12px}.stat strong{display:block;font-size:24px;margin-top:6px}
+    .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:9px;margin-top:14px}
+    .slot{padding:12px;border-radius:10px;border:1px solid var(--line-soft,#35434a);background:var(--surface-2,#202b30)}
+    .slot small{display:block;margin:5px 0 9px;color:var(--text-muted,#aab5ba)}.slot button{font-size:12px;padding:7px;width:100%}
+    .slot.booked{border-color:#2f9e68}.slot.blocked{border-color:#e36d6d}.hidden{display:none}
+    table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:10px;border-bottom:1px solid var(--line-soft,#29363b)}.table-wrap{overflow:auto}
+    #message{margin-top:12px}.error{color:#ff9a9a}.success{color:#a8ef9e}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <div><p class="muted">TURFARENA / FACILITY PARTNER</p><h1>Owner Console</h1><p class="muted">Manage only the turfs assigned to your account.</p></div>
+      <div><a href="index.html" style="color:inherit">← Public site</a> &nbsp; <button id="logout">Sign out</button></div>
+    </header>
+    <p id="message" role="status" aria-live="polite"></p>
+    <section class="panel">
+      <h2>Your facilities</h2>
+      <div class="row">
+        <div style="flex:1"><label for="turfSelect">Assigned turf</label><select id="turfSelect"><option>Loading…</option></select></div>
+        <div><label for="price">Hourly price (₹)</label><input id="price" type="number" min="100" max="100000" step="1"></div>
+        <div><button id="savePrice">Update price</button></div>
+      </div>
+      <p class="muted">Price changes are saved on the server and affect new bookings. Dynamic pricing will be added in a later phase.</p>
+    </section>
+    <section class="panel">
+      <h2>Slot controls</h2>
+      <div class="row"><div><label for="date">Booking date</label><input id="date" type="date"></div><div><button id="refresh">Refresh slots</button></div></div>
+      <div id="slots" class="slots"></div>
+    </section>
+    <section class="panel">
+      <h2>Recent bookings</h2><p class="muted">Customer details are visible only for facilities assigned to your owner account.</p>
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Time</th><th>Customer</th><th>Sport</th><th>Base rate</th></tr></thead><tbody id="bookingRows"><tr><td colspan="5">Loading…</td></tr></tbody></table></div>
+    </section>
+  </main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let turfs = [], bookings = [], bookedHours = [], blockedHours = [];
+  const message = (text, isError=false) => { $('message').textContent=text; $('message').className=isError?'error':'success'; };
+  const selectedTurf = () => Number($('turfSelect').value);
+  const request = async (url, options={}) => {
+    const res = await fetch(url,{credentials:'include',...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(data.error || 'Request failed');
+    return data;
+  };
+  const dateString = d => { const x=new Date(d.getTime()-d.getTimezoneOffset()*60000); return x.toISOString().slice(0,10); };
+  function timeLabel(hour) {
+    const fmt=h=>{const n=h%12||12;return n+':00 '+(h<12?'AM':'PM');};
+    return fmt(hour)+' – '+fmt((hour+1)%24);
+  }
+  async function load() {
+    try {
+      const me=await request('/api/auth/me');
+      if(!['owner','admin'].includes(me.user.role)){ location.href='index.html'; return; }
+      turfs=await request('/api/owner/turfs');
+      $('turfSelect').innerHTML='';
+      turfs.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name+' · '+t.meta;$('turfSelect').appendChild(o);});
+      if(!turfs.length){$('turfSelect').innerHTML='<option value="">No assigned turfs</option>';message('No turfs are assigned to this account yet. Ask the platform admin to assign a facility.',true);$('slots').textContent='No turf selected.';return;}
+      await refreshAll();
+    } catch(e) { message(e.message+' — log in with an owner account.',true); }
+  }
+  async function refreshAll() {
+    const t=turfs.find(x=>x.id===selectedTurf()); if(!t)return;
+    $('price').value=t.basePrice;
+    await Promise.all([loadSlots(),loadBookings()]);
+  }
+  async function loadSlots() {
+    const id=selectedTurf(), date=$('date').value;
+    const [booked,blocked]=await Promise.all([
+      request('/api/bookings?date='+encodeURIComponent(date)),
+      request('/api/blocked-slots?date='+encodeURIComponent(date))
+    ]);
+    bookedHours=booked[id]||[]; blockedHours=blocked[id]||[];
+    $('slots').innerHTML='';
+    for(let h=0;h<24;h++){
+      const isBooked=bookedHours.includes(h), isBlocked=blockedHours.includes(h);
+      const card=document.createElement('div');card.className='slot'+(isBooked?' booked':isBlocked?' blocked':'');
+      const title=document.createElement('strong');title.textContent=timeLabel(h);
+      const status=document.createElement('small');status.textContent=isBooked?'Booked':isBlocked?'Blocked':'Available';
+      card.append(title,status);
+      const btn=document.createElement('button');btn.disabled=isBooked;btn.textContent=isBooked?'Unavailable':isBlocked?'Unblock slot':'Block slot';
+      btn.addEventListener('click',()=>toggleBlock(h,isBlocked));card.appendChild(btn);$('slots').appendChild(card);
+    }
+  }
+  async function toggleBlock(hour,isBlocked) {
+    try {
+      await request('/api/owner/blocked-slots',{method:isBlocked?'DELETE':'POST',body:JSON.stringify({turfId:selectedTurf(),date:$('date').value,slotHour:hour})});
+      message(isBlocked?'Slot unblocked.':'Slot blocked.');await loadSlots();
+    } catch(e){message(e.message,true);}
+  }
+  async function loadBookings() {
+    try {
+      bookings=await request('/api/owner/bookings');
+      const rows=bookings.filter(b=>b.turf_id===selectedTurf()).slice(0,100);
+      $('bookingRows').innerHTML='';
+      if(!rows.length){$('bookingRows').innerHTML='<tr><td colspan="5">No bookings for this facility yet.</td></tr>';return;}
+      rows.forEach(b=>{
+        const tr=document.createElement('tr');
+        [b.booking_date,timeLabel(b.slot_hour),b.user_name||'Customer',b.sport_type||'—','₹'+Number(b.basePrice).toLocaleString('en-IN')].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td);});
+        $('bookingRows').appendChild(tr);
+      });
+    } catch(e){message(e.message,true);}
+  }
+  $('turfSelect').addEventListener('change',()=>refreshAll().catch(e=>message(e.message,true)));
+  $('date').addEventListener('change',()=>loadSlots().catch(e=>message(e.message,true)));
+  $('refresh').addEventListener('click',()=>loadSlots().catch(e=>message(e.message,true)));
+  $('savePrice').addEventListener('click',async()=>{
+    try {
+      const price=Number($('price').value);
+      const result=await request('/api/owner/turfs/'+selectedTurf()+'/price',{method:'PATCH',body:JSON.stringify({basePrice:price})});
+      const turf=turfs.find(t=>t.id===selectedTurf());if(turf)turf.basePrice=result.basePrice;
+      message('Hourly price updated to ₹'+result.basePrice+'.');
+    } catch(e){message(e.message,true);}
+  });
+  $('logout').addEventListener('click',async()=>{try{await request('/api/auth/logout',{method:'POST'});}finally{location.href='index.html';}});
+  $('date').value=dateString(new Date());load();
+})();
+</script>
+</body>
+</html>
