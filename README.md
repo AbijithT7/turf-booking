@@ -181,6 +181,14 @@ The following helper is destructive and for local development only. It drops `Te
 CONFIRM_RESET_DB=1 node backend/reset-db.js
 ```
 
+PowerShell:
+
+```powershell
+$env:CONFIRM_RESET_DB = "1"
+node backend/reset-db.js
+Remove-Item Env:CONFIRM_RESET_DB
+```
+
 The server recreates the dropped tables on its next startup. This command does not reset every table or delete all application data.
 
 ## Testing
