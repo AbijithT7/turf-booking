@@ -105,7 +105,7 @@
 
       .search-dock-form {
         display: grid;
-        grid-template-columns: 1.2fr 1.1fr 1.1fr auto;
+        grid-template-columns: 1fr 1fr 1fr 1fr auto;
         gap: 10px;
         align-items: center;
         min-width: 0;
@@ -1152,6 +1152,19 @@
                 </div>
               </div>
 
+              <!-- Budget Filter -->
+              <div class="search-dock-field">
+                <i class="fa-solid fa-wallet"></i>
+                <div class="search-field-content">
+                  <label class="search-field-label" for="filterBudget">Budget / hour</label>
+                  <select class="search-field-select" id="filterBudget">
+                    <option value="any">Any budget</option>
+                    <option value="900">Up to ₹900</option>
+                    <option value="1100">Up to ₹1,100</option>
+                  </select>
+                </div>
+              </div>
+
               <!-- Date Filter -->
               <div class="search-dock-field">
                 <i class="fa-solid fa-calendar-day"></i>
@@ -1167,6 +1180,10 @@
               </button>
             </form>
           </div>
+          <p id="smartFinderStatus" role="status" aria-live="polite" style="color: var(--text-muted); font-size: 13px; margin: -10px 0 20px 4px;">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i>
+            Smart Finder ranks matching turfs by your sport, area, and budget.
+          </p>
 
           <!-- Trust Indicators -->
           <div class="trust-strip">
@@ -1784,23 +1801,33 @@
         e.preventDefault();
         const loc = document.getElementById("filterLocation").value.toLowerCase();
         const sport = document.getElementById("filterSport").value.toLowerCase();
+        const budgetValue = document.getElementById("filterBudget").value;
+        const maxBudget = budgetValue === "any" ? Infinity : Number(budgetValue);
         const heroDate = document.getElementById("heroDateInput").value;
+        const status = document.getElementById("smartFinderStatus");
 
         if (heroDate) {
           document.getElementById("bookingDate").value = heroDate;
         }
 
-        const filtered = {};
-        Object.entries(turfData).forEach(([id, turf]) => {
+        // Explainable recommendations: match hard filters, then put the lowest hourly price first.
+        const matches = Object.entries(turfData).filter(([id, turf]) => {
           const metaLower = (turf.meta || "").toLowerCase();
           const matchesLoc = loc === "all" || metaLower.includes(loc);
           const matchesSport = sport === "all" || metaLower.includes(sport);
-          if (matchesLoc && matchesSport) {
-            filtered[id] = turf;
-          }
-        });
+          const price = Number(turf.basePrice);
+          const matchesBudget = Number.isFinite(price) && price <= maxBudget;
+          return matchesLoc && matchesSport && matchesBudget;
+        }).sort((a, b) => Number(a[1].basePrice) - Number(b[1].basePrice));
 
+        const filtered = Object.fromEntries(matches);
         renderTurfGrid(filtered);
+
+        if (status) {
+          status.textContent = matches.length
+            ? `Smart Finder found ${matches.length} matching turf${matches.length === 1 ? "" : "s"} and ranked them by hourly price.`
+            : "No turfs match those filters. Try a different area, sport, or budget.";
+        }
 
         // Smooth scroll to turfs
         const section = document.getElementById("available-turfs");
