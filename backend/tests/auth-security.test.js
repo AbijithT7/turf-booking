@@ -356,6 +356,12 @@ async function runTests() {
     });
     assert(ownerAccept.status === 200, '18. Owner can accept request on their own post (HTTP 200)');
 
+    const duplicateAccept = await normalUser.request(`/api/community/${postId}/request/${reqId}`, {
+      method: 'PATCH',
+      body: { status: 'Accepted' }
+    });
+    assert(duplicateAccept.status === 409, 'A processed community request cannot be accepted twice (HTTP 409)');
+
     // A processed community request must not be reset to Pending.
     const reopenRequest = await normalUser.request(`/api/community/${postId}/request/${reqId}`, {
       method: 'PATCH',

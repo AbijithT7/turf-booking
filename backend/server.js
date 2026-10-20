@@ -1163,46 +1163,71 @@ communityRouter.post('/:id/request', requireAuth, async (req, res, next) => {
 
 // Update request status (Accept/Reject - Post Owner or Admin only)
 communityRouter.patch('/:id/request/:requestId', requireAuth, async (req, res, next) => {
+  const { id: postId, requestId } = req.params;
+  const { status } = req.body;
+
+  if (!isValidId(postId) || !isValidId(requestId)) {
+    return res.status(400).json({ error: 'Invalid post or request ID.' });
+  }
+  if (!['Accepted', 'Rejected'].includes(status)) {
+    return res.status(400).json({ error: 'Status must be Accepted or Rejected.' });
+  }
+
+  const db = getDB();
+  let transactionStarted = false;
   try {
-    const { id: postId, requestId } = req.params;
-    const { status } = req.body;
-
-    // Requests may only transition to a final decision; never re-open a processed request.
-    if (!['Accepted', 'Rejected'].includes(status)) {
-      return res.status(400).json({ error: 'Status must be Accepted or Rejected.' });
-    }
-
-    const db = getDB();
     const post = await db.get('SELECT * FROM CommunityPosts WHERE id = ?', [postId]);
     if (!post) return res.status(404).json({ error: 'Post not found.' });
 
-    // Authorization: Only the creator of the post or admin
     const isOwner =
       post.user_id === req.user.id ||
       post.created_by_email === req.user.email ||
       post.created_by_phone === req.user.phone ||
       req.user.role === 'admin';
-
     if (!isOwner) {
       return res.status(403).json({ error: 'Forbidden. You do not own this community post.' });
     }
 
-    const reqRecord = await db.get('SELECT * FROM CommunityRequests WHERE id = ? AND post_id = ?', [requestId, postId]);
-    if (!reqRecord) return res.status(404).json({ error: 'Request not found.' });
+    // Serialize the decision and seat decrement so parallel approvals cannot consume
+    // the same final spot or process a request more than once.
+    await db.exec('BEGIN IMMEDIATE TRANSACTION');
+    transactionStarted = true;
 
-    await db.run('UPDATE CommunityRequests SET status = ? WHERE id = ?', [status, requestId]);
-
-    // If accepted and it's a solo post, decrement spots
-    if (status === 'Accepted' && reqRecord.status !== 'Accepted') {
-      if (post.post_type === 'solo' && post.spots > 0) {
-        const newSpots = post.spots - 1;
-        const newStatus = newSpots === 0 ? 'Full' : post.status;
-        await db.run('UPDATE CommunityPosts SET spots = ?, status = ? WHERE id = ?', [newSpots, newStatus, postId]);
-      }
+    const reqRecord = await db.get(
+      'SELECT * FROM CommunityRequests WHERE id = ? AND post_id = ?',
+      [requestId, postId]
+    );
+    if (!reqRecord) {
+      await db.exec('ROLLBACK');
+      transactionStarted = false;
+      return res.status(404).json({ error: 'Request not found.' });
+    }
+    if (reqRecord.status !== 'Pending') {
+      await db.exec('ROLLBACK');
+      transactionStarted = false;
+      return res.status(409).json({ error: 'Request has already been processed.' });
     }
 
-    res.json({ message: `Request status updated to ${status}.` });
+    const currentPost = await db.get('SELECT * FROM CommunityPosts WHERE id = ?', [postId]);
+    if (status === 'Accepted' && currentPost.post_type === 'solo') {
+      if (currentPost.spots <= 0) {
+        await db.exec('ROLLBACK');
+        transactionStarted = false;
+        return res.status(409).json({ error: 'No spots available to accept this request.' });
+      }
+      const newSpots = currentPost.spots - 1;
+      const newStatus = newSpots === 0 ? 'Full' : currentPost.status;
+      await db.run('UPDATE CommunityPosts SET spots = ?, status = ? WHERE id = ?', [newSpots, newStatus, postId]);
+    }
+
+    await db.run('UPDATE CommunityRequests SET status = ? WHERE id = ?', [status, requestId]);
+    await db.exec('COMMIT');
+    transactionStarted = false;
+    return res.json({ message: `Request status updated to ${status}.` });
   } catch (err) {
+    if (transactionStarted) {
+      try { await db.exec('ROLLBACK'); } catch (rollbackError) {}
+    }
     next(err);
   }
 });
