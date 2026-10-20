@@ -414,6 +414,20 @@ async function runTests() {
     });
     assert(badEmailReg.status === 400, '22. Registration with invalid email/short password rejected with HTTP 400');
 
+    const oversizedJson = JSON.stringify({
+      name: 'Oversized Payload',
+      email: 'oversized@example.com',
+      phone: '9876543210',
+      password: 'password123',
+      extra: 'x'.repeat(40 * 1024)
+    });
+    const oversizedPayloadRes = await unauthClient.request('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: oversizedJson
+    });
+    assert(oversizedPayloadRes.status === 413, 'Oversized JSON request body rejected with HTTP 413');
+
     const badBookingSlot = await normalUser.request('/api/bookings', {
       method: 'POST',
       body: {
