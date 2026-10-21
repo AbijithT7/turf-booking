@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>TurfArena - Tournaments & Leagues</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Official turf championships, knockout cups, and box cricket leagues in Chennai. Register your squad and compete for trophies and prize pools." />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="alternate icon" href="favicon.ico" />
+    <script>
+      try {
+        const t = localStorage.getItem("turf_theme") || "dark";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600;1,700;1,800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Theme CSS -->
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      .tournaments-hero {
+        margin-bottom: 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .filter-dock {
+        background: var(--surface-1);
+        border: 1px solid var(--line-soft);
+        border-radius: var(--radius-lg);
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+      }
+
+      .filter-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .tournament-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+        gap: 24px;
+      }
+
+      .tournament-card {
+        background: var(--surface-1);
+        border: 1px solid var(--line-soft);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .tournament-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--line-lime);
+        box-shadow: var(--shadow-card);
+      }
+
+      .card-header-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .card-title {
+        font-size: 20px;
+        font-weight: 800;
+        margin-bottom: 6px;
+        color: var(--text-main);
+      }
+
+      .card-venue {
+        font-size: 13.5px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 16px;
+      }
+
+      .prize-banner {
+        background: var(--surface-2);
+        border: 1px solid var(--line-soft);
+        border-radius: var(--radius-md);
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .prize-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-sm);
+        background: var(--primary-soft);
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+      }
+
+      .meta-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        padding: 12px 0;
+        border-top: 1px solid var(--line-soft);
+        border-bottom: 1px solid var(--line-soft);
+        margin-bottom: 18px;
+        font-size: 12.5px;
+      }
+
+      .meta-label {
+        font-size: 10.5px;
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 700;
+        margin-bottom: 2px;
+      }
+
+      .meta-value {
+        font-weight: 700;
+        color: var(--text-main);
+      }
+
+      .empty-box {
+        text-align: center;
+        padding: 60px 20px;
+        background: var(--surface-1);
+        border: 1px dashed var(--line-strong);
+        border-radius: var(--radius-lg);
+        grid-column: 1 / -1;
+      }
+    </style>
+  </head>
+
+  <body class="page-tournaments">
+    <!-- Layered Sports Background System -->
+    <div class="sports-bg-layer" aria-hidden="true">
+      <div class="sports-bg-stadium"></div>
+      <div class="sports-bg-turf-stripes"></div>
+      <div class="sports-bg-pitch-lines"></div>
+      <div class="sports-bg-court-geometry"></div>
+    </div>
+
+    <!-- Global Standard Header -->
+    <header class="global-header">
+      <div class="navbar-inner">
+        <!-- LEFT: Brand Logo -->
+        <a class="logo" href="index.html" aria-label="TurfArena Home">
+          <img src="logo.png" alt="TurfArena Logo" class="logo-image-brand" />
+          <div class="logo-text">
+            <span class="logo-brand">TURF<span>ARENA</span></span>
+            <span class="logo-sub">Sports Platform</span>
+          </div>
+        </a>
+
+        <!-- CENTER: Navigation Links -->
+        <nav class="top-nav" aria-label="Main Navigation">
+          <a href="index.html" class="nav-link" data-nav="home">
+            <i class="fa-solid fa-house"></i> Home
+          </a>
+          <a href="index.html#available-turfs" class="nav-link" data-nav="book">
+            <i class="fa-solid fa-calendar-check"></i> Book Turf
+          </a>
+          <a href="community.html" class="nav-link" data-nav="community">
+            <i class="fa-solid fa-users"></i> Community
+          </a>
+          <a href="tournaments.html" class="nav-link active" data-nav="tournaments">
+            <i class="fa-solid fa-trophy"></i> Tournaments
+          </a>
+        </nav>
+
+        <!-- RIGHT: Theme Toggle & Controls -->
+        <div class="header-actions">
+          <button class="theme-toggle-btn" data-theme-toggle type="button" aria-label="Toggle theme"></button>
+          <div id="userAuthActions" class="auth-actions-slot">
+            <div class="auth-group">
+              <a href="user-login.html" class="btn btn-outline btn-sm">
+                <i class="fa-solid fa-user"></i> Sign In
+              </a>
+              <a href="user-login.html?mode=signup" class="btn btn-primary btn-sm">
+                Sign Up
+              </a>
+              <span class="auth-divider"></span>
+              <a href="admin-login.html" class="admin-portal-btn" title="Arena Admin & Facility Management">
+                <i class="fa-solid fa-shield-halved"></i> Admin
+              </a>
+            </div>
+          </div>
+          <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle menu" onclick="toggleMobileNav()">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Dropdown Navigation -->
+      <div class="mobile-nav-drawer" id="mobileNavDrawer">
+        <a href="index.html" class="mobile-nav-link" data-nav="home" onclick="closeMobileNav()">
+          <i class="fa-solid fa-house"></i> Home
+        </a>
+        <a href="index.html#available-turfs" class="mobile-nav-link" data-nav="book" onclick="closeMobileNav()">
+          <i class="fa-solid fa-calendar-check"></i> Book Turf
+        </a>
+        <a href="community.html" class="mobile-nav-link" data-nav="community" onclick="closeMobileNav()">
+          <i class="fa-solid fa-users"></i> Community
+        </a>
+        <a href="tournaments.html" class="mobile-nav-link active" data-nav="tournaments" onclick="closeMobileNav()">
+          <i class="fa-solid fa-trophy"></i> Tournaments
+        </a>
+        <div id="mobileAuthSlot" class="mobile-auth-slot"></div>
+      </div>
+    </header>
+
+    <main class="page-container">
+      <!-- Section Header -->
+      <section class="tournaments-hero">
+        <div>
+          <h1 class="page-title">Tournaments & Championships</h1>
+          <p class="page-subtitle">
+            Compete in verified weekend knockout cups, box cricket leagues, and football tournaments across Chennai.
+          </p>
+        </div>
+        <div>
+          <button class="btn btn-primary" onclick="openHostModal()">
+            <i class="fa-solid fa-plus"></i> Host Tournament
+          </button>
+        </div>
+      </section>
+
+      <!-- Filter Dock -->
+      <section class="filter-dock">
+        <div class="filter-controls">
+          <select id="sportFilter" class="input-premium" style="width: auto; padding: 8px 14px;" onchange="renderTournaments()">
+            <option value="all">All Sports</option>
+            <option value="Football">Football</option>
+            <option value="Cricket">Cricket Box</option>
+            <option value="Badminton">Badminton</option>
+            <option value="Tennis">Tennis & Pickleball</option>
+            <option value="Basketball">Basketball</option>
+            <option value="Swimming">Swimming</option>
+            <option value="Futsal">Futsal</option>
+          </select>
+          <select id="locFilter" class="input-premium" style="width: auto; padding: 8px 14px;" onchange="renderTournaments()">
+            <option value="all">All Venues</option>
+            <option value="Velachery">Velachery</option>
+            <option value="Tambaram">Tambaram</option>
+            <option value="OMR">OMR</option>
+            <option value="Anna Nagar">Anna Nagar</option>
+            <option value="Adyar">Adyar</option>
+            <option value="T. Nagar">T. Nagar</option>
+            <option value="ECR">ECR</option>
+            <option value="Porur">Porur</option>
+          </select>
+        </div>
+        <div id="tournamentCountText" style="font-size: 13px; color: var(--text-muted); font-weight: 600;">
+          Loading championships...
+        </div>
+      </section>
+
+      <!-- Tournaments Grid -->
+      <section class="tournament-grid" id="tournamentGrid">
+        <!-- Dynamically rendered -->
+      </section>
+    </main>
+
+    <!-- Host Tournament Modal -->
+    <div class="modal-backdrop" id="hostTournamentModal">
+      <div class="modal-box">
+        <button class="modal-close-btn" onclick="closeModal('hostTournamentModal')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 6px;">Host a Tournament</h3>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">List your championship on TurfArena and accept team entries.</p>
+
+        <form id="hostForm" onsubmit="handleHostSubmit(event)" style="display: flex; flex-direction: column; gap: 14px;">
+          <div>
+            <label class="form-label">Tournament Name</label>
+            <input type="text" id="tournNameInput" class="input-premium" placeholder="e.g. Chennai Super Cup 2026" required />
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label class="form-label">Sport Format</label>
+              <select id="tournSportInput" class="input-premium">
+                <option value="Football">Football</option>
+                <option value="Cricket">Cricket Box</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Venue Turf</label>
+              <select id="tournTurfInput" class="input-premium">
+                <option value="GreenLine Arena">GreenLine Arena (Velachery)</option>
+                <option value="Boundary Line Arena">Boundary Line Arena (Tambaram)</option>
+                <option value="SkyLine Rooftop Hub">SkyLine Rooftop Hub (OMR)</option>
+                <option value="SmashPro Badminton Dome">SmashPro Badminton Dome (Anna Nagar)</option>
+                <option value="Adyar Grand Slam Club">Adyar Grand Slam Club (Adyar)</option>
+                <option value="Hoops City Arena">Hoops City Arena (T. Nagar)</option>
+                <option value="AquaMarine Aquatic Center">AquaMarine Aquatic Center (ECR)</option>
+                <option value="Titan Sports Complex">Titan Sports Complex (Porur)</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label">Prize Pool Description</label>
+            <input type="text" id="tournPrizeInput" class="input-premium" placeholder="e.g. Winner ₹25,000 + Trophy, Runner ₹10,000" required />
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label class="form-label">Tournament Date</label>
+              <input type="date" id="tournDateInput" class="input-premium" required />
+            </div>
+            <div>
+              <label class="form-label">Reporting Time</label>
+              <input type="time" id="tournTimeInput" class="input-premium" value="08:00" required />
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label class="form-label">Entry Fee per Team (₹)</label>
+              <input type="number" id="tournFeeInput" class="input-premium" value="499" min="0" required />
+            </div>
+            <div>
+              <label class="form-label">Max Teams / Squads</label>
+              <input type="number" id="tournTeamsInput" class="input-premium" value="16" min="4" max="64" required />
+            </div>
+          </div>
+
+          <div id="hostError" class="form-error"></div>
+
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeModal('hostTournamentModal')">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="flex: 2;">
+              <i class="fa-solid fa-trophy"></i> Publish Tournament
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Squad Registration Modal -->
+    <div class="modal-backdrop" id="registerSquadModal">
+      <div class="modal-box">
+        <button class="modal-close-btn" onclick="closeModal('registerSquadModal')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h3 id="regModalTitle" style="font-size: 22px; font-weight: 800; margin-bottom: 6px;">Register Squad</h3>
+        <p id="regModalSubtitle" style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Submit team details to lock your entry slot.</p>
+
+        <form id="registerForm" onsubmit="handleRegisterSubmit(event)" style="display: flex; flex-direction: column; gap: 14px;">
+          <input type="hidden" id="regPostId" />
+
+          <div>
+            <label class="form-label">Squad / Team Name</label>
+            <input type="text" id="regTeamName" class="input-premium" placeholder="e.g. Red Warriors FC" required />
+          </div>
+
+          <div>
+            <label class="form-label">Team Captain Full Name</label>
+            <input type="text" id="regCaptainName" class="input-premium" placeholder="Captain name" required />
+          </div>
+
+          <div>
+            <label class="form-label">Captain Contact Phone</label>
+            <input type="tel" id="regPhone" class="input-premium" placeholder="10-digit mobile number" required />
+          </div>
+
+          <div id="regError" class="form-error"></div>
+
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeModal('registerSquadModal')">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="flex: 2;">
+              <i class="fa-solid fa-check"></i> Confirm Registration
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <div style="max-width: 1360px; margin: 0 auto; padding: 24px 5vw; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; border-top: 1px solid var(--line-soft); color: var(--text-muted); font-size: 13px;">
+        <div style="font-weight: 700;">
+          <span style="color: var(--primary);">TURFARENA</span> • Official Tournaments Hub
+        </div>
+        <div>
+          <span>© 2026 TurfArena Inc. All rights reserved.</span>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="theme-toggle.js"></script>
+    <script>
+      let tournamentPosts = [];
+      let currentUser = null;
+
+      function escapeHtml(str) {
+        if (str === null || str === undefined) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function openModal(id) {
+        const m = document.getElementById(id);
+        if (m) m.style.display = "flex";
+      }
+
+      function closeModal(id) {
+        const m = document.getElementById(id);
+        if (m) m.style.display = "none";
+      }
+
+      function openHostModal() {
+        if (!currentUser) {
+          alert("Please log in to host a tournament.");
+          window.location.href = "user-login.html";
+          return;
+        }
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+        const dateInput = document.getElementById("tournDateInput");
+        if (dateInput) {
+          dateInput.value = today;
+          dateInput.min = today;
+        }
+        document.getElementById("hostError").textContent = "";
+        openModal("hostTournamentModal");
+      }
+
+      function openRegisterModal(postId) {
+        const t = tournamentPosts.find((p) => p.id === postId);
+        if (!t) return;
+
+        document.getElementById("regPostId").value = postId;
+        document.getElementById("regModalTitle").textContent = `Register for ${t.title}`;
+        document.getElementById("regModalSubtitle").textContent = `Entry fee: ₹${t.farePerPlayer || 499} • Venue: ${t.turfName}`;
+        document.getElementById("regError").textContent = "";
+
+        if (currentUser) {
+          document.getElementById("regCaptainName").value = currentUser.name || "";
+          document.getElementById("regPhone").value = currentUser.phone || "";
+        }
+
+        openModal("registerSquadModal");
+      }
+
+      async function fetchTournaments() {
+        try {
+          const res = await fetch("/api/community", { credentials: "include" });
+          if (res.ok) {
+            const all = await res.json();
+            tournamentPosts = all.filter((p) => p.postType === "tournament");
+          }
+        } catch (err) {
+          console.error("Failed to load tournaments:", err);
+        }
+        renderTournaments();
+      }
+
+      function renderTournaments() {
+        const grid = document.getElementById("tournamentGrid");
+        grid.innerHTML = "";
+
+        const sport = document.getElementById("sportFilter").value;
+        const loc = document.getElementById("locFilter").value;
+
+        const filtered = tournamentPosts.filter((t) => {
+          const matchesSport = sport === "all" || (t.sport || "").toLowerCase().includes(sport.toLowerCase());
+          const matchesLoc = loc === "all" || (t.turfName || "").toLowerCase().includes(loc.toLowerCase());
+          return matchesSport && matchesLoc;
+        });
+
+        document.getElementById("tournamentCountText").textContent = `${filtered.length} active championship${filtered.length === 1 ? "" : "s"}`;
+
+        if (!filtered.length) {
+          grid.innerHTML = `
+            <div class="empty-box">
+              <i class="fa-solid fa-trophy" style="font-size: 36px; color: var(--text-dim); margin-bottom: 12px; display: block;"></i>
+              <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">No tournaments matching criteria</h3>
+              <p style="color: var(--text-muted); font-size: 13.5px; margin-bottom: 16px;">Try changing the filter options or be the first to host one!</p>
+              <button class="btn btn-primary btn-sm" onclick="openHostModal()">
+                <i class="fa-solid fa-plus"></i> Host Tournament
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        filtered.forEach((t) => {
+          const card = document.createElement("article");
+          card.className = "tournament-card";
+
+          const prize = t.prizeDescription || "Trophy + Certificates";
+          const fee = t.farePerPlayer ? `₹${t.farePerPlayer}` : "Free Entry";
+          const maxTeams = t.openSpots || 16;
+          const regCount = (t.requests || []).length;
+          const isFull = regCount >= maxTeams;
+
+          card.innerHTML = `
+            <div>
+              <div class="card-header-meta">
+                <span class="badge badge-lime"><i class="fa-solid fa-futbol"></i> ${escapeHtml(t.sport || "Football")}</span>
+                <span class="badge badge-dark">${escapeHtml(t.status || "Registrations Open")}</span>
+              </div>
+              <h3 class="card-title">${escapeHtml(t.title)}</h3>
+              <div class="card-venue">
+                <i class="fa-solid fa-location-dot" style="color: var(--primary);"></i>
+                ${escapeHtml(t.turfName)}
+              </div>
+
+              <div class="prize-banner">
+                <div class="prize-icon">
+                  <i class="fa-solid fa-trophy"></i>
+                </div>
+                <div>
+                  <div class="meta-label">Prize Pool</div>
+                  <div style="font-weight: 700; font-size: 13.5px; color: var(--primary);">${escapeHtml(prize)}</div>
+                </div>
+              </div>
+
+              <div class="meta-grid-2">
+                <div>
+                  <div class="meta-label">Date & Time</div>
+                  <div class="meta-value">${escapeHtml(t.eventDate || "TBA")} • ${escapeHtml(t.eventTime || "08:00 AM")}</div>
+                </div>
+                <div>
+                  <div class="meta-label">Entry Fee</div>
+                  <div class="meta-value">${escapeHtml(fee)}</div>
+                </div>
+                <div>
+                  <div class="meta-label">Slots Filled</div>
+                  <div class="meta-value">${regCount} / ${maxTeams} Teams</div>
+                </div>
+                <div>
+                  <div class="meta-label">Host</div>
+                  <div class="meta-value">${escapeHtml(t.createdByName || "TurfArena")}</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top: 16px;">
+              <button class="btn btn-primary" style="width: 100%;" onclick="openRegisterModal(${Number(t.id)})" ${isFull ? "disabled" : ""}>
+                <i class="fa-solid fa-pen-to-square"></i> ${isFull ? "Tournament Full" : "Register Squad"}
+              </button>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      }
+
+      async function handleHostSubmit(e) {
+        e.preventDefault();
+        const errEl = document.getElementById("hostError");
+        errEl.textContent = "";
+
+        const payload = {
+          postType: "tournament",
+          sport: document.getElementById("tournSportInput").value,
+          title: document.getElementById("tournNameInput").value.trim(),
+          turfName: document.getElementById("tournTurfInput").value,
+          prizeDescription: document.getElementById("tournPrizeInput").value.trim(),
+          eventDate: document.getElementById("tournDateInput").value,
+          eventTime: document.getElementById("tournTimeInput").value,
+          farePerPlayer: Number(document.getElementById("tournFeeInput").value) || 0,
+          openSpots: Number(document.getElementById("tournTeamsInput").value) || 16,
+          createdByName: currentUser ? currentUser.name : "Host Organizer",
+          createdByPhone: currentUser ? currentUser.phone : "9999999999",
+          createdByEmail: currentUser ? currentUser.email : "organizer@turfarena.com"
+        };
+
+        try {
+          const res = await fetch("/api/community", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to create tournament.");
+
+          closeModal("hostTournamentModal");
+          document.getElementById("hostForm").reset();
+          await fetchTournaments();
+          alert("Tournament created successfully!");
+        } catch (err) {
+          errEl.textContent = err.message;
+        }
+      }
+
+      async function handleRegisterSubmit(e) {
+        e.preventDefault();
+        const errEl = document.getElementById("regError");
+        errEl.textContent = "";
+
+        const postId = document.getElementById("regPostId").value;
+        const payload = {
+          applicantTeam: document.getElementById("regTeamName").value.trim(),
+          applicantName: document.getElementById("regCaptainName").value.trim(),
+          applicantPhone: document.getElementById("regPhone").value.trim()
+        };
+
+        try {
+          const res = await fetch(`/api/community/${postId}/request`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Registration failed.");
+
+          closeModal("registerSquadModal");
+          document.getElementById("registerForm").reset();
+          await fetchTournaments();
+          alert("Registration submitted! The tournament host will verify your squad.");
+        } catch (err) {
+          errEl.textContent = err.message;
+        }
+      }
+
+      async function init() {
+        if (window.getAuthUser) {
+          currentUser = await window.getAuthUser();
+        }
+        await fetchTournaments();
+      }
+
+      window.addEventListener("DOMContentLoaded", init);
+    </script>
+  </body>
+</html>

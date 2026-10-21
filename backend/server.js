@@ -41,6 +41,23 @@ function regenerateSession(req) {
   });
 }
 
+// Concurrency Lock for SQLite serialized transactions.
+// One shared SQLite connection is used, so API/community requests are serialized
+// to prevent statements from one async transaction running inside another.
+class AsyncLock {
+  constructor() {
+    this._queue = Promise.resolve();
+  }
+  acquire() {
+    let release;
+    const p = new Promise((resolve) => { release = resolve; });
+    const wait = this._queue.then(() => release);
+    this._queue = this._queue.then(() => p);
+    return wait;
+  }
+}
+const bookingLock = new AsyncLock();
+
 // Security Headers
 app.use(
   helmet({
@@ -386,11 +403,22 @@ app.get('/api/owner/turfs', requireAuth, async (req, res, next) => {
     if (req.user.role !== 'owner' && req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Turf owner access required.' });
     }
-    const rows = await getDB().all(
-      'SELECT id, name, meta, basePrice, panoramaUrl FROM Turfs WHERE owner_id = ? ORDER BY name',
-      [req.user.role === 'admin' ? (req.query.ownerId || -1) : req.user.id]
-    );
-    res.json(rows);
+    const db = getDB();
+    let turfRows;
+    if (req.user.role === 'admin' && req.query.ownerId) {
+      turfRows = await db.all(
+        'SELECT id, name, meta, basePrice, panoramaUrl FROM Turfs WHERE owner_id = ? ORDER BY name',
+        [req.query.ownerId]
+      );
+    } else if (req.user.role === 'admin') {
+      turfRows = await db.all('SELECT id, name, meta, basePrice, panoramaUrl FROM Turfs ORDER BY name');
+    } else {
+      turfRows = await db.all(
+        'SELECT id, name, meta, basePrice, panoramaUrl FROM Turfs WHERE owner_id = ? ORDER BY name',
+        [req.user.id]
+      );
+    }
+    res.json(turfRows);
   } catch (err) { next(err); }
 });
 
@@ -400,14 +428,32 @@ app.get('/api/owner/bookings', requireAuth, async (req, res, next) => {
       return res.status(403).json({ error: 'Turf owner access required.' });
     }
     const db = getDB();
-    const rows = await db.all(`
-      SELECT b.id, b.turf_id, t.name AS turf_name, b.booking_date, b.slot_hour,
-             b.sport_type, b.user_name, b.user_phone, t.basePrice
-      FROM Bookings b JOIN Turfs t ON t.id = b.turf_id
-      WHERE t.owner_id = ?
-      ORDER BY b.booking_date DESC, b.slot_hour DESC
-    `, [req.user.role === 'admin' ? (req.query.ownerId || -1) : req.user.id]);
-    res.json(rows);
+    let bookingRows;
+    if (req.user.role === 'admin' && req.query.ownerId) {
+      bookingRows = await db.all(`
+        SELECT b.id, b.turf_id, t.name AS turf_name, b.booking_date, b.slot_hour,
+               b.sport_type, b.user_name, b.user_phone, t.basePrice
+        FROM Bookings b JOIN Turfs t ON t.id = b.turf_id
+        WHERE t.owner_id = ?
+        ORDER BY b.booking_date DESC, b.slot_hour DESC
+      `, [req.query.ownerId]);
+    } else if (req.user.role === 'admin') {
+      bookingRows = await db.all(`
+        SELECT b.id, b.turf_id, t.name AS turf_name, b.booking_date, b.slot_hour,
+               b.sport_type, b.user_name, b.user_phone, t.basePrice
+        FROM Bookings b JOIN Turfs t ON t.id = b.turf_id
+        ORDER BY b.booking_date DESC, b.slot_hour DESC
+      `);
+    } else {
+      bookingRows = await db.all(`
+        SELECT b.id, b.turf_id, t.name AS turf_name, b.booking_date, b.slot_hour,
+               b.sport_type, b.user_name, b.user_phone, t.basePrice
+        FROM Bookings b JOIN Turfs t ON t.id = b.turf_id
+        WHERE t.owner_id = ?
+        ORDER BY b.booking_date DESC, b.slot_hour DESC
+      `, [req.user.id]);
+    }
+    res.json(bookingRows);
   } catch (err) { next(err); }
 });
 
@@ -521,23 +567,6 @@ app.get('/api/bookings', async (req, res, next) => {
     next(err);
   }
 });
-
-// Concurrency Lock for SQLite serialized transactions
-class AsyncLock {
-  constructor() {
-    this._queue = Promise.resolve();
-  }
-  acquire() {
-    let release;
-    const p = new Promise((resolve) => {
-      release = resolve;
-    });
-    const wait = this._queue.then(() => release);
-    this._queue = this._queue.then(() => p);
-    return wait;
-  }
-}
-const bookingLock = new AsyncLock();
 
 // POST /api/bookings (Requires Authenticated Session)
 app.post('/api/bookings', requireAuth, validateBooking, async (req, res, next) => {
@@ -702,8 +731,12 @@ app.delete('/api/bookings/:id', requireAuth, async (req, res, next) => {
       return res.status(404).json({ error: 'Booking not found.' });
     }
 
-    // Normal user may only delete their own booking. Admin may delete any booking.
-    if (booking.user_id !== req.user.id && req.user.role !== 'admin') {
+    const turf = await db.get('SELECT owner_id FROM Turfs WHERE id = ?', [booking.turf_id]);
+    const isTurfOwner = req.user.role === 'owner' && turf && Number(turf.owner_id) === Number(req.user.id);
+
+    // Normal user may only delete their own booking.
+    // Admin may delete any booking. Owner may delete bookings on their own turfs only.
+    if (booking.user_id !== req.user.id && req.user.role !== 'admin' && !isTurfOwner) {
       return res.status(403).json({ error: 'Forbidden. You do not own this booking.' });
     }
 
@@ -1511,6 +1544,12 @@ app.get('/', (req, res) => {
 });
 app.get('/community.html', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/community.html'));
+});
+app.get('/tournaments', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/tournaments.html'));
+});
+app.get('/tournaments.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/tournaments.html'));
 });
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/admin-login.html'));

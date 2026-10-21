@@ -117,40 +117,42 @@ async function runMigrations(db) {
     await db.run('INSERT OR IGNORE INTO _migrations (name) VALUES (?)', ['005_turf_ownership.sql']);
   }
 
-  // Admin provisioning: production must be explicitly configured. Never promote
-  // an existing player account to admin merely because its email matches.
+  // Admin provisioning: provisioned exclusively from ADMIN_EMAIL / ADMIN_PASSWORD
+  // environment variables. Never hardcode credentials, and never automatically
+  // promote an existing player account to admin merely because its email matches.
   const isProduction = process.env.NODE_ENV === 'production';
-  const configuredEmail = process.env.ADMIN_EMAIL;
+  const configuredEmail = process.env.ADMIN_EMAIL ? String(process.env.ADMIN_EMAIL).trim().toLowerCase() : null;
   const configuredPassword = process.env.ADMIN_PASSWORD;
 
   if (isProduction && (!configuredEmail || !configuredPassword || configuredPassword.length < 12)) {
     throw new Error('Production requires explicit ADMIN_EMAIL and ADMIN_PASSWORD (at least 12 characters).');
   }
 
-  const adminEmail = (configuredEmail || 'admin@turfarena.com').trim().toLowerCase();
-  const existingAdmin = await db.get('SELECT id, role FROM Users WHERE LOWER(email) = ?', [adminEmail]);
+  if (configuredEmail) {
+    const bcrypt = require('bcryptjs');
+    const existingAdmin = await db.get('SELECT id, role FROM Users WHERE LOWER(email) = ?', [configuredEmail]);
 
-  if (!existingAdmin) {
-    const bcrypt = require('bcryptjs');
-    const adminPassword = configuredPassword || 'admin123';
-    const hash = await bcrypt.hash(adminPassword, 12);
-    await db.run(
-      'INSERT INTO Users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)',
-      ['TurfArena Admin', adminEmail, '9999999999', hash, 'admin']
-    );
-    console.log('Seeded admin account from configured credentials.');
-  } else if (existingAdmin.role !== 'admin') {
-    throw new Error('ADMIN_EMAIL belongs to a non-admin account. Refusing automatic role promotion; configure a different ADMIN_EMAIL or promote the account manually.');
-  } else if (isProduction) {
-    // Ensure the explicitly configured production password is actually applied
-    // to an existing admin account, rather than leaving an old demo hash in place.
-    const bcrypt = require('bcryptjs');
-    const currentAdmin = await db.get('SELECT password FROM Users WHERE id = ?', [existingAdmin.id]);
-    const passwordMatches = currentAdmin && await bcrypt.compare(configuredPassword, currentAdmin.password);
-    if (!passwordMatches) {
+    if (!existingAdmin) {
+      if (!configuredPassword) {
+        throw new Error('ADMIN_PASSWORD is required to provision the admin account identified by ADMIN_EMAIL.');
+      }
+      if (isProduction && configuredPassword.length < 12) {
+        throw new Error('ADMIN_PASSWORD must be at least 12 characters in production.');
+      }
+      const hash = await bcrypt.hash(configuredPassword, 12);
+      await db.run(
+        'INSERT INTO Users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)',
+        ['TurfArena Admin', configuredEmail, '9999999999', hash, 'admin']
+      );
+      console.log('Provisioned admin account from ADMIN_EMAIL / ADMIN_PASSWORD.');
+    } else if (existingAdmin.role !== 'admin') {
+      throw new Error('ADMIN_EMAIL belongs to a non-admin account. Refusing automatic role promotion; configure a different ADMIN_EMAIL or promote the account manually.');
+    } else if (configuredPassword) {
+      // Reset/provision the admin password from the configured environment variable
+      // on every startup so the admin can be recovered/reset via env vars.
       const hash = await bcrypt.hash(configuredPassword, 12);
       await db.run('UPDATE Users SET password = ? WHERE id = ?', [hash, existingAdmin.id]);
-      console.log('Updated existing admin password from production configuration.');
+      console.log('Reset admin password from ADMIN_PASSWORD environment variable.');
     }
   }
 

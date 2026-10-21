@@ -308,6 +308,54 @@
         align-items: center;
       }
 
+      .match-header-strip {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: var(--radius-md);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .match-header-strip.badge-lime {
+        background: var(--primary-soft);
+        color: var(--primary);
+        border: 1px solid var(--primary-soft-border);
+      }
+
+      .match-header-strip.badge-green {
+        background: var(--primary-soft);
+        color: var(--primary);
+        border: 1px solid var(--primary-soft-border);
+      }
+
+      .match-header-strip.badge-cyan {
+        background: var(--secondary-soft);
+        color: var(--secondary);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+      }
+
+      .match-header-strip .match-badge-left,
+      .match-header-strip .match-badge-right {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .match-header-strip .match-badge-right {
+        opacity: 0.92;
+        font-weight: 600;
+      }
+
       .card-team-title {
         font-size: 18px;
         font-weight: 800;
@@ -394,9 +442,7 @@
       <div class="navbar-inner">
         <!-- LEFT: Brand Logo -->
         <a class="logo" href="index.html" aria-label="TurfArena Home">
-          <div class="logo-icon">
-            <i class="fa-solid fa-crown"></i>
-          </div>
+          <img src="logo.png" alt="TurfArena Logo" class="logo-image-brand" />
           <div class="logo-text">
             <span class="logo-brand">TURF<span>ARENA</span></span>
             <span class="logo-sub">Community Lobby</span>
@@ -405,20 +451,17 @@
 
         <!-- CENTER: Navigation Links -->
         <nav class="top-nav" aria-label="Main Navigation">
-          <a href="index.html" class="nav-link">
+          <a href="index.html" class="nav-link" data-nav="home">
             <i class="fa-solid fa-house"></i> Home
           </a>
-          <a href="index.html#available-turfs" class="nav-link">
+          <a href="index.html#available-turfs" class="nav-link" data-nav="book">
             <i class="fa-solid fa-calendar-check"></i> Book Turf
           </a>
-          <a href="community.html" class="nav-link active">
+          <a href="community.html" class="nav-link active" data-nav="community">
             <i class="fa-solid fa-users"></i> Community
           </a>
-          <a href="community.html#tournaments" class="nav-link" onclick="setTab('tournament')">
+          <a href="tournaments.html" class="nav-link" data-nav="tournaments">
             <i class="fa-solid fa-trophy"></i> Tournaments
-          </a>
-          <a href="admin-login.html" class="nav-link">
-            <i class="fa-solid fa-shield"></i> Admin Portal
           </a>
         </nav>
 
@@ -426,9 +469,18 @@
         <div class="header-actions">
           <button class="theme-toggle-btn" data-theme-toggle type="button" aria-label="Toggle theme"></button>
           <div id="userAuthActions" class="auth-actions-slot">
-            <a href="user-login.html" class="btn btn-outline btn-sm">
-              <i class="fa-solid fa-user"></i> Login
-            </a>
+            <div class="auth-group">
+              <a href="user-login.html" class="btn btn-outline btn-sm">
+                <i class="fa-solid fa-user"></i> Sign In
+              </a>
+              <a href="user-login.html?mode=signup" class="btn btn-primary btn-sm">
+                Sign Up
+              </a>
+              <span class="auth-divider"></span>
+              <a href="admin-login.html" class="admin-portal-btn" title="Arena Admin & Facility Management">
+                <i class="fa-solid fa-shield-halved"></i> Admin
+              </a>
+            </div>
           </div>
           <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle menu" onclick="toggleMobileNav()">
             <i class="fa-solid fa-bars"></i>
@@ -438,20 +490,17 @@
 
       <!-- Mobile Dropdown Navigation -->
       <div class="mobile-nav-drawer" id="mobileNavDrawer">
-        <a href="index.html" class="mobile-nav-link" onclick="closeMobileNav()">
+        <a href="index.html" class="mobile-nav-link" data-nav="home" onclick="closeMobileNav()">
           <i class="fa-solid fa-house"></i> Home
         </a>
-        <a href="index.html#available-turfs" class="mobile-nav-link" onclick="closeMobileNav()">
+        <a href="index.html#available-turfs" class="mobile-nav-link" data-nav="book" onclick="closeMobileNav()">
           <i class="fa-solid fa-calendar-check"></i> Book Turf
         </a>
-        <a href="community.html" class="mobile-nav-link active" onclick="closeMobileNav()">
-          <i class="fa-solid fa-users"></i> Community Lobby
+        <a href="community.html" class="mobile-nav-link active" data-nav="community" onclick="closeMobileNav()">
+          <i class="fa-solid fa-users"></i> Community
         </a>
-        <a href="community.html#tournaments" class="mobile-nav-link" onclick="setTab('tournament'); closeMobileNav()">
+        <a href="tournaments.html" class="mobile-nav-link" data-nav="tournaments" onclick="closeMobileNav()">
           <i class="fa-solid fa-trophy"></i> Tournaments
-        </a>
-        <a href="admin-login.html" class="mobile-nav-link" onclick="closeMobileNav()">
-          <i class="fa-solid fa-shield"></i> Admin Portal
         </a>
         <div id="mobileAuthSlot" class="mobile-auth-slot"></div>
       </div>
@@ -463,76 +512,12 @@
       ─────────────────────────────────────────── -->
       <section class="lobby-hero">
         <div>
-          <div class="badge badge-lime">
-            <i class="fa-solid fa-bolt"></i> LIVE TEAMS · SQUAD CHALLENGES · TOURNAMENTS
-          </div>
           <h1 class="lobby-title">
-            Players & Community <span class="text-lime-gradient">Lobby</span>
+            Player Matchmaking & Squads
           </h1>
           <p class="lobby-sub">
-            Find teammates for weekend matches, challenge rival squads in 50-50 turf wars, register for regional tournaments, and build your sports network under the floodlights.
+            Find teammates for open match slots, challenge rival squads to turf wars, and build your local sports network across Chennai.
           </p>
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 12px; background: var(--surface-1); border: 1px solid var(--line-soft); padding: 12px 20px; border-radius: 18px;">
-          <span class="live-dot"></span>
-          <div>
-            <div style="font-size: 13px; font-weight: 700;">Chennai Pitch Pulse</div>
-            <div style="font-size: 11px; font-family: var(--font-mono); color: var(--secondary);">Active Matchmaking Live</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ───────────────────────────────────────────
-           LIVE STATS CARDS (4 COLUMNS)
-      ─────────────────────────────────────────── -->
-      <section class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-top">
-            <span>Solo Openings</span>
-            <span class="live-dot"></span>
-          </div>
-          <div class="stat-main">
-            <div class="stat-num" id="statSolo">0<span>live</span></div>
-            <div class="stat-icon"><i class="fa-solid fa-user-plus"></i></div>
-          </div>
-          <div style="font-size: 12px; color: var(--text-muted);">Slots needing substitutes</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-top">
-            <span>Turf Wars</span>
-            <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--secondary);"></span>
-          </div>
-          <div class="stat-main">
-            <div class="stat-num" id="statTeam">0<span>challenges</span></div>
-            <div class="stat-icon" style="color: var(--secondary);"><i class="fa-solid fa-hand-fist"></i></div>
-          </div>
-          <div style="font-size: 12px; color: var(--text-muted);">50-50 stakes match open</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-top">
-            <span>Tournaments</span>
-            <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--accent-gold);"></span>
-          </div>
-          <div class="stat-main">
-            <div class="stat-num" id="statTournaments">0<span>cups</span></div>
-            <div class="stat-icon" style="color: var(--accent-gold);"><i class="fa-solid fa-trophy"></i></div>
-          </div>
-          <div style="font-size: 12px; color: var(--text-muted);">Knockout championships</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-top">
-            <span>Pending Approvals</span>
-            <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--tertiary);"></span>
-          </div>
-          <div class="stat-main">
-            <div class="stat-num" id="statPending">0<span>pending</span></div>
-            <div class="stat-icon" style="color: var(--tertiary);"><i class="fa-solid fa-user-check"></i></div>
-          </div>
-          <div style="font-size: 12px; color: var(--text-muted);">Requests on your matches</div>
         </div>
       </section>
 
@@ -546,9 +531,6 @@
           </button>
           <button class="tab-btn" id="tabTeam" onclick="setTab('team')">
             <i class="fa-solid fa-hand-fist"></i> Turf Wars (v/s)
-          </button>
-          <button class="tab-btn" id="tabTournaments" onclick="setTab('tournament')">
-            <i class="fa-solid fa-trophy"></i> Tournaments & Leagues
           </button>
           <button class="tab-btn" id="tabMySquads" onclick="setTab('my-squads')">
             <i class="fa-solid fa-shield-heart"></i> My Squads & Requests
@@ -573,14 +555,24 @@
           <select class="filter-pill-select" id="sportFilter" onchange="renderCards()">
             <option value="all">All Sports</option>
             <option value="Football">Football</option>
-            <option value="Cricket">Cricket</option>
+            <option value="Cricket">Cricket Box</option>
+            <option value="Badminton">Badminton</option>
+            <option value="Tennis">Tennis & Pickleball</option>
+            <option value="Basketball">Basketball</option>
+            <option value="Swimming">Swimming</option>
+            <option value="Futsal">Futsal</option>
           </select>
 
           <select class="filter-pill-select" id="locFilter" onchange="renderCards()">
             <option value="all">All Chennai Areas</option>
             <option value="Velachery">Velachery</option>
-            <option value="OMR">OMR IT Corridor</option>
             <option value="Tambaram">Tambaram</option>
+            <option value="OMR">OMR Sholinganallur</option>
+            <option value="Anna Nagar">Anna Nagar</option>
+            <option value="Adyar">Adyar</option>
+            <option value="T. Nagar">T. Nagar</option>
+            <option value="ECR">ECR Palavakkam</option>
+            <option value="Porur">Porur</option>
           </select>
 
           <button class="btn btn-primary btn-sm" onclick="openCreateModal()">
@@ -615,7 +607,6 @@
             <select id="postTypeInput" class="input-premium" onchange="updateCreateFormFields()">
               <option value="solo">Free Agent (Need Players)</option>
               <option value="team">Turf War (Challenge Rival Team)</option>
-              <option value="tournament">Tournament Championship</option>
             </select>
           </div>
 
@@ -630,14 +621,24 @@
               <select id="postSportInput" class="input-premium">
                 <option value="Football">Football</option>
                 <option value="Cricket">Cricket Box</option>
+                <option value="Badminton">Badminton</option>
+                <option value="Tennis">Tennis & Pickleball</option>
+                <option value="Basketball">Basketball</option>
+                <option value="Swimming">Swimming</option>
+                <option value="Futsal">Futsal</option>
               </select>
             </div>
             <div>
               <label style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Venue Turf</label>
               <select id="postTurfInput" class="input-premium">
                 <option value="GreenLine Arena">GreenLine Arena (Velachery)</option>
-                <option value="Boundary Line Turf">Boundary Line Turf (Tambaram)</option>
-                <option value="SkyLine Sports Hub">SkyLine Sports Hub (OMR)</option>
+                <option value="Boundary Line Arena">Boundary Line Arena (Tambaram)</option>
+                <option value="SkyLine Rooftop Hub">SkyLine Rooftop Hub (OMR)</option>
+                <option value="SmashPro Badminton Dome">SmashPro Badminton Dome (Anna Nagar)</option>
+                <option value="Adyar Grand Slam Club">Adyar Grand Slam Club (Adyar)</option>
+                <option value="Hoops City Arena">Hoops City Arena (T. Nagar)</option>
+                <option value="AquaMarine Aquatic Center">AquaMarine Aquatic Center (ECR)</option>
+                <option value="Titan Sports Complex">Titan Sports Complex (Porur)</option>
               </select>
             </div>
           </div>
@@ -741,14 +742,26 @@
       </div>
     </div>
 
-    <!-- Footer -->
-    <footer>
-      <div style="max-width: 1360px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px;">
-        <div style="font-weight: 700;">
+    <!-- Standardized Global Footer -->
+    <footer class="global-footer">
+      <div class="footer-inner">
+        <div style="display: flex; align-items: center; gap: 8px; font-weight: 700;">
+          <img src="logo.png" alt="TurfArena Logo" style="height: 24px; width: auto; border-radius: 4px;" />
           <span style="color: var(--primary);">TURFARENA</span> • Sports Community Hub
         </div>
         <div>
-          <span>© 2026 TurfArena Inc. All rights reserved.</span>
+          <span>© 2026 TurfArena Inc. All rights reserved. Instant team matchmaking.</span>
+        </div>
+        <div class="footer-links">
+          <a href="index.html" style="color: var(--text-muted); text-decoration: none; font-size: 12px;">
+            <i class="fa-solid fa-house"></i> Home
+          </a>
+          <a href="tournaments.html" style="color: var(--text-muted); text-decoration: none; font-size: 12px;">
+            <i class="fa-solid fa-trophy"></i> Tournaments
+          </a>
+          <a href="user-dashboard.html" style="color: var(--text-muted); text-decoration: none; font-size: 12px;">
+            <i class="fa-solid fa-user"></i> My Profile
+          </a>
         </div>
       </div>
     </footer>
@@ -782,7 +795,7 @@
 
       function checkUrlHash() {
         if (window.location.hash === "#tournaments") {
-          currentTab = "tournament";
+          window.location.href = "tournaments.html";
         }
       }
 
@@ -825,7 +838,8 @@
         try {
           const res = await fetch("/api/community", { credentials: "include" });
           if (res.ok) {
-            allPosts = await res.json();
+            // Tournament cards belong exclusively in tournaments.html.
+            allPosts = (await res.json()).filter((post) => post.postType !== "tournament");
           }
         } catch (err) {
           console.error("Error fetching community posts:", err);
@@ -838,7 +852,6 @@
       function updateStats() {
         const soloCount = allPosts.filter((p) => p.postType === "solo").length;
         const teamCount = allPosts.filter((p) => p.postType === "team").length;
-        const tournCount = allPosts.filter((p) => p.postType === "tournament").length;
 
         const user = getCurrentUser();
         let pendingCount = 0;
@@ -850,10 +863,12 @@
             });
         }
 
-        document.getElementById("statSolo").innerHTML = `${soloCount}<span>live</span>`;
-        document.getElementById("statTeam").innerHTML = `${teamCount}<span>challenges</span>`;
-        document.getElementById("statTournaments").innerHTML = `${tournCount}<span>cups</span>`;
-        document.getElementById("statPending").innerHTML = `${pendingCount}<span>pending</span>`;
+        const sSolo = document.getElementById("statSolo");
+        if (sSolo) sSolo.innerHTML = `${soloCount}<span>live</span>`;
+        const sTeam = document.getElementById("statTeam");
+        if (sTeam) sTeam.innerHTML = `${teamCount}<span>challenges</span>`;
+        const sPending = document.getElementById("statPending");
+        if (sPending) sPending.innerHTML = `${pendingCount}<span>pending</span>`;
       }
 
       function setTab(tab) {
@@ -861,13 +876,11 @@
         document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
         if (tab === "solo") document.getElementById("tabSolo").classList.add("active");
         if (tab === "team") document.getElementById("tabTeam").classList.add("active");
-        if (tab === "tournament") document.getElementById("tabTournaments").classList.add("active");
         if (tab === "my-squads") document.getElementById("tabMySquads").classList.add("active");
 
         const titles = {
           solo: { h: "Free Agent Openings", s: "Need 1-2 players to complete your squad? Post or sub in here.", btn: "Post Opening" },
           team: { h: "Turf Wars (v/s Challenges)", s: "Rival team matchmaking with split venue fares and bragging rights.", btn: "Challenge a Squad" },
-          tournament: { h: "Tournaments & Championship Cups", s: "Register your squad for official knockout cups and prize pools.", btn: "Host Tournament" },
           "my-squads": { h: "Your Created Squads & Applications", s: "Manage incoming player requests and track match approvals.", btn: "Create New Post" },
         };
 
@@ -956,11 +969,15 @@
 
           card.innerHTML = `
             <div>
-              <div class="card-header-row">
-                <span class="badge ${badgeClass}">${badgeText}</span>
-                <span class="badge badge-dark">
-                  ${isTournament ? `${Number(post.maxTeams || 16)} Max Teams` : `${Number(post.spots || 1)} Open Spot(s)`}
-                </span>
+              <div class="match-header-strip ${badgeClass}">
+                <div class="match-badge-left">
+                  <i class="fa-solid fa-bolt" style="font-size: 10px;"></i>
+                  <span>${badgeText}</span>
+                </div>
+                <div class="match-badge-right">
+                  <i class="fa-solid fa-users" style="font-size: 10px;"></i>
+                  <span>${isTournament ? `${Number(post.maxTeams || 16)} Teams` : `${Number(post.spots || 1)} Open Spot${Number(post.spots || 1) === 1 ? "" : "s"}`}</span>
+                </div>
               </div>
 
               <h3 class="card-team-title">${escapeHtml(post.teamName)}</h3>
@@ -1040,7 +1057,8 @@
           return;
         }
 
-        const today = new Date().toISOString().split("T")[0];
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
         document.getElementById("eventDateInput").value = today;
         document.getElementById("eventDateInput").min = today;
         document.getElementById("postTypeInput").value = currentTab === "my-squads" ? "solo" : currentTab;

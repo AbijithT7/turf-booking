@@ -21,14 +21,24 @@ async function initDB(dbPath = path.join(__dirname, 'turf.db')) {
 
   // Seed turfs if none exist
   const count = await dbInstance.get('SELECT COUNT(*) as count FROM Turfs');
-  if (count.count === 0) {
+  if (count.count < 8) {
     await dbInstance.exec(`
       INSERT INTO Turfs (id, name, meta, basePrice, panoramaUrl) VALUES 
-      (1, 'GreenLine Arena', 'Velachery • Football, Cricket', 1200, 'turf1-360.jpg'),
-      (2, 'Boundary Line Turf', 'Tambaram • Cricket box', 800, 'turf2-360.jpg'),
-      (3, 'SkyLine Sports Hub', 'OMR • Multi-sport', 1000, 'turf3-360.jpg');
+      (1, 'GreenLine Arena', 'Velachery • Football, Box Cricket', 1200, 'turf1-360.jpg'),
+      (2, 'Boundary Line Arena', 'Tambaram • Box Cricket', 900, 'turf2-360.jpg'),
+      (3, 'SkyLine Rooftop Hub', 'OMR Sholinganallur • Multi-Sport & Futsal', 1100, 'turf3-360.jpg'),
+      (4, 'SmashPro Badminton Dome', 'Anna Nagar • Badminton (BWF Standard)', 750, 'turf4-360.jpg'),
+      (5, 'Adyar Grand Slam Club', 'Adyar • Tennis & Pickleball', 1000, 'turf5-360.jpg'),
+      (6, 'Hoops City Arena', 'T. Nagar • Basketball (FIBA Indoor)', 1300, 'turf6-360.jpg'),
+      (7, 'AquaMarine Aquatic Center', 'ECR Palavakkam • Swimming & Aquatics', 600, 'turf7-360.jpg'),
+      (8, 'Titan Sports Complex', 'Porur • Futsal & Box Cricket', 1150, 'turf8-360.jpg')
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name,
+        meta = excluded.meta,
+        basePrice = excluded.basePrice,
+        panoramaUrl = excluded.panoramaUrl;
     `);
-    console.log('Seeded database with initial turf data.');
+    console.log('Seeded database with 8 turf facilities.');
   }
 
   // Seed default community posts if none exist

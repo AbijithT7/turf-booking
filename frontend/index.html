@@ -30,49 +30,34 @@
       .hero-section {
         max-width: 1360px;
         margin: 0 auto;
-        padding: 48px 5vw 40px;
-        display: grid;
-        grid-template-columns: 1.4fr 0.9fr;
-        gap: 40px;
-        align-items: stretch;
-      }
-
-      @media (max-width: 960px) {
-        .hero-section {
-          grid-template-columns: 1fr;
-          padding: 32px 5vw;
-        }
+        padding: 48px 5vw 28px;
       }
 
       @media (max-width: 640px) {
         .hero-section {
-          padding: 24px 16px 20px;
-          gap: 24px;
+          padding: 28px 16px 20px;
         }
+      }
+
+      .hero-content {
+        max-width: 860px;
       }
 
       .hero-headline {
-        font-size: clamp(26px, 4.8vw, 56px);
+        font-size: clamp(28px, 4.2vw, 48px);
         font-weight: 800;
-        line-height: 1.1;
+        line-height: 1.15;
         letter-spacing: -0.03em;
-        margin: 16px 0 18px;
+        margin: 0 0 12px;
         word-break: break-word;
-      }
-
-      @media (max-width: 640px) {
-        .hero-headline {
-          font-size: clamp(26px, 7.5vw, 36px);
-          margin: 12px 0 14px;
-        }
       }
 
       .hero-subtitle {
         color: var(--text-muted);
-        font-size: clamp(14px, 1.8vw, 17px);
+        font-size: clamp(14px, 1.8vw, 16.5px);
         line-height: 1.6;
-        max-width: 580px;
-        margin-bottom: 28px;
+        max-width: 620px;
+        margin-bottom: 24px;
       }
 
       @media (max-width: 640px) {
@@ -142,6 +127,8 @@
       .search-field-content {
         display: flex;
         flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
         width: 100%;
         min-width: 0;
       }
@@ -153,6 +140,10 @@
         letter-spacing: 0.08em;
         color: var(--text-muted);
         font-weight: 700;
+        text-align: left;
+        display: block;
+        width: 100%;
+        margin-bottom: 2px;
       }
 
       .search-field-select, .search-field-input {
@@ -202,172 +193,13 @@
         color: var(--primary);
       }
 
-      /* Hero Promo Card */
-      .hero-promo-card {
-        background: linear-gradient(145deg, rgba(14, 20, 23, 0.85) 0%, rgba(5, 10, 13, 0.95) 100%);
-        border: 1px solid var(--line-soft);
-        border-radius: 28px;
-        padding: 32px;
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        min-height: 380px;
-        box-shadow: var(--shadow-glass);
-        min-width: 0;
-      }
-
-      @media (max-width: 640px) {
-        .hero-promo-card {
-          padding: 20px 16px;
-          min-height: auto;
-          border-radius: 20px;
-        }
-      }
-
-      .hero-promo-card::before {
-        content: "";
-        position: absolute;
-        top: -20%;
-        right: -20%;
-        width: 260px;
-        height: 260px;
-        background: radial-gradient(circle, rgba(163, 230, 53, 0.12) 0%, transparent 70%);
-        filter: blur(50px);
-        pointer-events: none;
-      }
-
-      .promo-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
-        z-index: 2;
-        gap: 8px;
-      }
-
-      .promo-crown {
-        width: 48px;
-        height: 48px;
-        border-radius: 14px;
-        background: var(--surface-3);
-        border: 1px solid var(--line-lime);
-        color: var(--primary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        box-shadow: var(--shadow-neon-soft);
-        flex-shrink: 0;
-      }
-
-      .promo-body {
-        margin-top: auto;
-        padding-top: 32px;
-        position: relative;
-        z-index: 2;
-      }
-
-      @media (max-width: 640px) {
-        .promo-body {
-          padding-top: 16px;
-        }
-      }
-
-      .promo-body h3 {
-        font-size: 26px;
-        font-weight: 800;
-        line-height: 1.2;
-        margin-bottom: 8px;
-      }
-
-      .promo-body p {
-        color: var(--text-muted);
-        font-size: 14px;
-        line-height: 1.5;
-        max-width: 280px;
-      }
-
-      .promo-footer {
-        padding-top: 24px;
-        margin-top: 24px;
-        border-top: 1px solid var(--line-soft);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        position: relative;
-        z-index: 2;
-        flex-wrap: wrap;
-        gap: 12px;
-      }
-
-      @media (max-width: 640px) {
-        .promo-footer {
-          padding-top: 16px;
-          margin-top: 16px;
-        }
-      }
-
-      .promo-quote {
-        font-size: 11px;
-        font-family: var(--font-mono);
-        text-transform: uppercase;
-        color: var(--primary);
-        font-weight: 600;
-        text-align: right;
-        line-height: 1.4;
-      }
-
-      @media (max-width: 640px) {
-        .promo-quote {
-          text-align: left;
-        }
-      }
-
-      [data-theme="light"] .hero-promo-card {
-        background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-        border: 1px solid rgba(15, 23, 42, 0.12);
-        box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-      }
-
-      [data-theme="light"] .hero-promo-card::before {
-        background: radial-gradient(circle, rgba(22, 163, 74, 0.08) 0%, transparent 70%);
-      }
-
-      [data-theme="light"] .promo-crown {
-        background: #f1f5f9;
-        border-color: rgba(22, 163, 74, 0.3);
-      }
-
-      [data-theme="light"] .promo-body h3 {
-        color: #0f172a;
-      }
-
-      [data-theme="light"] .promo-body p {
-        color: #64748b;
-      }
-
-      [data-theme="light"] .promo-footer {
-        border-top-color: rgba(15, 23, 42, 0.08);
-      }
-
-      [data-theme="light"] .promo-quote {
-        color: #15803d;
-      }
-
-      [data-theme="light"] .community-strip {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        border: 1px solid rgba(22, 163, 74, 0.3);
-        box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.08);
-      }
-
-      [data-theme="light"] .community-strip h3 {
-        color: #0f172a !important;
-      }
-
-      /* ── Available Turfs Section ── */
+      /* Available Turfs Section */
       .section-container {
+        max-width: 1360px;
+        margin: 0 auto;
+        padding: 32px 5vw 48px;
+        scroll-margin-top: 80px;
+      }
         max-width: 1360px;
         margin: 0 auto;
         padding: 48px 5vw;
@@ -1036,9 +868,7 @@
       <div class="navbar-inner">
         <!-- LEFT: Brand Logo -->
         <a class="logo" href="index.html" aria-label="TurfArena Home">
-          <div class="logo-icon">
-            <i class="fa-solid fa-crown"></i>
-          </div>
+          <img src="logo.png" alt="TurfArena Logo" class="logo-image-brand" />
           <div class="logo-text">
             <span class="logo-brand">TURF<span>ARENA</span></span>
             <span class="logo-sub">Book. Play. Connect.</span>
@@ -1047,20 +877,17 @@
 
         <!-- CENTER: Navigation Links -->
         <nav class="top-nav" aria-label="Main Navigation">
-          <a href="index.html" class="nav-link active">
+          <a href="index.html" class="nav-link active" data-nav="home">
             <i class="fa-solid fa-house"></i> Home
           </a>
-          <a href="#available-turfs" class="nav-link">
+          <a href="#available-turfs" class="nav-link" data-nav="book">
             <i class="fa-solid fa-calendar-check"></i> Book Turf
           </a>
-          <a href="community.html" class="nav-link">
+          <a href="community.html" class="nav-link" data-nav="community">
             <i class="fa-solid fa-users"></i> Community
           </a>
-          <a href="community.html#tournaments" class="nav-link">
+          <a href="tournaments.html" class="nav-link" data-nav="tournaments">
             <i class="fa-solid fa-trophy"></i> Tournaments
-          </a>
-          <a href="admin-login.html" class="nav-link">
-            <i class="fa-solid fa-shield"></i> Admin Portal
           </a>
         </nav>
 
@@ -1068,12 +895,18 @@
         <div class="header-actions">
           <button class="theme-toggle-btn" data-theme-toggle type="button" aria-label="Toggle theme"></button>
           <div id="userAuthActions" class="auth-actions-slot">
-            <a href="user-login.html" class="btn btn-outline btn-sm">
-              <i class="fa-solid fa-user"></i> Login
-            </a>
-            <a href="user-login.html?mode=signup" class="btn btn-primary btn-sm">
-              Sign Up
-            </a>
+            <div class="auth-group">
+              <a href="user-login.html" class="btn btn-outline btn-sm">
+                <i class="fa-solid fa-user"></i> Sign In
+              </a>
+              <a href="user-login.html?mode=signup" class="btn btn-primary btn-sm">
+                Sign Up
+              </a>
+              <span class="auth-divider"></span>
+              <a href="admin-login.html" class="admin-portal-btn" title="Arena Admin & Facility Management">
+                <i class="fa-solid fa-shield-halved"></i> Admin
+              </a>
+            </div>
           </div>
           <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle menu" onclick="toggleMobileNav()">
             <i class="fa-solid fa-bars"></i>
@@ -1083,20 +916,17 @@
 
       <!-- Mobile Dropdown Navigation -->
       <div class="mobile-nav-drawer" id="mobileNavDrawer">
-        <a href="index.html" class="mobile-nav-link active" onclick="closeMobileNav()">
+        <a href="index.html" class="mobile-nav-link active" data-nav="home" onclick="closeMobileNav()">
           <i class="fa-solid fa-house"></i> Home
         </a>
-        <a href="#available-turfs" class="mobile-nav-link" onclick="closeMobileNav()">
+        <a href="#available-turfs" class="mobile-nav-link" data-nav="book" onclick="closeMobileNav()">
           <i class="fa-solid fa-calendar-check"></i> Book Turf
         </a>
-        <a href="community.html" class="mobile-nav-link" onclick="closeMobileNav()">
-          <i class="fa-solid fa-users"></i> Community Lobby
+        <a href="community.html" class="mobile-nav-link" data-nav="community" onclick="closeMobileNav()">
+          <i class="fa-solid fa-users"></i> Community
         </a>
-        <a href="community.html#tournaments" class="mobile-nav-link" onclick="closeMobileNav()">
+        <a href="tournaments.html" class="mobile-nav-link" data-nav="tournaments" onclick="closeMobileNav()">
           <i class="fa-solid fa-trophy"></i> Tournaments
-        </a>
-        <a href="admin-login.html" class="mobile-nav-link" onclick="closeMobileNav()">
-          <i class="fa-solid fa-shield"></i> Admin Portal
         </a>
         <div id="mobileAuthSlot" class="mobile-auth-slot"></div>
       </div>
@@ -1104,50 +934,54 @@
 
     <main style="position: relative; z-index: 10;">
       <!-- ───────────────────────────────────────────
-           HERO SECTION
+           HERO SECTION (Centered Layout)
       ─────────────────────────────────────────── -->
-      <section class="hero-section">
-        <!-- Hero Left Content -->
-        <div>
-          <div class="badge badge-lime" style="margin-bottom: 8px;">
-            <i class="fa-solid fa-bolt"></i> BOOK. PLAY. CONNECT.
-          </div>
-
+      <section class="hero-section hero-centered">
+        <div class="hero-content">
           <h1 class="hero-headline">
-            Find Your Turf.<br />
-            <span class="text-lime-gradient">Fuel Your Game.</span>
+            Book Your Turf
           </h1>
-
           <p class="hero-subtitle">
-            Discover and book verified turf pitches near you in seconds. Real-time slot locking, zero double bookings, instant digital entry passes.
+            Real-time hourly slots, verified floodlit pitches, and seamless online booking for Football, Box Cricket, Badminton, Tennis, Basketball & Swimming.
           </p>
 
-          <!-- Search & Filter Bar Dock -->
+          <!-- Search & Filter Bar Dock (Centered) -->
           <div class="search-dock">
             <form class="search-dock-form" id="heroSearchForm" onsubmit="handleHeroSearch(event)">
               <!-- Location Filter -->
               <div class="search-dock-field">
                 <i class="fa-solid fa-location-dot"></i>
                 <div class="search-field-content">
-                  <label class="search-field-label">Location</label>
+                  <label class="search-field-label">Chennai Area</label>
                   <select class="search-field-select" id="filterLocation">
                     <option value="all">All Chennai Areas</option>
                     <option value="Velachery">Velachery</option>
                     <option value="Tambaram">Tambaram</option>
-                    <option value="OMR">OMR IT Corridor</option>
+                    <option value="OMR">OMR Sholinganallur</option>
+                    <option value="Anna Nagar">Anna Nagar</option>
+                    <option value="Adyar">Adyar</option>
+                    <option value="T. Nagar">T. Nagar</option>
+                    <option value="ECR">ECR Palavakkam</option>
+                    <option value="Porur">Porur</option>
                   </select>
                 </div>
               </div>
 
               <!-- Sport Filter -->
               <div class="search-dock-field">
-                <i class="fa-solid fa-futbol"></i>
+                <i class="fa-solid fa-medal"></i>
                 <div class="search-field-content">
                   <label class="search-field-label">Sport</label>
                   <select class="search-field-select" id="filterSport">
                     <option value="all">All Sports</option>
                     <option value="Football">Football</option>
-                    <option value="Cricket">Cricket Box</option>
+                    <option value="Cricket">Box Cricket</option>
+                    <option value="Badminton">Badminton</option>
+                    <option value="Tennis">Tennis & Pickleball</option>
+                    <option value="Basketball">Basketball</option>
+                    <option value="Swimming">Swimming & Aquatics</option>
+                    <option value="Futsal">Futsal</option>
+                    <option value="Multi-sport">Multi-Sport</option>
                   </select>
                 </div>
               </div>
@@ -1167,120 +1001,42 @@
               </button>
             </form>
           </div>
-
-          <!-- Trust Indicators -->
-          <div class="trust-strip">
-            <div class="trust-item">
-              <i class="fa-solid fa-circle-check"></i> Instant Booking
-            </div>
-            <div class="trust-item">
-              <i class="fa-solid fa-shield-halved"></i> No Double Booking
-            </div>
-            <div class="trust-item">
-              <i class="fa-solid fa-people-group"></i> Play with Friends
-            </div>
-            <div class="trust-item">
-              <i class="fa-solid fa-lock"></i> Secure Payments
-            </div>
-          </div>
-        </div>
-
-        <!-- Hero Right: Promotional Showcase Card -->
-        <div class="hero-promo-card">
-          <div class="promo-top">
-            <div class="promo-crown">
-              <i class="fa-solid fa-trophy"></i>
-            </div>
-            <span class="badge badge-lime">Community Story</span>
-          </div>
-
-          <div class="promo-body">
-            <h3>More than<br />just a game.</h3>
-            <p>TurfArena brings players together. Book. Play. Connect with local squads.</p>
-          </div>
-
-          <div class="promo-footer">
-            <a href="community.html" class="btn btn-primary btn-sm" style="border-radius: 999px;">
-              Join Community <i class="fa-solid fa-arrow-right"></i>
-            </a>
-            <div class="promo-quote">
-              “A HEALTHY MIND<br />LIVES ON A TURF.”
-            </div>
-          </div>
         </div>
       </section>
 
       <!-- ───────────────────────────────────────────
-           AVAILABLE TURFS (POPULAR NEAR YOU)
+           AVAILABLE TURFS (Animated Swipeable Showcase)
       ─────────────────────────────────────────── -->
       <section class="section-container" id="available-turfs">
         <div class="section-header-row">
           <div class="section-title-wrap">
-            <div class="badge badge-lime">
-              <i class="fa-solid fa-star"></i> Popular Near You
-            </div>
-            <h2>Available Sports Turfs</h2>
+            <h2>Available Turfs</h2>
             <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">
-              Explore top-rated floodlit grounds and book your preferred hour in seconds.
+              Explore premier sports venues across Chennai. Swipe right or click arrows to browse all facilities.
             </p>
           </div>
-        </div>
-
-        <!-- Dynamic Turf Cards Grid -->
-        <div class="turf-grid" id="turfGrid">
-          <!-- Dynamically populated via JS -->
-        </div>
-
-        <!-- ───────────────────────────────────────────
-             FEATURES & HOW IT WORKS
-        ─────────────────────────────────────────── -->
-        <div class="features-grid" id="about">
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fa-solid fa-bolt-lightning"></i>
-            </div>
-            <h3>Instant Booking</h3>
-            <p>Select your favorite turf and available 1-hour slots. Confirm immediately with UPI or Pay at Turf.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fa-solid fa-shield-halved"></i>
-            </div>
-            <h3>Fair & Transparent</h3>
-            <p>Real-time slot locking and synchronization guarantees zero double booking across all platforms.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fa-solid fa-people-arrows"></i>
-            </div>
-            <h3>Community Driven</h3>
-            <p>Need extra players or looking for a squad challenge? Browse open lobby spots or post your match.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fa-solid fa-trophy"></i>
-            </div>
-            <h3>Tournaments & Cups</h3>
-            <p>Participate in weekend knockout tournaments with prize pools and official turf refereeing.</p>
+          <div class="carousel-swipe-hint">
+            <i class="fa-solid fa-arrow-right-arrow-left"></i> <span>Swipe horizontally</span>
           </div>
         </div>
 
-        <!-- Community Callout Banner -->
-        <div class="community-strip">
-          <div>
-            <h3 style="font-size: 24px; font-weight: 800; color: #ffffff; margin-bottom: 6px;">
-              Never cancel game night. Match with verified players in under 60s.
-            </h3>
-            <p style="color: var(--text-muted); font-size: 14px;">
-              Join 400+ active footballers and cricketers playing daily across Chennai.
-            </p>
+        <!-- Animated Swipeable Carousel Track -->
+        <div class="turf-carousel-container">
+          <div class="turf-carousel-wrapper">
+            <button type="button" class="carousel-nav-btn prev" id="carouselPrevBtn" aria-label="Previous turfs" onclick="scrollTurfs(-1)">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="turf-carousel-track" id="turfGrid" role="region" aria-label="Turfs Showcase">
+              <!-- Dynamically populated via JS -->
+            </div>
+            <button type="button" class="carousel-nav-btn next" id="carouselNextBtn" aria-label="Next turfs" onclick="scrollTurfs(1)">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
           </div>
-          <a href="community.html" class="btn btn-primary" style="padding: 14px 28px;">
-            Explore Community Lobby <i class="fa-solid fa-arrow-right"></i>
-          </a>
+          <div class="carousel-indicator-bar">
+            <div class="carousel-dots" id="carouselDots" role="tablist" aria-label="Turf pages"></div>
+            <span id="carouselCount" style="font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); font-weight: 700;">1 / 8</span>
+          </div>
         </div>
       </section>
     </main>
@@ -1319,7 +1075,7 @@
           <div>
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
               <span class="badge badge-lime" id="modalSportBadge">Football, Cricket</span>
-              <span class="badge badge-green"><i class="fa-solid fa-star"></i> 4.8 (236 reviews)</span>
+              <span class="badge badge-green" id="modalTurfRating"><i class="fa-solid fa-star"></i> 4.8 (236 reviews)</span>
             </div>
             <h2 id="modalTurfName" style="font-size: 28px; font-weight: 800; margin-bottom: 4px;">Turf Name</h2>
             <div id="modalTurfMeta" style="color: var(--text-muted); font-size: 14px; display: flex; align-items: center; gap: 6px;">
@@ -1421,6 +1177,12 @@
                 <option value="">Choose sport format</option>
                 <option selected value="Football">Football (5v5 / 7v7)</option>
                 <option value="Cricket">Box Cricket</option>
+                <option value="Badminton">Badminton (Singles / Doubles)</option>
+                <option value="Tennis">Tennis & Pickleball</option>
+                <option value="Basketball">Basketball (Full / Half Court)</option>
+                <option value="Swimming">Swimming & Aquatics</option>
+                <option value="Futsal">Futsal</option>
+                <option value="Multi-sport">Multi-Sport</option>
               </select>
             </div>
 
@@ -1585,6 +1347,16 @@
       let blocked = {};
       let teamOpenings = {};
       let currentTurfId = 1;
+      const turfRatings = {
+        1: { score: "4.8", reviews: 342 },
+        2: { score: "4.5", reviews: 188 },
+        3: { score: "4.9", reviews: 512 },
+        4: { score: "4.7", reviews: 276 },
+        5: { score: "4.9", reviews: 410 },
+        6: { score: "4.6", reviews: 165 },
+        7: { score: "4.4", reviews: 98 },
+        8: { score: "4.7", reviews: 224 },
+      };
       let selectedSlots = [];
       let panoramaViewer = null;
       let isProcessingPayment = false;
@@ -1593,16 +1365,31 @@
       const hours = Array.from({ length: 24 }, (_, i) => i);
       const turfImages = {
         1: [
+          "turf1-360.jpg",
           "aerial-view-grass-field-hockey.jpg",
-          "hc-digital-9sOleIZAE54-unsplash.jpg",
         ],
         2: [
+          "turf2-360.jpg",
           "izuddin-helmi-adnan-K5ChxJaheKI-unsplash.jpg",
-          "nguy-n-hi-p-XHDRUHXcsl0-unsplash.jpg",
         ],
         3: [
+          "turf3-360.jpg",
           "thomas-park-fDmpxdV69eA-unsplash.jpg",
-          "timothy-tan-PAe2UhGo-S4-unsplash.jpg",
+        ],
+        4: [
+          "turf4-360.jpg",
+        ],
+        5: [
+          "turf5-360.jpg",
+        ],
+        6: [
+          "turf6-360.jpg",
+        ],
+        7: [
+          "turf7-360.jpg",
+        ],
+        8: [
+          "turf8-360.jpg",
         ],
       };
 
@@ -1625,6 +1412,13 @@
       // ───────────────────────────────────────────
       // INITIALIZATION
       // ───────────────────────────────────────────
+      function getLocalDateStr(d = new Date()) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
+
       async function init() {
         setupHeroDate();
         await fetchTurfs();
@@ -1632,7 +1426,7 @@
         renderTurfGrid();
         startAlternatingImages();
 
-        const today = new Date().toISOString().split("T")[0];
+        const today = getLocalDateStr();
         const bookingDateInput = document.getElementById("bookingDate");
         bookingDateInput.value = today;
         bookingDateInput.min = today;
@@ -1672,7 +1466,7 @@
       }
 
       function setupHeroDate() {
-        const today = new Date().toISOString().split("T")[0];
+        const today = getLocalDateStr();
         const heroDate = document.getElementById("heroDateInput");
         if (heroDate) {
           heroDate.value = today;
@@ -1691,23 +1485,58 @@
             1: {
               id: 1,
               name: "GreenLine Arena",
-              meta: "Velachery • Football, Cricket",
+              meta: "Velachery • Football, Box Cricket",
               basePrice: 1200,
               panoramaUrl: "turf1-360.jpg",
             },
             2: {
               id: 2,
-              name: "Boundary Line Turf",
-              meta: "Tambaram • Cricket box",
-              basePrice: 800,
+              name: "Boundary Line Arena",
+              meta: "Tambaram • Box Cricket",
+              basePrice: 900,
               panoramaUrl: "turf2-360.jpg",
             },
             3: {
               id: 3,
-              name: "SkyLine Sports Hub",
-              meta: "OMR • Multi-sport",
-              basePrice: 1000,
+              name: "SkyLine Rooftop Hub",
+              meta: "OMR Sholinganallur • Multi-Sport & Futsal",
+              basePrice: 1100,
               panoramaUrl: "turf3-360.jpg",
+            },
+            4: {
+              id: 4,
+              name: "SmashPro Badminton Dome",
+              meta: "Anna Nagar • Badminton (BWF Standard)",
+              basePrice: 750,
+              panoramaUrl: "turf4-360.jpg",
+            },
+            5: {
+              id: 5,
+              name: "Adyar Grand Slam Club",
+              meta: "Adyar • Tennis & Pickleball",
+              basePrice: 1000,
+              panoramaUrl: "turf5-360.jpg",
+            },
+            6: {
+              id: 6,
+              name: "Hoops City Arena",
+              meta: "T. Nagar • Basketball (FIBA Indoor)",
+              basePrice: 1300,
+              panoramaUrl: "turf6-360.jpg",
+            },
+            7: {
+              id: 7,
+              name: "AquaMarine Aquatic Center",
+              meta: "ECR Palavakkam • Swimming & Aquatics",
+              basePrice: 600,
+              panoramaUrl: "turf7-360.jpg",
+            },
+            8: {
+              id: 8,
+              name: "Titan Sports Complex",
+              meta: "Porur • Futsal & Box Cricket",
+              basePrice: 1150,
+              panoramaUrl: "turf8-360.jpg",
             },
           };
         }
@@ -1745,9 +1574,10 @@
         Object.entries(dataToRender).forEach(([id, turf]) => {
           const card = document.createElement("article");
           card.className = "turf-card";
-          const img = turfImages[id] ? turfImages[id][0] : "aerial-view-grass-field-hockey.jpg";
+          const img = turfImages[id] ? turfImages[id][0] : (turf.panoramaUrl || "turf1-360.jpg");
           const sportMeta = turf.meta ? turf.meta.split(" • ")[1] || "Multi-sport" : "Football";
           const locMeta = turf.meta ? turf.meta.split(" • ")[0] || "Chennai" : "Chennai";
+          const rating = turfRatings[id] || { score: "4.8", reviews: 190 };
 
           card.innerHTML = `
             <div class="turf-media">
@@ -1763,7 +1593,7 @@
                 <h3 class="turf-title">${escapeHtml(turf.name)}</h3>
                 <div class="turf-meta-row">
                   <span><i class="fa-solid fa-location-dot" style="color: var(--primary);"></i> ${escapeHtml(locMeta)}</span>
-                  <span style="color: var(--accent-gold); font-weight: 700;"><i class="fa-solid fa-star"></i> 4.8 (200+)</span>
+                  <span style="color: var(--accent-gold); font-weight: 700;"><i class="fa-solid fa-star"></i> ${rating.score} (${rating.reviews}+)</span>
                 </div>
               </div>
               <div class="turf-card-bottom">
@@ -1778,6 +1608,105 @@
           `;
           grid.appendChild(card);
         });
+
+        setupCarouselIndicators();
+        initCarouselGestures();
+      }
+
+      function scrollTurfs(direction) {
+        const track = document.getElementById("turfGrid");
+        if (!track) return;
+        const firstCard = track.querySelector(".turf-card");
+        const cardWidth = firstCard ? firstCard.getBoundingClientRect().width + 22 : 320;
+        track.scrollBy({ left: direction * cardWidth, behavior: "smooth" });
+      }
+
+      function setupCarouselIndicators() {
+        const track = document.getElementById("turfGrid");
+        const dotsContainer = document.getElementById("carouselDots");
+        const countEl = document.getElementById("carouselCount");
+        if (!track || !dotsContainer) return;
+
+        const cards = track.querySelectorAll(".turf-card");
+        dotsContainer.innerHTML = "";
+        if (countEl) countEl.textContent = `1 / ${cards.length}`;
+
+        cards.forEach((card, idx) => {
+          const dot = document.createElement("button");
+          dot.type = "button";
+          dot.className = `carousel-dot ${idx === 0 ? "active" : ""}`;
+          dot.setAttribute("aria-label", `Go to turf slide ${idx + 1}`);
+          dot.onclick = () => {
+            card.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+          };
+          dotsContainer.appendChild(dot);
+        });
+      }
+
+      function updateActiveCarouselDot() {
+        const track = document.getElementById("turfGrid");
+        const dots = document.querySelectorAll(".carousel-dot");
+        const countEl = document.getElementById("carouselCount");
+        const cards = track ? track.querySelectorAll(".turf-card") : [];
+        if (!track || cards.length === 0) return;
+
+        const trackRect = track.getBoundingClientRect();
+        const trackCenter = trackRect.left + trackRect.width / 2;
+
+        let closestIdx = 0;
+        let closestDist = Infinity;
+
+        cards.forEach((card, idx) => {
+          const rect = card.getBoundingClientRect();
+          const cardCenter = rect.left + rect.width / 2;
+          const dist = Math.abs(cardCenter - trackCenter);
+          if (dist < closestDist) {
+            closestDist = dist;
+            closestIdx = idx;
+          }
+        });
+
+        dots.forEach((dot, idx) => {
+          if (idx === closestIdx) {
+            dot.classList.add("active");
+          } else {
+            dot.classList.remove("active");
+          }
+        });
+
+        if (countEl) {
+          countEl.textContent = `${closestIdx + 1} / ${cards.length}`;
+        }
+      }
+
+      let carouselGesturesInitialized = false;
+      function initCarouselGestures() {
+        const track = document.getElementById("turfGrid");
+        if (!track || carouselGesturesInitialized) return;
+        carouselGesturesInitialized = true;
+
+        track.addEventListener("scroll", () => {
+          requestAnimationFrame(updateActiveCarouselDot);
+        }, { passive: true });
+
+        // Touch swipe support
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let touchStartTime = 0;
+
+        track.addEventListener("touchstart", (e) => {
+          touchStartX = e.changedTouches[0].screenX;
+          touchStartTime = Date.now();
+        }, { passive: true });
+
+        track.addEventListener("touchend", (e) => {
+          touchEndX = e.changedTouches[0].screenX;
+          const deltaX = touchStartX - touchEndX;
+          const time = Date.now() - touchStartTime;
+          if (Math.abs(deltaX) > 40 && time < 400) {
+            scrollTurfs(deltaX > 0 ? 1 : -1);
+          }
+        }, { passive: true });
       }
 
       function handleHeroSearch(e) {
@@ -1815,7 +1744,7 @@
         for (let i = 0; i < 7; i++) {
           const d = new Date(base);
           d.setDate(base.getDate() + i);
-          const iso = d.toISOString().split("T")[0];
+          const iso = getLocalDateStr(d);
           const isSelected = iso === selectedDate;
           const dayName = i === 0 ? "Today" : d.toLocaleDateString("en-US", { weekday: "short" });
           const dayNum = d.getDate();
@@ -1910,6 +1839,8 @@
         document.getElementById("modalTurfName").textContent = turf.name;
         document.getElementById("modalTurfMeta").innerHTML = `<i class="fa-solid fa-location-dot" style="color: var(--primary);"></i> ${turf.meta}`;
         document.getElementById("ratePerHrText").textContent = `₹${turf.basePrice}`;
+        const rating = turfRatings[id] || { score: "4.5", reviews: 100 };
+        document.getElementById("modalTurfRating").innerHTML = `<i class="fa-solid fa-star"></i> ${rating.score} (${rating.reviews} reviews)`;
 
         document.getElementById("view360Btn").style.display = turf.panoramaUrl ? "inline-flex" : "none";
 

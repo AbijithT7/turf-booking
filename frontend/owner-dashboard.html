@@ -1,139 +1,459 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Manage your TurfArena facilities, pricing and bookings.">
-  <title>TurfArena — Owner Console</title>
-  <link rel="stylesheet" href="theme.css">
-  <style>
-    body{font-family:system-ui,sans-serif;margin:0;background:var(--bg-main,#0b1114);color:var(--text-main,#f4f7f8)}
-    .wrap{max-width:1100px;margin:auto;padding:28px 18px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
-    .panel{background:var(--surface-1,#151e22);border:1px solid var(--line-soft,#29363b);border-radius:16px;padding:20px;margin-top:18px}
-    label{display:block;font-size:13px;color:var(--text-muted,#aab5ba);margin-bottom:6px}
-    select,input,button{font:inherit;border-radius:9px;padding:10px;border:1px solid var(--line-soft,#35434a);background:var(--surface-2,#202b30);color:inherit}
-    button{cursor:pointer;background:var(--primary,#b8ef4b);color:#14200b;font-weight:700;border:0}
-    .row{display:flex;gap:12px;align-items:end;flex-wrap:wrap}.row>div{min-width:170px}
-    .muted{color:var(--text-muted,#aab5ba)}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
-    .stat{padding:14px;border:1px solid var(--line-soft,#29363b);border-radius:12px}.stat strong{display:block;font-size:24px;margin-top:6px}
-    .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:9px;margin-top:14px}
-    .slot{padding:12px;border-radius:10px;border:1px solid var(--line-soft,#35434a);background:var(--surface-2,#202b30)}
-    .slot small{display:block;margin:5px 0 9px;color:var(--text-muted,#aab5ba)}.slot button{font-size:12px;padding:7px;width:100%}
-    .slot.booked{border-color:#2f9e68}.slot.blocked{border-color:#e36d6d}.hidden{display:none}
-    table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:10px;border-bottom:1px solid var(--line-soft,#29363b)}.table-wrap{overflow:auto}
-    #message{margin-top:12px}.error{color:#ff9a9a}.success{color:#a8ef9e}
-  </style>
-</head>
-<body>
-  <main class="wrap">
-    <header class="top">
-      <div><p class="muted">TURFARENA / FACILITY PARTNER</p><h1>Owner Console</h1><p class="muted">Manage only the turfs assigned to your account.</p></div>
-      <div><a href="index.html" style="color:inherit">← Public site</a> &nbsp; <button id="logout">Sign out</button></div>
-    </header>
-    <p id="message" role="status" aria-live="polite"></p>
-    <section class="panel">
-      <h2>Your facilities</h2>
-      <div class="row">
-        <div style="flex:1"><label for="turfSelect">Assigned turf</label><select id="turfSelect"><option>Loading…</option></select></div>
-        <div><label for="price">Hourly price (₹)</label><input id="price" type="number" min="100" max="100000" step="1"></div>
-        <div><button id="savePrice">Update price</button></div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>TurfArena - Owner Console</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Manage your TurfArena facilities, pricing, and bookings." />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="alternate icon" href="favicon.ico" />
+    <script>
+      try {
+        const t = localStorage.getItem("turf_theme") || "dark";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    </script>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600;1,700;1,800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Theme CSS -->
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      .owner-row {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 24px;
+        margin-bottom: 28px;
+      }
+
+      @media (max-width: 860px) {
+        .owner-row {
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+      }
+
+      .message-box {
+        min-height: 24px;
+        font-size: 13.5px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        display: none;
+        padding: 10px 16px;
+        border-radius: var(--radius-md);
+      }
+
+      .message-box.error {
+        display: block;
+        background: var(--danger-soft);
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+
+      .message-box.success {
+        display: block;
+        background: var(--primary-soft);
+        color: var(--primary);
+        border: 1px solid var(--primary-soft-border);
+      }
+
+      .owner-slot-card {
+        padding: 12px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--line-soft);
+        background: var(--surface-2);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 8px;
+        min-height: 90px;
+        transition: transform 0.15s ease, border-color 0.15s ease;
+      }
+
+      .owner-slot-card:hover {
+        transform: translateY(-2px);
+      }
+
+      .owner-slot-card.booked {
+        background: rgba(34, 197, 94, 0.08);
+        border-color: rgba(34, 197, 94, 0.35);
+      }
+
+      .owner-slot-card.blocked {
+        background: rgba(239, 68, 68, 0.08);
+        border-color: rgba(239, 68, 68, 0.35);
+      }
+    </style>
+  </head>
+
+  <body class="page-dashboard">
+    <!-- Layered Sports Background System -->
+    <div class="sports-bg-layer" aria-hidden="true">
+      <div class="sports-bg-stadium"></div>
+      <div class="sports-bg-turf-stripes"></div>
+      <div class="sports-bg-pitch-lines"></div>
+      <div class="sports-bg-court-geometry"></div>
+    </div>
+
+    <!-- Global Standard Header -->
+    <header class="global-header">
+      <div class="navbar-inner">
+        <!-- LEFT: Brand Logo -->
+        <a class="logo" href="index.html" aria-label="TurfArena Home">
+          <img src="logo.png" alt="TurfArena Logo" class="logo-image-brand" />
+          <div class="logo-text">
+            <span class="logo-brand">TURF<span>ARENA</span></span>
+            <span class="logo-sub">Facility Partner</span>
+          </div>
+        </a>
+
+        <!-- CENTER: Navigation Links -->
+        <nav class="top-nav" aria-label="Main Navigation">
+          <a href="index.html" class="nav-link" data-nav="home">
+            <i class="fa-solid fa-house"></i> Home
+          </a>
+          <a href="index.html#available-turfs" class="nav-link" data-nav="book">
+            <i class="fa-solid fa-calendar-check"></i> Book Turf
+          </a>
+          <a href="community.html" class="nav-link" data-nav="community">
+            <i class="fa-solid fa-users"></i> Community
+          </a>
+          <a href="tournaments.html" class="nav-link" data-nav="tournaments">
+            <i class="fa-solid fa-trophy"></i> Tournaments
+          </a>
+        </nav>
+
+        <!-- RIGHT: Theme Toggle & Controls -->
+        <div class="header-actions">
+          <button class="theme-toggle-btn" data-theme-toggle type="button" aria-label="Toggle theme"></button>
+          <div id="userAuthActions" class="auth-actions-slot">
+            <a href="owner-dashboard.html" class="btn btn-primary btn-sm active" title="Owner Facility Console">
+              <i class="fa-solid fa-building"></i> Owner Console
+            </a>
+            <button id="logoutBtn" class="btn btn-ghost btn-sm" onclick="handleLogout()" title="Sign Out" aria-label="Sign Out">
+              <i class="fa-solid fa-power-off" style="color: var(--danger);"></i>
+            </button>
+          </div>
+          <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle menu" onclick="toggleMobileNav()">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+        </div>
       </div>
-      <p class="muted">Price changes are saved on the server and affect new bookings. Dynamic pricing will be added in a later phase.</p>
-    </section>
-    <section class="panel">
-      <h2>Slot controls</h2>
-      <div class="row"><div><label for="date">Booking date</label><input id="date" type="date"></div><div><button id="refresh">Refresh slots</button></div></div>
-      <div id="slots" class="slots"></div>
-    </section>
-    <section class="panel">
-      <h2>Recent bookings</h2><p class="muted">Customer details are visible only for facilities assigned to your owner account.</p>
-      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Time</th><th>Customer</th><th>Sport</th><th>Base rate</th></tr></thead><tbody id="bookingRows"><tr><td colspan="5">Loading…</td></tr></tbody></table></div>
-    </section>
-  </main>
-<script>
-(() => {
-  const $ = id => document.getElementById(id);
-  let turfs = [], bookings = [], bookedHours = [], blockedHours = [];
-  const message = (text, isError=false) => { $('message').textContent=text; $('message').className=isError?'error':'success'; };
-  const selectedTurf = () => Number($('turfSelect').value);
-  const request = async (url, options={}) => {
-    const res = await fetch(url,{credentials:'include',...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});
-    const data = await res.json().catch(()=>({}));
-    if(!res.ok) throw new Error(data.error || 'Request failed');
-    return data;
-  };
-  const dateString = d => { const x=new Date(d.getTime()-d.getTimezoneOffset()*60000); return x.toISOString().slice(0,10); };
-  function timeLabel(hour) {
-    const fmt=h=>{const n=h%12||12;return n+':00 '+(h<12?'AM':'PM');};
-    return fmt(hour)+' – '+fmt((hour+1)%24);
-  }
-  async function load() {
-    try {
-      const me=await request('/api/auth/me');
-      if(!['owner','admin'].includes(me.user.role)){ location.href='index.html'; return; }
-      turfs=await request('/api/owner/turfs');
-      $('turfSelect').innerHTML='';
-      turfs.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name+' · '+t.meta;$('turfSelect').appendChild(o);});
-      if(!turfs.length){$('turfSelect').innerHTML='<option value="">No assigned turfs</option>';message('No turfs are assigned to this account yet. Ask the platform admin to assign a facility.',true);$('slots').textContent='No turf selected.';return;}
-      await refreshAll();
-    } catch(e) { message(e.message+' — log in with an owner account.',true); }
-  }
-  async function refreshAll() {
-    const t=turfs.find(x=>x.id===selectedTurf()); if(!t)return;
-    $('price').value=t.basePrice;
-    await Promise.all([loadSlots(),loadBookings()]);
-  }
-  async function loadSlots() {
-    const id=selectedTurf(), date=$('date').value;
-    const [booked,blocked]=await Promise.all([
-      request('/api/bookings?date='+encodeURIComponent(date)),
-      request('/api/blocked-slots?date='+encodeURIComponent(date))
-    ]);
-    bookedHours=booked[id]||[]; blockedHours=blocked[id]||[];
-    $('slots').innerHTML='';
-    for(let h=0;h<24;h++){
-      const isBooked=bookedHours.includes(h), isBlocked=blockedHours.includes(h);
-      const card=document.createElement('div');card.className='slot'+(isBooked?' booked':isBlocked?' blocked':'');
-      const title=document.createElement('strong');title.textContent=timeLabel(h);
-      const status=document.createElement('small');status.textContent=isBooked?'Booked':isBlocked?'Blocked':'Available';
-      card.append(title,status);
-      const btn=document.createElement('button');btn.disabled=isBooked;btn.textContent=isBooked?'Unavailable':isBlocked?'Unblock slot':'Block slot';
-      btn.addEventListener('click',()=>toggleBlock(h,isBlocked));card.appendChild(btn);$('slots').appendChild(card);
-    }
-  }
-  async function toggleBlock(hour,isBlocked) {
-    try {
-      await request('/api/owner/blocked-slots',{method:isBlocked?'DELETE':'POST',body:JSON.stringify({turfId:selectedTurf(),date:$('date').value,slotHour:hour})});
-      message(isBlocked?'Slot unblocked.':'Slot blocked.');await loadSlots();
-    } catch(e){message(e.message,true);}
-  }
-  async function loadBookings() {
-    try {
-      bookings=await request('/api/owner/bookings');
-      const rows=bookings.filter(b=>b.turf_id===selectedTurf()).slice(0,100);
-      $('bookingRows').innerHTML='';
-      if(!rows.length){$('bookingRows').innerHTML='<tr><td colspan="5">No bookings for this facility yet.</td></tr>';return;}
-      rows.forEach(b=>{
-        const tr=document.createElement('tr');
-        [b.booking_date,timeLabel(b.slot_hour),b.user_name||'Customer',b.sport_type||'—','₹'+Number(b.basePrice).toLocaleString('en-IN')].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td);});
-        $('bookingRows').appendChild(tr);
-      });
-    } catch(e){message(e.message,true);}
-  }
-  $('turfSelect').addEventListener('change',()=>refreshAll().catch(e=>message(e.message,true)));
-  $('date').addEventListener('change',()=>loadSlots().catch(e=>message(e.message,true)));
-  $('refresh').addEventListener('click',()=>loadSlots().catch(e=>message(e.message,true)));
-  $('savePrice').addEventListener('click',async()=>{
-    try {
-      const price=Number($('price').value);
-      const result=await request('/api/owner/turfs/'+selectedTurf()+'/price',{method:'PATCH',body:JSON.stringify({basePrice:price})});
-      const turf=turfs.find(t=>t.id===selectedTurf());if(turf)turf.basePrice=result.basePrice;
-      message('Hourly price updated to ₹'+result.basePrice+'.');
-    } catch(e){message(e.message,true);}
-  });
-  $('logout').addEventListener('click',async()=>{try{await request('/api/auth/logout',{method:'POST'});}finally{location.href='index.html';}});
-  $('date').value=dateString(new Date());load();
-})();
-</script>
-</body>
+
+      <!-- Mobile Dropdown Navigation -->
+      <div class="mobile-nav-drawer" id="mobileNavDrawer">
+        <a href="index.html" class="mobile-nav-link" data-nav="home" onclick="closeMobileNav()">
+          <i class="fa-solid fa-house"></i> Home
+        </a>
+        <a href="index.html#available-turfs" class="mobile-nav-link" data-nav="book" onclick="closeMobileNav()">
+          <i class="fa-solid fa-calendar-check"></i> Book Turf
+        </a>
+        <a href="community.html" class="mobile-nav-link" data-nav="community" onclick="closeMobileNav()">
+          <i class="fa-solid fa-users"></i> Community
+        </a>
+        <a href="tournaments.html" class="mobile-nav-link" data-nav="tournaments" onclick="closeMobileNav()">
+          <i class="fa-solid fa-trophy"></i> Tournaments
+        </a>
+        <div id="mobileAuthSlot" class="mobile-auth-slot"></div>
+      </div>
+    </header>
+
+    <main class="page-container">
+      <div class="page-header-row">
+        <h1 class="page-title">Facility Owner Console</h1>
+        <p class="page-subtitle">
+          Manage hourly base pricing, block maintenance hours, and track customer reservations for your assigned grounds.
+        </p>
+      </div>
+
+      <div id="message" class="message-box" role="status" aria-live="polite"></div>
+
+      <!-- Top Row: Facility Selection & Pricing -->
+      <div class="owner-row">
+        <section class="card-elevated">
+          <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 6px;">Facility Settings</h2>
+          <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">
+            Choose your facility to configure rates and control slots.
+          </p>
+
+          <div class="form-group">
+            <label for="turfSelect" class="form-label">Assigned Venue</label>
+            <select id="turfSelect" class="input-premium">
+              <option>Loading facilities...</option>
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 12px; align-items: flex-end;">
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+              <label for="price" class="form-label">Base Hourly Price (₹)</label>
+              <input id="price" type="number" min="100" max="100000" step="10" class="input-premium" />
+            </div>
+            <button id="savePrice" class="btn btn-primary" style="height: 42px;">
+              <i class="fa-solid fa-floppy-disk"></i> Update Price
+            </button>
+          </div>
+        </section>
+
+        <section class="card-elevated">
+          <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 6px;">Slot Date Filter</h2>
+          <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">
+            Inspect or modify slot availability for any upcoming date.
+          </p>
+
+          <div class="form-group">
+            <label for="date" class="form-label">Select Date</label>
+            <input id="date" type="date" class="input-premium" />
+          </div>
+
+          <button id="refresh" class="btn btn-outline" style="width: 100%;">
+            <i class="fa-solid fa-arrows-rotate"></i> Refresh Date Slots
+          </button>
+        </section>
+      </div>
+
+      <!-- Slot Matrix Section -->
+      <section class="card-elevated" style="margin-bottom: 28px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 2px;">24-Hour Slot Management</h2>
+            <p style="color: var(--text-muted); font-size: 13px;">Click "Block" to close slots for ground maintenance or internal bookings.</p>
+          </div>
+          <!-- Legend -->
+          <div style="display: flex; gap: 12px; font-size: 11.5px; font-family: var(--font-mono); color: var(--text-muted);">
+            <span style="display: flex; align-items: center; gap: 5px;"><i class="fa-regular fa-circle" style="color: var(--primary);"></i> Available</span>
+            <span style="display: flex; align-items: center; gap: 5px;"><i class="fa-solid fa-check" style="color: var(--primary);"></i> Booked</span>
+            <span style="display: flex; align-items: center; gap: 5px;"><i class="fa-solid fa-ban" style="color: var(--danger);"></i> Blocked</span>
+          </div>
+        </div>
+
+        <div id="slots" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px;">
+          <!-- Loaded dynamically -->
+        </div>
+      </section>
+
+      <!-- Bookings Table -->
+      <section class="card-elevated">
+        <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 4px;">Recent Customer Reservations</h2>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">
+          Confirmed bookings made through TurfArena for your facility.
+        </p>
+
+        <div class="table-responsive">
+          <table class="table-standard">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Slot Time</th>
+                <th>Customer Name</th>
+                <th>Sport Format</th>
+                <th>Base Rate</th>
+              </tr>
+            </thead>
+            <tbody id="bookingRows">
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading bookings...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="theme-toggle.js"></script>
+    <script>
+      (() => {
+        const $ = (id) => document.getElementById(id);
+        let turfs = [],
+          bookings = [],
+          bookedHours = [],
+          blockedHours = [];
+
+        const message = (text, isError = false) => {
+          $("message").textContent = text;
+          $("message").className = "message-box " + (isError ? "error" : "success");
+          setTimeout(() => {
+            if (!isError) $("message").style.display = "none";
+          }, 4000);
+        };
+
+        const selectedTurf = () => Number($("turfSelect").value);
+
+        const request = async (url, options = {}) => {
+          const res = await fetch(url, {
+            credentials: "include",
+            ...options,
+            headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || "Request failed");
+          return data;
+        };
+
+        const dateString = (d) => {
+          const x = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+          return x.toISOString().slice(0, 10);
+        };
+
+        function timeLabel(hour) {
+          const fmt = (h) => {
+            const n = h % 12 || 12;
+            return n + ":00 " + (h < 12 ? "AM" : "PM");
+          };
+          return fmt(hour) + " – " + fmt((hour + 1) % 24);
+        }
+
+        async function load() {
+          try {
+            const me = await request("/api/auth/me");
+            if (!["owner", "admin"].includes(me.user.role)) {
+              location.href = "index.html";
+              return;
+            }
+            turfs = await request("/api/owner/turfs");
+            $("turfSelect").innerHTML = "";
+            turfs.forEach((t) => {
+              const o = document.createElement("option");
+              o.value = t.id;
+              o.textContent = t.name + " · " + t.meta;
+              $("turfSelect").appendChild(o);
+            });
+            if (!turfs.length) {
+              $("turfSelect").innerHTML = '<option value="">No assigned turfs</option>';
+              message("No turfs are assigned to this account yet. Contact platform admin.", true);
+              $("slots").textContent = "No turf selected.";
+              return;
+            }
+            await refreshAll();
+          } catch (e) {
+            message(e.message + " — Please sign in with an owner account.", true);
+          }
+        }
+
+        async function refreshAll() {
+          const t = turfs.find((x) => x.id === selectedTurf());
+          if (!t) return;
+          $("price").value = t.basePrice;
+          await Promise.all([loadSlots(), loadBookings()]);
+        }
+
+        async function loadSlots() {
+          const id = selectedTurf(),
+            date = $("date").value;
+          const [booked, blocked] = await Promise.all([
+            request("/api/bookings?date=" + encodeURIComponent(date)),
+            request("/api/blocked-slots?date=" + encodeURIComponent(date)),
+          ]);
+          bookedHours = booked[id] || [];
+          blockedHours = blocked[id] || [];
+          $("slots").innerHTML = "";
+
+          for (let h = 0; h < 24; h++) {
+            const isBooked = bookedHours.includes(h),
+              isBlocked = blockedHours.includes(h);
+            const card = document.createElement("div");
+            card.className = "owner-slot-card" + (isBooked ? " booked" : isBlocked ? " blocked" : "");
+
+            const title = document.createElement("div");
+            title.style.cssText = "font-weight: 700; font-size: 13px; font-family: var(--font-mono);";
+            title.textContent = timeLabel(h);
+
+            const status = document.createElement("div");
+            status.style.cssText = "font-size: 11px; text-transform: uppercase; font-family: var(--font-mono); font-weight: 700;";
+            if (isBooked) {
+              status.innerHTML = `<span style="color: var(--primary);"><i class="fa-solid fa-check"></i> Booked</span>`;
+            } else if (isBlocked) {
+              status.innerHTML = `<span style="color: var(--danger);"><i class="fa-solid fa-ban"></i> Blocked</span>`;
+            } else {
+              status.innerHTML = `<span style="color: var(--text-muted);"><i class="fa-regular fa-circle"></i> Open</span>`;
+            }
+
+            const btn = document.createElement("button");
+            btn.className = isBlocked ? "btn btn-outline btn-sm" : "btn btn-danger btn-sm";
+            btn.style.cssText = "font-size: 11px; padding: 5px 8px; width: 100%; margin-top: 4px;";
+            btn.disabled = isBooked;
+            btn.textContent = isBooked ? "Reserved" : isBlocked ? "Unblock" : "Block Slot";
+            btn.addEventListener("click", () => toggleBlock(h, isBlocked));
+
+            card.append(title, status, btn);
+            $("slots").appendChild(card);
+          }
+        }
+
+        async function toggleBlock(hour, isBlocked) {
+          try {
+            await request("/api/owner/blocked-slots", {
+              method: isBlocked ? "DELETE" : "POST",
+              body: JSON.stringify({ turfId: selectedTurf(), date: $("date").value, slotHour: hour }),
+            });
+            message(isBlocked ? "Slot unblocked." : "Slot blocked.");
+            await loadSlots();
+          } catch (e) {
+            message(e.message, true);
+          }
+        }
+
+        async function loadBookings() {
+          try {
+            bookings = await request("/api/owner/bookings");
+            const rows = bookings.filter((b) => b.turf_id === selectedTurf()).slice(0, 100);
+            $("bookingRows").innerHTML = "";
+            if (!rows.length) {
+              $("bookingRows").innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">No customer reservations for this venue yet.</td></tr>';
+              return;
+            }
+            rows.forEach((b) => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+                <td style="font-weight: 600;">${window.escapeHtml(b.booking_date)}</td>
+                <td style="font-family: var(--font-mono); font-weight: 700; color: var(--primary);">${window.escapeHtml(timeLabel(b.slot_hour))}</td>
+                <td style="font-weight: 700;">${window.escapeHtml(b.user_name || "Customer")}</td>
+                <td><span class="badge badge-dark">${window.escapeHtml(b.sport_type || "Football")}</span></td>
+                <td style="font-weight: 800; font-family: var(--font-mono);">₹${Number(b.basePrice).toLocaleString("en-IN")}</td>
+              `;
+              $("bookingRows").appendChild(tr);
+            });
+          } catch (e) {
+            message(e.message, true);
+          }
+        }
+
+        $("turfSelect").addEventListener("change", () => refreshAll().catch((e) => message(e.message, true)));
+        $("date").addEventListener("change", () => loadSlots().catch((e) => message(e.message, true)));
+        $("refresh").addEventListener("click", () => loadSlots().catch((e) => message(e.message, true)));
+        $("savePrice").addEventListener("click", async () => {
+          try {
+            const price = Number($("price").value);
+            const result = await request("/api/owner/turfs/" + selectedTurf() + "/price", {
+              method: "PATCH",
+              body: JSON.stringify({ basePrice: price }),
+            });
+            const turf = turfs.find((t) => t.id === selectedTurf());
+            if (turf) turf.basePrice = result.basePrice;
+            message("Hourly rate updated to ₹" + result.basePrice + ".");
+          } catch (e) {
+            message(e.message, true);
+          }
+        });
+
+        const handleLogout = async () => {
+          try {
+            await request("/api/auth/logout", { method: "POST" });
+          } finally {
+            location.href = "index.html";
+          }
+        };
+
+        const logoutBtn = $("logoutBtn");
+        if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
+        const mobileLogoutBtn = $("mobileLogoutBtn");
+        if (mobileLogoutBtn) mobileLogoutBtn.addEventListener("click", handleLogout);
+
+        $("date").value = dateString(new Date());
+        load();
+      })();
+    </script>
+  </body>
 </html>

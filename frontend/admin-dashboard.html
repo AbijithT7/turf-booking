@@ -265,9 +265,7 @@
       <div class="navbar-inner">
         <!-- LEFT: Brand Logo -->
         <a class="logo" href="index.html" aria-label="TurfArena Home">
-          <div class="logo-icon">
-            <i class="fa-solid fa-crown"></i>
-          </div>
+          <img src="logo.png" alt="TurfArena Logo" class="logo-image-brand" />
           <div class="logo-text">
             <span class="logo-brand">TURF<span>ARENA</span></span>
             <span class="logo-sub">HQ Facility Controller</span>
@@ -276,20 +274,17 @@
 
         <!-- CENTER: Navigation Links -->
         <nav class="top-nav" aria-label="Main Navigation">
-          <a href="index.html" class="nav-link">
+          <a href="index.html" class="nav-link" data-nav="home">
             <i class="fa-solid fa-house"></i> Home
           </a>
-          <a href="index.html#available-turfs" class="nav-link">
+          <a href="index.html#available-turfs" class="nav-link" data-nav="book">
             <i class="fa-solid fa-calendar-check"></i> Book Turf
           </a>
-          <a href="community.html" class="nav-link">
+          <a href="community.html" class="nav-link" data-nav="community">
             <i class="fa-solid fa-users"></i> Community
           </a>
-          <a href="admin-dashboard.html" class="nav-link active">
-            <i class="fa-solid fa-sliders"></i> Admin Console
-          </a>
-          <a href="admin-owners.html" class="nav-link">
-            <i class="fa-solid fa-building-user"></i> Owner Assignments
+          <a href="tournaments.html" class="nav-link" data-nav="tournaments">
+            <i class="fa-solid fa-trophy"></i> Tournaments
           </a>
         </nav>
 
@@ -297,10 +292,18 @@
         <div class="header-actions">
           <button class="theme-toggle-btn" data-theme-toggle type="button" aria-label="Toggle theme"></button>
           <div id="userAuthActions" class="auth-actions-slot">
-            <span class="badge badge-lime">Admin</span>
-            <button class="btn btn-ghost btn-sm" onclick="handleLogout()" title="Sign Out" aria-label="Sign Out">
-              <i class="fa-solid fa-power-off" style="color: var(--danger);"></i>
-            </button>
+            <div class="admin-control-cluster" role="group" aria-label="Admin Control Hub">
+              <span class="admin-chip"><i class="fa-solid fa-shield"></i> Admin</span>
+              <a href="admin-dashboard.html" class="btn btn-outline btn-sm active" title="HQ Admin Center">
+                <i class="fa-solid fa-chart-line"></i> Admin Console
+              </a>
+              <a href="admin-owners.html" class="btn btn-outline btn-sm" title="Owner Facility Assignments">
+                <i class="fa-solid fa-user-tie"></i> Owners
+              </a>
+              <button onclick="handleLogout()" class="btn btn-ghost btn-sm" title="Sign Out" aria-label="Sign Out">
+                <i class="fa-solid fa-power-off" style="color: var(--danger);"></i>
+              </button>
+            </div>
           </div>
           <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle menu" onclick="toggleMobileNav()">
             <i class="fa-solid fa-bars"></i>
@@ -310,24 +313,19 @@
 
       <!-- Mobile Dropdown Navigation -->
       <div class="mobile-nav-drawer" id="mobileNavDrawer">
-        <a href="index.html" class="mobile-nav-link" onclick="closeMobileNav()">
+        <a href="index.html" class="mobile-nav-link" data-nav="home" onclick="closeMobileNav()">
           <i class="fa-solid fa-house"></i> Home
         </a>
-        <a href="index.html#available-turfs" class="mobile-nav-link" onclick="closeMobileNav()">
+        <a href="index.html#available-turfs" class="mobile-nav-link" data-nav="book" onclick="closeMobileNav()">
           <i class="fa-solid fa-calendar-check"></i> Book Turf
         </a>
-        <a href="community.html" class="mobile-nav-link" onclick="closeMobileNav()">
-          <i class="fa-solid fa-users"></i> Community Lobby
+        <a href="community.html" class="mobile-nav-link" data-nav="community" onclick="closeMobileNav()">
+          <i class="fa-solid fa-users"></i> Community
         </a>
-        <a href="admin-dashboard.html" class="mobile-nav-link active" onclick="closeMobileNav()">
-          <i class="fa-solid fa-sliders"></i> Admin Console
+        <a href="tournaments.html" class="mobile-nav-link" data-nav="tournaments" onclick="closeMobileNav()">
+          <i class="fa-solid fa-trophy"></i> Tournaments
         </a>
-        <a href="admin-owners.html" class="mobile-nav-link" onclick="closeMobileNav()">
-          <i class="fa-solid fa-building-user"></i> Owner Assignments
-        </a>
-        <button onclick="handleLogout()" class="btn btn-danger btn-sm" style="width: 100%; margin-top: 8px;">
-          <i class="fa-solid fa-power-off"></i> Sign Out
-        </button>
+        <div id="mobileAuthSlot" class="mobile-auth-slot"></div>
       </div>
     </header>
 
@@ -530,10 +528,11 @@
       let turfBasePrice = 1200;
       let bookings = {};
       let blocked = {};
+      let allTurfs = [];
 
       async function init() {
         try {
-          const user = window.getAuthUser ? await window.getAuthUser() : null;
+          const user = window.getAuthUser ? await window.getAuthUser(true) : null;
           if (!user || user.role !== "admin") {
             window.location.href = "admin-login.html";
             return;
@@ -543,7 +542,25 @@
           return;
         }
 
-        const today = new Date().toISOString().split("T")[0];
+        try {
+          const res = await fetch("/api/turfs");
+          if (res.ok) {
+            allTurfs = await res.json();
+            const select = document.getElementById("adminTurfSelect");
+            if (select && allTurfs.length > 0) {
+              select.innerHTML = allTurfs
+                .map((t) => `<option value="${t.id}">${t.name} (${t.location || t.area || "Chennai"})</option>`)
+                .join("");
+              currentTurfId = allTurfs[0].id;
+              turfBasePrice = allTurfs[0].price || 1200;
+            }
+          }
+        } catch (e) {
+          console.error("Failed to load turfs in admin", e);
+        }
+
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
         document.getElementById("adminDateInput").value = today;
         await refreshAdminData();
       }
@@ -559,15 +576,20 @@
 
       function changeTurf(id) {
         currentTurfId = parseInt(id);
-        turfBasePrice = currentTurfId === 1 ? 1200 : currentTurfId === 2 ? 800 : 1000;
+        const match = allTurfs.find((t) => t.id === currentTurfId);
+        turfBasePrice = match && match.price ? match.price : 1200;
         refreshAdminData();
       }
 
       function shiftDate(days) {
         const dateInput = document.getElementById("adminDateInput");
-        const curr = new Date(dateInput.value || new Date());
+        const parts = (dateInput.value || "").split("-");
+        const curr = parts.length === 3 ? new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])) : new Date();
         curr.setDate(curr.getDate() + days);
-        dateInput.value = curr.toISOString().split("T")[0];
+        const y = curr.getFullYear();
+        const m = String(curr.getMonth() + 1).padStart(2, "0");
+        const d = String(curr.getDate()).padStart(2, "0");
+        dateInput.value = `${y}-${m}-${d}`;
         refreshAdminData();
       }
 

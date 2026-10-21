@@ -1,42 +1,349 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TurfArena — Owner Assignments</title><link rel="stylesheet" href="theme.css">
-<style>
-body{font-family:system-ui,sans-serif;margin:0;background:var(--bg-main,#0b1114);color:var(--text-main,#f4f7f8)}main{max-width:1000px;margin:auto;padding:28px 18px}
-.panel{background:var(--surface-1,#151e22);border:1px solid var(--line-soft,#29363b);border-radius:14px;padding:20px;margin:18px 0}
-.row{display:flex;gap:12px;align-items:end;flex-wrap:wrap}.row>div{flex:1;min-width:190px}label{display:block;margin-bottom:6px;color:var(--text-muted,#aab5ba);font-size:13px}
-select,button{padding:10px;border-radius:8px;border:1px solid var(--line-soft,#35434a);background:var(--surface-2,#202b30);color:inherit;font:inherit}button{cursor:pointer;background:var(--primary,#b8ef4b);color:#17200e;border:0;font-weight:700}
-.muted{color:var(--text-muted,#aab5ba)}#message{min-height:24px}.error{color:#ff9999}.success{color:#a5ec9b}
-table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:10px;border-bottom:1px solid var(--line-soft,#29363b)}.scroll{overflow:auto}
-</style></head>
-<body><main>
-<p class="muted">TURFARENA / PLATFORM ADMIN</p><h1>Owner assignments</h1>
-<p class="muted">Promote an existing user to owner, then assign one or more facilities. Only platform admins can make these changes.</p>
-<p><a href="admin-dashboard.html" style="color:inherit">← Admin console</a></p><p id="message" role="status" aria-live="polite"></p>
-<section class="panel"><h2>Manage account role</h2><div class="row">
-<div><label for="user">User account</label><select id="user"></select></div>
-<div><label for="role">Role</label><select id="role"><option value="owner">Turf owner</option><option value="user">Player / user</option></select></div>
-<div><button id="saveRole">Save role</button></div></div></section>
-<section class="panel"><h2>Assign a turf</h2><div class="row">
-<div><label for="turf">Facility</label><select id="turf"></select></div>
-<div><label for="owner">Owner account</label><select id="owner"><option value="">Unassigned</option></select></div>
-<div><button id="assign">Save assignment</button></div></div></section>
-<section class="panel"><h2>Current owners</h2><div class="scroll"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Assigned turfs</th></tr></thead><tbody id="owners"><tr><td colspan="4">Loading…</td></tr></tbody></table></div></section>
-<script>
-(()=>{const $=id=>document.getElementById(id);let users=[],turfs={};
-const msg=(s,err=false)=>{$('message').textContent=s;$('message').className=err?'error':'success';};
-async function api(url,options={}){const r=await fetch(url,{credentials:'include',...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'Request failed');return d;}
-async function load(){try{const me=await api('/api/auth/me');if(me.user.role!=='admin'){location.href='admin-login.html';return;}
-[users,turfs]=await Promise.all([api('/api/users'),api('/api/turfs')]);
-$('user').innerHTML='';users.filter(u=>u.role!=='admin').forEach(u=>{const o=document.createElement('option');o.value=u.id;o.textContent=u.name+' — '+u.email+' ('+u.role+')';$('user').append(o);});
-$('turf').innerHTML='';Object.values(turfs).forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name+' — '+t.meta;$('turf').append(o);});
-await loadOwners();}catch(e){msg(e.message+' — sign in as an admin.',true);}}
-async function loadOwners(){const owners=await api('/api/admin/owners');$('owner').innerHTML='<option value="">Unassigned</option>';owners.forEach(u=>{const o=document.createElement('option');o.value=u.id;o.textContent=u.name+' — '+u.email;$('owner').append(o);});
-$('owners').innerHTML='';if(!owners.length){$('owners').innerHTML='<tr><td colspan="4">No owner accounts yet.</td></tr>';return;}
-owners.forEach(u=>{const tr=document.createElement('tr');[u.name,u.email,u.phone,String(u.turf_count)].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.append(td);});$('owners').append(tr);});}
-$('saveRole').addEventListener('click',async()=>{try{await api('/api/admin/users/'+$('user').value+'/role',{method:'PATCH',body:JSON.stringify({role:$('role').value})});msg('Account role updated.');await load();}catch(e){msg(e.message,true);}});
-$('assign').addEventListener('click',async()=>{try{const ownerId=$('owner').value||null;await api('/api/admin/turfs/'+$('turf').value+'/owner',{method:'PATCH',body:JSON.stringify({ownerId})});msg('Facility assignment saved.');await loadOwners();}catch(e){msg(e.message,true);}});
-load();})();
-</script></main></body></html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>TurfArena - Owner Assignments</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="TurfArena Admin - Manage user roles and assign facility ownership." />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="alternate icon" href="favicon.ico" />
+    <script>
+      try {
+        const t = localStorage.getItem("turf_theme") || "dark";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    </script>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600;1,700;1,800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Theme CSS -->
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      .owners-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 28px;
+      }
+
+      @media (max-width: 860px) {
+        .owners-grid {
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+      }
+
+      .message-box {
+        min-height: 24px;
+        font-size: 13.5px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        display: none;
+        padding: 10px 16px;
+        border-radius: var(--radius-md);
+      }
+
+      .message-box.error {
+        display: block;
+        background: var(--danger-soft);
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+
+      .message-box.success {
+        display: block;
+        background: var(--primary-soft);
+        color: var(--primary);
+        border: 1px solid var(--primary-soft-border);
+      }
+    </style>
+  </head>
+
+  <body class="page-dashboard">
+    <!-- Layered Sports Background System -->
+    <div class="sports-bg-layer" aria-hidden="true">
+      <div class="sports-bg-stadium"></div>
+      <div class="sports-bg-turf-stripes"></div>
+      <div class="sports-bg-pitch-lines"></div>
+      <div class="sports-bg-court-geometry"></div>
+    </div>
+
+    <!-- Global Standard Header -->
+    <header class="global-header">
+      <div class="navbar-inner">
+        <!-- LEFT: Brand Logo -->
+        <a class="logo" href="index.html" aria-label="TurfArena Home">
+          <img src="logo.png" alt="TurfArena Logo" class="logo-image-brand" />
+          <div class="logo-text">
+            <span class="logo-brand">TURF<span>ARENA</span></span>
+            <span class="logo-sub">HQ Facility Control</span>
+          </div>
+        </a>
+
+        <!-- CENTER: Navigation Links -->
+        <nav class="top-nav" aria-label="Main Navigation">
+          <a href="index.html" class="nav-link" data-nav="home">
+            <i class="fa-solid fa-house"></i> Home
+          </a>
+          <a href="index.html#available-turfs" class="nav-link" data-nav="book">
+            <i class="fa-solid fa-calendar-check"></i> Book Turf
+          </a>
+          <a href="community.html" class="nav-link" data-nav="community">
+            <i class="fa-solid fa-users"></i> Community
+          </a>
+          <a href="tournaments.html" class="nav-link" data-nav="tournaments">
+            <i class="fa-solid fa-trophy"></i> Tournaments
+          </a>
+        </nav>
+
+        <!-- RIGHT: Theme Toggle & Admin Controls -->
+        <div class="header-actions">
+          <button class="theme-toggle-btn" data-theme-toggle type="button" aria-label="Toggle theme"></button>
+          <div id="userAuthActions" class="auth-actions-slot">
+            <div class="admin-control-cluster" role="group" aria-label="Admin Control Hub">
+              <span class="admin-chip"><i class="fa-solid fa-shield"></i> Admin</span>
+              <a href="admin-dashboard.html" class="btn btn-outline btn-sm" title="HQ Admin Center">
+                <i class="fa-solid fa-chart-line"></i> Admin Console
+              </a>
+              <a href="admin-owners.html" class="btn btn-outline btn-sm active" title="Owner Facility Assignments">
+                <i class="fa-solid fa-user-tie"></i> Owners
+              </a>
+              <button onclick="handleLogout()" class="btn btn-ghost btn-sm" title="Sign Out" aria-label="Sign Out">
+                <i class="fa-solid fa-power-off" style="color: var(--danger);"></i>
+              </button>
+            </div>
+          </div>
+          <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle menu" onclick="toggleMobileNav()">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Dropdown Navigation -->
+      <div class="mobile-nav-drawer" id="mobileNavDrawer">
+        <a href="index.html" class="mobile-nav-link" data-nav="home" onclick="closeMobileNav()">
+          <i class="fa-solid fa-house"></i> Home
+        </a>
+        <a href="index.html#available-turfs" class="mobile-nav-link" data-nav="book" onclick="closeMobileNav()">
+          <i class="fa-solid fa-calendar-check"></i> Book Turf
+        </a>
+        <a href="community.html" class="mobile-nav-link" data-nav="community" onclick="closeMobileNav()">
+          <i class="fa-solid fa-users"></i> Community
+        </a>
+        <a href="tournaments.html" class="mobile-nav-link" data-nav="tournaments" onclick="closeMobileNav()">
+          <i class="fa-solid fa-trophy"></i> Tournaments
+        </a>
+        <div id="mobileAuthSlot" class="mobile-auth-slot"></div>
+      </div>
+    </header>
+
+    <main class="page-container">
+      <div class="page-header-row">
+        <h1 class="page-title">Facility Owner Assignments</h1>
+        <p class="page-subtitle">
+          Promote existing registered users to facility owners and assign venue permissions.
+        </p>
+      </div>
+
+      <div id="message" class="message-box" role="status" aria-live="polite"></div>
+
+      <div class="owners-grid">
+        <!-- Role Management Panel -->
+        <section class="card-elevated">
+          <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 6px;">Manage User Role</h2>
+          <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">
+            Upgrade a player account to turf owner status or demote back to regular user.
+          </p>
+
+          <div class="form-group">
+            <label for="user" class="form-label">User Account</label>
+            <select id="user" class="input-premium"></select>
+          </div>
+
+          <div class="form-group">
+            <label for="role" class="form-label">Assigned Role</label>
+            <select id="role" class="input-premium">
+              <option value="owner">Turf Owner (Facility Partner)</option>
+              <option value="user">Regular Player / User</option>
+            </select>
+          </div>
+
+          <button id="saveRole" class="btn btn-primary" style="margin-top: 8px;">
+            <i class="fa-solid fa-floppy-disk"></i> Save Role
+          </button>
+        </section>
+
+        <!-- Turf Assignment Panel -->
+        <section class="card-elevated">
+          <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 6px;">Assign Facility to Owner</h2>
+          <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">
+            Grant a verified owner account management rights over a sports venue.
+          </p>
+
+          <div class="form-group">
+            <label for="turf" class="form-label">Select Turf Facility</label>
+            <select id="turf" class="input-premium"></select>
+          </div>
+
+          <div class="form-group">
+            <label for="owner" class="form-label">Select Owner Account</label>
+            <select id="owner" class="input-premium">
+              <option value="">Unassigned</option>
+            </select>
+          </div>
+
+          <button id="assign" class="btn btn-primary" style="margin-top: 8px;">
+            <i class="fa-solid fa-link"></i> Save Assignment
+          </button>
+        </section>
+      </div>
+
+      <!-- Current Owners Overview Table -->
+      <section class="card-elevated">
+        <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 4px;">Current Facility Owners</h2>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">
+          All user accounts currently granted owner privileges and their total assigned venues.
+        </p>
+
+        <div class="table-responsive">
+          <table class="table-standard">
+            <thead>
+              <tr>
+                <th>Owner Name</th>
+                <th>Email Address</th>
+                <th>Phone Number</th>
+                <th>Assigned Turfs</th>
+              </tr>
+            </thead>
+            <tbody id="owners">
+              <tr>
+                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 32px;">Loading owners...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="theme-toggle.js"></script>
+    <script>
+      (() => {
+        const $ = (id) => document.getElementById(id);
+        let users = [];
+        let turfs = {};
+
+        const msg = (s, err = false) => {
+          $("message").textContent = s;
+          $("message").className = "message-box " + (err ? "error" : "success");
+          setTimeout(() => {
+            if (!err) $("message").style.display = "none";
+          }, 4000);
+        };
+
+        async function api(url, options = {}) {
+          const r = await fetch(url, {
+            credentials: "include",
+            ...options,
+            headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+          });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok) throw Error(d.error || "Request failed");
+          return d;
+        }
+
+        async function load() {
+          try {
+            const me = await api("/api/auth/me");
+            if (me.user.role !== "admin") {
+              location.href = "admin-login.html";
+              return;
+            }
+            [users, turfs] = await Promise.all([api("/api/users"), api("/api/turfs")]);
+            $("user").innerHTML = "";
+            users
+              .filter((u) => u.role !== "admin")
+              .forEach((u) => {
+                const o = document.createElement("option");
+                o.value = u.id;
+                o.textContent = `${u.name} — ${u.email} (${u.role})`;
+                $("user").append(o);
+              });
+
+            $("turf").innerHTML = "";
+            const turfList = Array.isArray(turfs) ? turfs : Object.values(turfs);
+            turfList.forEach((t) => {
+              const o = document.createElement("option");
+              o.value = t.id;
+              o.textContent = `${t.name} — ${t.location || t.meta || t.area || "Chennai"}`;
+              $("turf").append(o);
+            });
+
+            await loadOwners();
+          } catch (e) {
+            msg(e.message + " — Please sign in as an administrator.", true);
+          }
+        }
+
+        async function loadOwners() {
+          const owners = await api("/api/admin/owners");
+          $("owner").innerHTML = '<option value="">Unassigned</option>';
+          owners.forEach((u) => {
+            const o = document.createElement("option");
+            o.value = u.id;
+            o.textContent = `${u.name} — ${u.email}`;
+            $("owner").append(o);
+          });
+
+          $("owners").innerHTML = "";
+          if (!owners.length) {
+            $("owners").innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 24px;">No owner accounts created yet.</td></tr>';
+            return;
+          }
+
+          owners.forEach((u) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td style="font-weight: 700;">${window.escapeHtml(u.name)}</td>
+              <td>${window.escapeHtml(u.email)}</td>
+              <td>${window.escapeHtml(u.phone || "—")}</td>
+              <td><span class="badge badge-lime">${u.turf_count} Facility${u.turf_count === 1 ? "" : "s"}</span></td>
+            `;
+            $("owners").append(tr);
+          });
+        }
+
+        $("saveRole").addEventListener("click", async () => {
+          try {
+            await api(`/api/admin/users/${$("user").value}/role`, {
+              method: "PATCH",
+              body: JSON.stringify({ role: $("role").value }),
+            });
+            msg("User role updated successfully.");
+            await load();
+          } catch (e) {
+            msg(e.message, true);
+          }
+        });
+
+        $("assign").addEventListener("click", async () => {
+          try {
+            const ownerId = $("owner").value || null;
+            await api(`/api/admin/turfs/${$("turf").value}/owner`, {
+              method: "PATCH",
+              body: JSON.stringify({ ownerId }),
+            });
+            msg("Facility assignment saved successfully.");
+            await loadOwners();
+          } catch (e) {
+            msg(e.message, true);
+          }
+        });
+
+        load();
+      })();
+    </script>
+  </body>
+</html>

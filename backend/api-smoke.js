@@ -1,4 +1,6 @@
+require('dotenv').config();
 const { spawn } = require("child_process");
+require("dotenv").config();
 
 const BASE_URL = "http://127.0.0.1:5000";
 const STARTUP_TIMEOUT_MS = 12000;

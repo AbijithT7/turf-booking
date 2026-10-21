@@ -151,9 +151,7 @@
       <div class="navbar-inner">
         <!-- LEFT: Brand Logo -->
         <a class="logo" href="index.html" aria-label="TurfArena Home">
-          <div class="logo-icon">
-            <i class="fa-solid fa-crown"></i>
-          </div>
+          <img src="logo.png" alt="TurfArena Logo" class="logo-image-brand" />
           <div class="logo-text">
             <span class="logo-brand">TURF<span>ARENA</span></span>
             <span class="logo-sub">Book. Play. Connect.</span>
@@ -162,16 +160,16 @@
 
         <!-- CENTER: Navigation Links -->
         <nav class="top-nav" aria-label="Main Navigation">
-          <a href="index.html" class="nav-link">
+          <a href="index.html" class="nav-link" data-nav="home">
             <i class="fa-solid fa-house"></i> Home
           </a>
-          <a href="index.html#available-turfs" class="nav-link">
+          <a href="index.html#available-turfs" class="nav-link" data-nav="book">
             <i class="fa-solid fa-calendar-check"></i> Book Turf
           </a>
-          <a href="community.html" class="nav-link">
+          <a href="community.html" class="nav-link" data-nav="community">
             <i class="fa-solid fa-users"></i> Community
           </a>
-          <a href="community.html#tournaments" class="nav-link">
+          <a href="tournaments.html" class="nav-link" data-nav="tournaments">
             <i class="fa-solid fa-trophy"></i> Tournaments
           </a>
         </nav>
@@ -180,8 +178,8 @@
         <div class="header-actions">
           <button class="theme-toggle-btn" data-theme-toggle type="button" aria-label="Toggle theme"></button>
           <div id="userAuthActions" class="auth-actions-slot">
-            <a href="index.html" class="btn btn-outline btn-sm">
-              <i class="fa-solid fa-arrow-left"></i> Home
+            <a href="admin-login.html" class="admin-portal-btn" title="Arena Admin & Facility Management">
+              <i class="fa-solid fa-shield-halved"></i> Admin Portal
             </a>
           </div>
           <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle menu" onclick="toggleMobileNav()">
@@ -192,21 +190,19 @@
 
       <!-- Mobile Dropdown Navigation -->
       <div class="mobile-nav-drawer" id="mobileNavDrawer">
-        <a href="index.html" class="mobile-nav-link" onclick="closeMobileNav()">
+        <a href="index.html" class="mobile-nav-link" data-nav="home" onclick="closeMobileNav()">
           <i class="fa-solid fa-house"></i> Home
         </a>
-        <a href="index.html#available-turfs" class="mobile-nav-link" onclick="closeMobileNav()">
+        <a href="index.html#available-turfs" class="mobile-nav-link" data-nav="book" onclick="closeMobileNav()">
           <i class="fa-solid fa-calendar-check"></i> Book Turf
         </a>
-        <a href="community.html" class="mobile-nav-link" onclick="closeMobileNav()">
+        <a href="community.html" class="mobile-nav-link" data-nav="community" onclick="closeMobileNav()">
           <i class="fa-solid fa-users"></i> Community
         </a>
-        <a href="community.html#tournaments" class="mobile-nav-link" onclick="closeMobileNav()">
+        <a href="tournaments.html" class="mobile-nav-link" data-nav="tournaments" onclick="closeMobileNav()">
           <i class="fa-solid fa-trophy"></i> Tournaments
         </a>
-        <a href="admin-login.html" class="mobile-nav-link" onclick="closeMobileNav()">
-          <i class="fa-solid fa-shield"></i> Admin Portal
-        </a>
+        <div id="mobileAuthSlot" class="mobile-auth-slot"></div>
       </div>
     </header>
 
@@ -215,9 +211,7 @@
       <div class="auth-card">
         <!-- Logo Header -->
         <div class="auth-logo-header">
-          <div class="auth-logo-icon">
-            <i class="fa-solid fa-crown"></i>
-          </div>
+          <img src="logo.png" alt="TurfArena Logo" style="width: 52px; height: 52px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--line-lime); box-shadow: var(--shadow-neon-soft); margin: 0 auto var(--space-3);" />
           <h1 style="font-size: 22px; font-weight: 800; color: var(--text-main);">
             Player Portal
           </h1>

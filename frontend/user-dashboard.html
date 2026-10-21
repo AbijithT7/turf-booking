@@ -243,9 +243,7 @@
       <div class="navbar-inner">
         <!-- LEFT: Brand Logo -->
         <a class="logo" href="index.html" aria-label="TurfArena Home">
-          <div class="logo-icon">
-            <i class="fa-solid fa-crown"></i>
-          </div>
+          <img src="logo.png" alt="TurfArena Logo" class="logo-image-brand" />
           <div class="logo-text">
             <span class="logo-brand">TURF<span>ARENA</span></span>
             <span class="logo-sub">Athlete Portal</span>
@@ -254,17 +252,17 @@
 
         <!-- CENTER: Navigation Links -->
         <nav class="top-nav" aria-label="Main Navigation">
-          <a href="index.html" class="nav-link">
+          <a href="index.html" class="nav-link" data-nav="home">
             <i class="fa-solid fa-house"></i> Home
           </a>
-          <a href="index.html#available-turfs" class="nav-link">
+          <a href="index.html#available-turfs" class="nav-link" data-nav="book">
             <i class="fa-solid fa-calendar-check"></i> Book Turf
           </a>
-          <a href="community.html" class="nav-link">
+          <a href="community.html" class="nav-link" data-nav="community">
             <i class="fa-solid fa-users"></i> Community
           </a>
-          <a href="user-dashboard.html" class="nav-link active">
-            <i class="fa-solid fa-gauge-high"></i> Dashboard
+          <a href="tournaments.html" class="nav-link" data-nav="tournaments">
+            <i class="fa-solid fa-trophy"></i> Tournaments
           </a>
         </nav>
 
@@ -272,6 +270,9 @@
         <div class="header-actions">
           <button class="theme-toggle-btn" data-theme-toggle type="button" aria-label="Toggle theme"></button>
           <div id="userAuthActions" class="auth-actions-slot">
+            <a href="user-dashboard.html" class="btn btn-outline btn-sm active" title="Player Dashboard">
+              <i class="fa-solid fa-circle-user"></i> <span id="headerUserName">Player</span>
+            </a>
             <button class="btn btn-ghost btn-sm" onclick="handleLogout()" title="Sign Out" aria-label="Sign Out">
               <i class="fa-solid fa-power-off" style="color: var(--danger);"></i>
             </button>
@@ -284,21 +285,19 @@
 
       <!-- Mobile Dropdown Navigation -->
       <div class="mobile-nav-drawer" id="mobileNavDrawer">
-        <a href="index.html" class="mobile-nav-link" onclick="closeMobileNav()">
+        <a href="index.html" class="mobile-nav-link" data-nav="home" onclick="closeMobileNav()">
           <i class="fa-solid fa-house"></i> Home
         </a>
-        <a href="index.html#available-turfs" class="mobile-nav-link" onclick="closeMobileNav()">
+        <a href="index.html#available-turfs" class="mobile-nav-link" data-nav="book" onclick="closeMobileNav()">
           <i class="fa-solid fa-calendar-check"></i> Book Turf
         </a>
-        <a href="community.html" class="mobile-nav-link" onclick="closeMobileNav()">
-          <i class="fa-solid fa-users"></i> Community Lobby
+        <a href="community.html" class="mobile-nav-link" data-nav="community" onclick="closeMobileNav()">
+          <i class="fa-solid fa-users"></i> Community
         </a>
-        <a href="user-dashboard.html" class="mobile-nav-link active" onclick="closeMobileNav()">
-          <i class="fa-solid fa-gauge-high"></i> Dashboard
+        <a href="tournaments.html" class="mobile-nav-link" data-nav="tournaments" onclick="closeMobileNav()">
+          <i class="fa-solid fa-trophy"></i> Tournaments
         </a>
-        <button onclick="handleLogout()" class="btn btn-danger btn-sm" style="width: 100%; margin-top: 8px;">
-          <i class="fa-solid fa-power-off"></i> Sign Out
-        </button>
+        <div id="mobileAuthSlot" class="mobile-auth-slot"></div>
       </div>
     </header>
 

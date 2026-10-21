@@ -4,9 +4,12 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "node tests/auth-security.test.js && node tests/security-headers.test.js && node api-smoke.js",
+    "test": "node tests/auth-security.test.js && node tests/security-headers.test.js && node tests/admin-provisioning.test.js && node tests/ownership-isolation.test.js && node tests/migrations.test.js && node api-smoke.js",
     "test:security": "node tests/auth-security.test.js && node tests/security-headers.test.js",
     "test:api": "node api-smoke.js",
+    "test:provisioning": "node tests/admin-provisioning.test.js",
+    "test:ownership": "node tests/ownership-isolation.test.js",
+    "test:migrations": "node tests/migrations.test.js",
     "start": "node server.js"
   },
   "keywords": [],
