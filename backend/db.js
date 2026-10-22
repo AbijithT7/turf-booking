@@ -41,6 +41,22 @@ async function initDB(dbPath = path.join(__dirname, 'turf.db')) {
     console.log('Seeded database with 8 turf facilities.');
   }
 
+  // Fresh databases seed their facilities after migrations, so fill the
+  // opening rules here as well as in migration 007.
+  await dbInstance.exec(`
+    UPDATE Turfs SET sport_config = CASE id
+      WHEN 1 THEN '[{"sport":"Football","teamSize":11},{"sport":"Box Cricket","teamSize":8}]'
+      WHEN 2 THEN '[{"sport":"Box Cricket","teamSize":8}]'
+      WHEN 3 THEN '[{"sport":"Futsal","teamSize":5}]'
+      WHEN 4 THEN '[{"sport":"Badminton","teamSize":2}]'
+      WHEN 5 THEN '[{"sport":"Tennis","teamSize":2},{"sport":"Pickleball","teamSize":4}]'
+      WHEN 6 THEN '[{"sport":"Basketball","teamSize":5}]'
+      WHEN 7 THEN '[{"sport":"Swimming","teamSize":1}]'
+      WHEN 8 THEN '[{"sport":"Futsal","teamSize":5},{"sport":"Box Cricket","teamSize":8}]'
+      ELSE sport_config END
+    WHERE sport_config IS NULL;
+  `);
+
   // Seed default community posts if none exist
   const commCount = await dbInstance.get('SELECT COUNT(*) as count FROM CommunityPosts');
   if (commCount.count === 0) {

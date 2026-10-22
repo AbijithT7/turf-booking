@@ -409,8 +409,17 @@
       .card-action-bar {
         display: flex;
         gap: 8px;
+        flex-wrap: wrap;
         padding-top: var(--space-3);
         border-top: 1px solid var(--line-soft);
+      }
+
+      .card-action-bar .btn {
+        min-width: 0;
+      }
+
+      .card-action-bar .btn:first-child {
+        flex: 1 1 170px !important;
       }
 
       .modal-two-col {
@@ -946,6 +955,9 @@
               <button class="btn btn-outline btn-sm" style="flex: 1;" onclick="openManageModal(${post.id})">
                 <i class="fa-solid fa-users-gear"></i> Manage Applicants (${pendingRequests} pending)
               </button>
+              <button class="btn btn-outline btn-sm" style="color: var(--danger, #dc3545);" onclick="cancelCommunityPost(${post.id})">
+                <i class="fa-solid fa-ban"></i> Cancel
+              </button>
             `;
           } else if (isTournament) {
             actionButtons = `
@@ -1136,6 +1148,23 @@
           await fetchCommunityPosts();
         } catch (err) {
           document.getElementById("createError").textContent = err.message;
+        }
+      }
+
+      async function cancelCommunityPost(postId) {
+        if (!confirm("Cancel this opening? Any pending applications will also be removed.")) return;
+
+        try {
+          const res = await fetch(`/api/community/${postId}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Could not cancel this opening.");
+          await fetchCommunityPosts();
+          alert("Opening cancelled.");
+        } catch (err) {
+          alert(err.message);
         }
       }
 

@@ -1234,10 +1234,7 @@
               <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
                 <div>
                   <label style="font-size: 10px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Sport</label>
-                  <select id="postSport" class="input-premium" style="padding: 8px 12px;">
-                    <option>Football</option>
-                    <option>Cricket</option>
-                  </select>
+                  <select id="postSport" class="input-premium" style="padding: 8px 12px;" onchange="syncOpeningTeamSize()"></select>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                   <div>
@@ -1246,7 +1243,7 @@
                   </div>
                   <div>
                     <label style="font-size: 10px; font-family: var(--font-mono); text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Team Size</label>
-                    <input type="number" id="postTeamSize" class="input-premium" value="10" min="2" max="11" style="padding: 8px 12px;" />
+                    <input type="number" id="postTeamSize" class="input-premium" readonly style="padding: 8px 12px;" />
                   </div>
                 </div>
                 <button class="btn btn-secondary btn-sm" onclick="postOpening()" style="margin-top: 4px;">
@@ -1847,6 +1844,7 @@
         selectedSlots = [];
         updateBookingSummary();
         renderSlots();
+        syncOpeningOptions();
         switchTab("booking");
         updateOpeningsCount();
 
@@ -1929,7 +1927,10 @@
         document.getElementById("openingsSection").style.display = tab === "openings" ? "flex" : "none";
         document.getElementById("tabBooking").classList.toggle("active", tab === "booking");
         document.getElementById("tabOpenings").classList.toggle("active", tab === "openings");
-        if (tab === "openings") renderOpenings();
+        if (tab === "openings") {
+          syncOpeningOptions();
+          renderOpenings();
+        }
       }
 
       function updateOpeningsCount() {
@@ -2142,6 +2143,8 @@
 
         ops.forEach((op) => {
           const isFull = Number(op.seats) <= 0;
+          const currentUser = getCurrentUser();
+          const isMyOpening = currentUser && op.userId === currentUser.id;
           const card = document.createElement("div");
           card.style.cssText = "background: var(--surface-2); border: 1px solid var(--line-soft); border-radius: 12px; padding: 10px; display: flex; justify-content: space-between; align-items: center;";
           card.innerHTML = `
@@ -2149,10 +2152,43 @@
               <div style="font-weight: 700; color: var(--primary); font-size: 13px;">${escapeHtml(op.sport)}</div>
               <div style="font-size: 11px; color: var(--text-muted);">Seats Left: ${Number(op.seats)} / ${Number(op.teamSize)} · Share: ₹${Number(op.fare)}/pp</div>
             </div>
-            ${isFull ? `<span class="badge badge-dark">Full</span>` : `<button class="btn btn-secondary btn-sm" onclick="joinTeam(${Number(op.id)})"><i class="fa-solid fa-user-plus"></i> Join</button>`}
+            ${isMyOpening
+              ? `<button class="btn btn-outline btn-sm" style="color: var(--danger, #dc3545);" onclick="cancelOpening(${Number(op.id)})"><i class="fa-solid fa-ban"></i> Cancel</button>`
+              : isFull
+                ? `<span class="badge badge-dark">Full</span>`
+                : `<button class="btn btn-secondary btn-sm" onclick="joinTeam(${Number(op.id)})"><i class="fa-solid fa-user-plus"></i> Join</button>`}
           `;
           list.appendChild(card);
         });
+      }
+
+      function openingSportConfig() {
+        return turfData[currentTurfId]?.sportConfig || [];
+      }
+
+      function syncOpeningOptions() {
+        const sportSelect = document.getElementById("postSport");
+        const config = openingSportConfig();
+        sportSelect.innerHTML = "";
+        config.forEach((entry) => {
+          const option = document.createElement("option");
+          option.value = entry.sport;
+          option.textContent = `${entry.sport} · ${entry.teamSize} players per team`;
+          sportSelect.appendChild(option);
+        });
+        if (!config.length) {
+          sportSelect.innerHTML = '<option value="">No team-opening sports configured</option>';
+        }
+        syncOpeningTeamSize();
+      }
+
+      function syncOpeningTeamSize() {
+        const rule = openingSportConfig().find((entry) => entry.sport === document.getElementById("postSport").value);
+        const teamSize = document.getElementById("postTeamSize");
+        const seats = document.getElementById("postSeats");
+        teamSize.value = rule ? rule.teamSize : "";
+        seats.max = rule ? rule.teamSize : 1;
+        if (Number(seats.value) > Number(seats.max)) seats.value = seats.max;
       }
 
       async function joinTeam(openingId) {
@@ -2197,6 +2233,10 @@
         const sport = document.getElementById("postSport").value;
         const seats = parseInt(document.getElementById("postSeats").value) || 2;
         const size = parseInt(document.getElementById("postTeamSize").value) || 10;
+        if (!sport || !size) {
+          alert("This turf has no configured team-opening sport. Ask the turf owner to set it up.");
+          return;
+        }
         const fare = Math.ceil((selectedSlots.length * (turfData[currentTurfId]?.basePrice || 1000)) / size);
 
         try {
@@ -2220,6 +2260,25 @@
           renderOpenings();
         } catch (e) {
           alert(e.message);
+        }
+      }
+
+      async function cancelOpening(openingId) {
+        if (!confirm("Cancel this team opening? Any join requests will be removed.")) return;
+
+        try {
+          const res = await fetch(`/api/openings/${openingId}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Could not cancel this opening.");
+          await fetchAllOpenings();
+          updateOpeningsCount();
+          renderOpenings();
+          alert("Team opening cancelled.");
+        } catch (err) {
+          alert(err.message);
         }
       }
 

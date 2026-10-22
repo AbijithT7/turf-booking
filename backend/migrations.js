@@ -117,6 +117,42 @@ async function runMigrations(db) {
     await db.run('INSERT OR IGNORE INTO _migrations (name) VALUES (?)', ['005_turf_ownership.sql']);
   }
 
+  // Migration 006_link_community_openings.sql
+  // A solo community post also appears in the turf's team-opening list. Keep
+  // that linked record so cancelling the post removes both representations.
+  if (!applied.has('006_link_community_openings.sql')) {
+    const postCols = await db.all('PRAGMA table_info(CommunityPosts)');
+    if (!postCols.some(c => c.name === 'team_opening_id')) {
+      await db.exec('ALTER TABLE CommunityPosts ADD COLUMN team_opening_id INTEGER REFERENCES TeamOpenings(id)');
+    }
+    await db.exec('CREATE INDEX IF NOT EXISTS idx_community_posts_team_opening ON CommunityPosts(team_opening_id);');
+    await db.run('INSERT OR IGNORE INTO _migrations (name) VALUES (?)', ['006_link_community_openings.sql']);
+    console.log('Applied migration: 006_link_community_openings.sql');
+  }
+
+  // Migration 007_turf_sport_config.sql
+  if (!applied.has('007_turf_sport_config.sql')) {
+    const turfCols = await db.all('PRAGMA table_info(Turfs)');
+    if (!turfCols.some(c => c.name === 'sport_config')) {
+      await db.exec('ALTER TABLE Turfs ADD COLUMN sport_config TEXT');
+    }
+    await db.exec(`
+      UPDATE Turfs SET sport_config = CASE id
+        WHEN 1 THEN '[{"sport":"Football","teamSize":11},{"sport":"Box Cricket","teamSize":8}]'
+        WHEN 2 THEN '[{"sport":"Box Cricket","teamSize":8}]'
+        WHEN 3 THEN '[{"sport":"Futsal","teamSize":5}]'
+        WHEN 4 THEN '[{"sport":"Badminton","teamSize":2}]'
+        WHEN 5 THEN '[{"sport":"Tennis","teamSize":2},{"sport":"Pickleball","teamSize":4}]'
+        WHEN 6 THEN '[{"sport":"Basketball","teamSize":5}]'
+        WHEN 7 THEN '[{"sport":"Swimming","teamSize":1}]'
+        WHEN 8 THEN '[{"sport":"Futsal","teamSize":5},{"sport":"Box Cricket","teamSize":8}]'
+        ELSE sport_config END
+      WHERE sport_config IS NULL;
+    `);
+    await db.run('INSERT OR IGNORE INTO _migrations (name) VALUES (?)', ['007_turf_sport_config.sql']);
+    console.log('Applied migration: 007_turf_sport_config.sql');
+  }
+
   // Admin provisioning: provisioned exclusively from ADMIN_EMAIL / ADMIN_PASSWORD
   // environment variables. Never hardcode credentials, and never automatically
   // promote an existing player account to admin merely because its email matches.

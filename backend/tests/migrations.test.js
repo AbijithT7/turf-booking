@@ -51,9 +51,12 @@ async function runTests() {
 
   const turfsCols = await db.all('PRAGMA table_info(Turfs)');
   assert(turfsCols.some(c => c.name === 'owner_id'), 'Turfs.owner_id column added by 005 migration');
+  const communityCols = await db.all('PRAGMA table_info(CommunityPosts)');
+  assert(communityCols.some(c => c.name === 'team_opening_id'), 'CommunityPosts.team_opening_id column added by 006 migration');
+  assert(turfsCols.some(c => c.name === 'sport_config'), 'Turfs.sport_config column added by 007 migration');
 
   const migrationsCount1 = await db.get('SELECT COUNT(*) AS n FROM _migrations');
-  assert(migrationsCount1.n === 5, 'Exactly 5 migrations recorded on fresh db');
+  assert(migrationsCount1.n === 7, 'Exactly 7 migrations recorded on fresh db');
 
   // Seed some existing application data to prove preservation
   const bcrypt = require('bcryptjs');
@@ -76,7 +79,7 @@ async function runTests() {
     assert(tablesAfterSecond.includes(t), `Table ${t} still exists after re-migration`);
   }
   const migrationsCount2 = await db.get('SELECT COUNT(*) AS n FROM _migrations');
-  assert(migrationsCount2.n === 5, 'No duplicate migration records after re-run');
+  assert(migrationsCount2.n === 7, 'No duplicate migration records after re-run');
   assert(migrationsCount2.n === migrationsCount1.n, 'Migration record count unchanged after re-run');
 
   const userCountAfter = await db.get('SELECT COUNT(*) AS n FROM Users');

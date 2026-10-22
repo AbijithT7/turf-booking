@@ -373,6 +373,15 @@ async function runTests() {
     });
     assert(reopenRequest.status === 400, 'Processed community request cannot be reset to Pending (HTTP 400)');
 
+    const ownerCancelPost = await normalUser.request(`/api/community/${postId}`, {
+      method: 'DELETE'
+    });
+    assert(ownerCancelPost.status === 200, '18. Owner can cancel their own community opening (HTTP 200)');
+    const cancelledPost = await normalUser.request(`/api/community/${postId}/request`, {
+      method: 'POST', body: { applicantTeam: 'Too Late Team' }
+    });
+    assert(cancelledPost.status === 404, 'Cancelled community opening and its applications are removed');
+
     // 19. Unauthenticated modification rejected
     const unauthModify = await unauthClient.request(`/api/community/${postId}`, {
       method: 'DELETE'

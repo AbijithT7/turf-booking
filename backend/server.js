@@ -58,6 +58,17 @@ class AsyncLock {
 }
 const bookingLock = new AsyncLock();
 
+function parseSportConfig(value) {
+  try {
+    const config = JSON.parse(value || '[]');
+    return Array.isArray(config) ? config.filter((entry) =>
+      entry && typeof entry.sport === 'string' && Number.isInteger(Number(entry.teamSize))
+    ).map((entry) => ({ sport: entry.sport, teamSize: Number(entry.teamSize) })) : [];
+  } catch (_) {
+    return [];
+  }
+}
+
 // Security Headers
 app.use(
   helmet({
@@ -407,14 +418,14 @@ app.get('/api/owner/turfs', requireAuth, async (req, res, next) => {
     let turfRows;
     if (req.user.role === 'admin' && req.query.ownerId) {
       turfRows = await db.all(
-        'SELECT id, name, meta, basePrice, panoramaUrl FROM Turfs WHERE owner_id = ? ORDER BY name',
+        'SELECT id, name, meta, basePrice, panoramaUrl, sport_config FROM Turfs WHERE owner_id = ? ORDER BY name',
         [req.query.ownerId]
       );
     } else if (req.user.role === 'admin') {
-      turfRows = await db.all('SELECT id, name, meta, basePrice, panoramaUrl FROM Turfs ORDER BY name');
+      turfRows = await db.all('SELECT id, name, meta, basePrice, panoramaUrl, sport_config FROM Turfs ORDER BY name');
     } else {
       turfRows = await db.all(
-        'SELECT id, name, meta, basePrice, panoramaUrl FROM Turfs WHERE owner_id = ? ORDER BY name',
+        'SELECT id, name, meta, basePrice, panoramaUrl, sport_config FROM Turfs WHERE owner_id = ? ORDER BY name',
         [req.user.id]
       );
     }
@@ -473,6 +484,31 @@ app.patch('/api/owner/turfs/:id/price', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+app.patch('/api/owner/turfs/:id/sports', requireAuth, async (req, res, next) => {
+  try {
+    if (!['owner', 'admin'].includes(req.user.role)) return res.status(403).json({ error: 'Turf owner access required.' });
+    if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid turf ID.' });
+    const turf = await requireTurfOwnerOrAdmin(req, res, req.params.id);
+    if (!turf) return;
+    const config = req.body && req.body.sportConfig;
+    if (!Array.isArray(config) || config.length < 1 || config.length > 10) {
+      return res.status(400).json({ error: 'Add between 1 and 10 supported sports.' });
+    }
+    const normalised = config.map((entry) => ({
+      sport: typeof entry.sport === 'string' ? entry.sport.trim() : '',
+      teamSize: Number(entry.teamSize)
+    }));
+    if (normalised.some((entry) => !entry.sport || entry.sport.length > 40 || !Number.isInteger(entry.teamSize) || entry.teamSize < 1 || entry.teamSize > 50)) {
+      return res.status(400).json({ error: 'Each sport needs a name and a team size from 1 to 50.' });
+    }
+    if (new Set(normalised.map((entry) => entry.sport.toLowerCase())).size !== normalised.length) {
+      return res.status(400).json({ error: 'Each supported sport can be listed only once.' });
+    }
+    await getDB().run('UPDATE Turfs SET sport_config = ? WHERE id = ?', [JSON.stringify(normalised), req.params.id]);
+    res.json({ message: 'Supported sports updated.', turfId: Number(req.params.id), sportConfig: normalised });
+  } catch (err) { next(err); }
+});
+
 // Owner-scoped slot blocks; the existing global admin endpoints remain unchanged.
 app.post('/api/owner/blocked-slots', requireAuth, validateBlockedSlot, async (req, res, next) => {
   try {
@@ -510,7 +546,7 @@ app.delete('/api/owner/blocked-slots', requireAuth, validateBlockedSlot, async (
 app.get('/api/turfs', async (req, res, next) => {
   try {
     const db = getDB();
-    const rows = await db.all('SELECT id, name, meta, basePrice, panoramaUrl FROM Turfs');
+    const rows = await db.all('SELECT id, name, meta, basePrice, panoramaUrl, sport_config FROM Turfs');
     const turfData = {};
     rows.forEach((turf) => {
       turfData[turf.id] = {
@@ -518,7 +554,8 @@ app.get('/api/turfs', async (req, res, next) => {
         name: turf.name,
         meta: turf.meta,
         basePrice: turf.basePrice,
-        panoramaUrl: turf.panoramaUrl
+        panoramaUrl: turf.panoramaUrl,
+        sportConfig: parseSportConfig(turf.sport_config)
       };
     });
     res.json(turfData);
@@ -874,10 +911,13 @@ app.post('/api/openings', requireAuth, validateOpening, async (req, res, next) =
     const { turfId, sport, seats, teamSize, fare } = req.body;
     const user = req.user;
 
-    const turf = await db.get('SELECT id FROM Turfs WHERE id = ?', [turfId]);
+    const turf = await db.get('SELECT id, sport_config FROM Turfs WHERE id = ?', [turfId]);
     if (!turf) {
       return res.status(404).json({ error: 'Turf not found.' });
     }
+    const sportRule = parseSportConfig(turf.sport_config).find((entry) => entry.sport.toLowerCase() === sport.toLowerCase());
+    if (!sportRule) return res.status(400).json({ error: `${sport} is not available at this turf.` });
+    if (teamSize !== sportRule.teamSize) return res.status(400).json({ error: `${sport} openings at this turf must use ${sportRule.teamSize} players per team.` });
 
     const result = await db.run(
       'INSERT INTO TeamOpenings (turf_id, user_id, sport, seats, team_size, fare, creator_phone, creator_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
@@ -1229,11 +1269,12 @@ communityRouter.post('/', requireAuth, validateCommunityPost, async (req, res, n
         const matched = await db.get('SELECT id FROM Turfs WHERE name LIKE ?', [`%${postTurf}%`]);
         if (matched) turfId = matched.id;
       }
-      await db.run(
+      const openingResult = await db.run(
         `INSERT INTO TeamOpenings (turf_id, user_id, sport, seats, team_size, fare, creator_phone, creator_name)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [turfId, user.id, sport, numSpots, 11, numFare, user.phone, user.name]
       );
+      await db.run('UPDATE CommunityPosts SET team_opening_id = ? WHERE id = ?', [openingResult.lastID, result.lastID]);
     }
 
     res.status(201).json({
@@ -1277,6 +1318,13 @@ communityRouter.delete('/:id', requireAuth, async (req, res, next) => {
       return res.status(403).json({ error: 'Forbidden. You do not have permission to delete this post.' });
     }
 
+    if (post.team_opening_id) {
+      // Clear the optional back-reference first so SQLite's foreign-key
+      // constraint permits removal of the linked opening.
+      await db.run('UPDATE CommunityPosts SET team_opening_id = NULL WHERE id = ?', [postId]);
+      await db.run('DELETE FROM TeamRequests WHERE opening_id = ?', [post.team_opening_id]);
+      await db.run('DELETE FROM TeamOpenings WHERE id = ?', [post.team_opening_id]);
+    }
     await db.run('DELETE FROM CommunityRequests WHERE post_id = ?', [postId]);
     await db.run('DELETE FROM CommunityPosts WHERE id = ?', [postId]);
 

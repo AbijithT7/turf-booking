@@ -195,6 +195,14 @@
               <i class="fa-solid fa-floppy-disk"></i> Update Price
             </button>
           </div>
+          <div class="form-group" style="margin-top: 16px; margin-bottom: 0;">
+            <label for="sportConfig" class="form-label">Supported sports and team size</label>
+            <input id="sportConfig" class="input-premium" placeholder="Football:11, Box Cricket:8" />
+            <p style="color: var(--text-muted); font-size: 12px; margin: 6px 0 10px;">Format: Sport:players per team. These are the only options players can use for team openings.</p>
+            <button id="saveSports" class="btn btn-outline" type="button">
+              <i class="fa-solid fa-futbol"></i> Update sports rules
+            </button>
+          </div>
         </section>
 
         <section class="card-elevated">
@@ -336,6 +344,9 @@
           const t = turfs.find((x) => x.id === selectedTurf());
           if (!t) return;
           $("price").value = t.basePrice;
+          let sportRules = [];
+          try { sportRules = t.sport_config ? JSON.parse(t.sport_config) : []; } catch (_) {}
+          $("sportConfig").value = sportRules.map((entry) => `${entry.sport}:${entry.teamSize}`).join(", ");
           await Promise.all([loadSlots(), loadBookings()]);
         }
 
@@ -433,6 +444,25 @@
             const turf = turfs.find((t) => t.id === selectedTurf());
             if (turf) turf.basePrice = result.basePrice;
             message("Hourly rate updated to ₹" + result.basePrice + ".");
+          } catch (e) {
+            message(e.message, true);
+          }
+        });
+
+        $("saveSports").addEventListener("click", async () => {
+          try {
+            const sportConfig = $("sportConfig").value.split(",").map((entry) => {
+              const [sport, teamSize] = entry.split(":");
+              return { sport: (sport || "").trim(), teamSize: Number((teamSize || "").trim()) };
+            }).filter((entry) => entry.sport);
+            const result = await request("/api/owner/turfs/" + selectedTurf() + "/sports", {
+              method: "PATCH",
+              body: JSON.stringify({ sportConfig }),
+            });
+            const turf = turfs.find((t) => t.id === selectedTurf());
+            if (turf) turf.sport_config = JSON.stringify(result.sportConfig);
+            $("sportConfig").value = result.sportConfig.map((entry) => `${entry.sport}:${entry.teamSize}`).join(", ");
+            message("Team-opening sport rules updated.");
           } catch (e) {
             message(e.message, true);
           }
